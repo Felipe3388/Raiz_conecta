@@ -21,7 +21,9 @@ export default function SiteHeader() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     carregarUsuario();
+
     // Escuta mudanças de aba e de login para atualizar sozinho
+
     window.addEventListener("storage", carregarUsuario);
     window.addEventListener("loginStateChange", carregarUsuario);
     return () => {
@@ -41,7 +43,9 @@ export default function SiteHeader() {
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm transition-all">
       <div className="max-w-350 mx-auto px-4 md:px-8 h-20 flex justify-between items-center">
+
         {/* LOGO */}
+
         <Link href="/" className="flex items-center gap-2 group">
           <div className="bg-green-100 p-2 rounded-xl group-hover:bg-green-600 transition-colors">
             <Leaf
@@ -55,6 +59,7 @@ export default function SiteHeader() {
         </Link>
 
         {/* MENUS DINÂMICOS */}
+
         <nav className="hidden md:flex items-center gap-8 font-bold text-gray-600">
           {!role && (
             <>
@@ -77,6 +82,7 @@ export default function SiteHeader() {
           )}
 
           {/* Se for Mercado ou Produtor, mostra link rápido para o Painel e Perfil */}
+
           {(role === "mercado" || role === "produtor") && (
             <>
               <Link
@@ -96,6 +102,7 @@ export default function SiteHeader() {
           )}
 
           {/* Se for Admin */}
+
           {role === "admin" && (
             <Link
               href="/admin"
@@ -107,6 +114,7 @@ export default function SiteHeader() {
         </nav>
 
         {/* BOTÕES DA DIREITA */}
+        
         <div className="flex items-center gap-4">
           {!role ? (
             <>

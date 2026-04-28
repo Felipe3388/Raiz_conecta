@@ -6,7 +6,7 @@ export async function POST(req: Request) {
     try {
         const { email, senha } = await req.json();
 
-        // 1. Procura o usuário no banco pelo e-mail (tabela de Acessos)
+        // Procura o usuário no banco pelo e-mail (tabela de Acessos)
         const usuario = await prisma.acesso.findFirst({
             where: { login: email }
         });
@@ -15,14 +15,14 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "E-mail não encontrado." }, { status: 404 });
         }
 
-        // 2. Verifica se a senha digitada bate com a criptografada no banco
+        // Verifica se a senha digitada bate com a criptografada no banco
         const senhaValida = await bcrypt.compare(senha, usuario.hash || "");
 
         if (!senhaValida) {
             return NextResponse.json({ error: "Senha incorreta." }, { status: 401 });
         }
 
-        // 3. Responde com sucesso e o tipo de usuário
+        // Responde com sucesso e o tipo de usuário
         return NextResponse.json({
             message: "Login realizado com sucesso!",
             tipoUser: usuario.tipoUser

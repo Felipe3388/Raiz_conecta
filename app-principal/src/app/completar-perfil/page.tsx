@@ -35,9 +35,8 @@ export default function CompletarPerfilPage() {
         if (!email) router.push("/login");
     }, [router]);
 
-    // ==========================================
-    // FUNÇÕES DE MÁSCARA (Visual)
-    // ==========================================
+    // FUNÇÕES DE MÁSCARA (Visual) autoprenchimento dos campos de documento e cep com a formatação correta, mas o valor que vai pro banco é sempre limpo (só números)
+
     const handleDocumentoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         let value = e.target.value.replace(/\D/g, ""); // Remove tudo que não é número
 
@@ -93,9 +92,8 @@ export default function CompletarPerfilPage() {
         setFormDados({ ...formDados, [e.target.name]: e.target.value });
     };
 
-    // ==========================================
     // ENVIO LIMPO PARA O BANCO
-    // ==========================================
+
     const enviarDados = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!arquivo) return alert("Por favor, anexe a foto do seu documento.");

@@ -27,26 +27,25 @@ export async function POST(req: Request) {
 
         let urlDocumentoReal = null;
 
-        // ==========================================
-        // LÓGICA DE UPLOAD REAL DO ARQUIVO
-        // ==========================================
+        // Upload do Arquivo do anexo
+
         if (file && file.size > 0) {
             const bytes = await file.arrayBuffer();
             const buffer = Buffer.from(bytes);
 
-            // Define a pasta de destino (public/uploads/docs)
+            // Pasta de destino (public/uploads/docs)
             const uploadDir = path.join(process.cwd(), "public", "uploads", "docs");
 
-            // Se a pasta não existir, o sistema cria automaticamente
+            // Se a pasta não existir, cria automaticamente
             if (!fs.existsSync(uploadDir)) {
                 fs.mkdirSync(uploadDir, { recursive: true });
             }
 
-            // Cria um nome único para o arquivo (evita que duas pessoas enviem "foto.jpg" e dê conflito)
+            // Cria um nome único para o arquivo usando datenow como id e depois o nome do arquivo original (limpando espaços)
             const fileName = `doc_${Date.now()}_${file.name.replace(/\s/g, "_")}`;
             const filePath = path.join(uploadDir, fileName);
 
-            // Salva o arquivo no seu computador/servidor
+            // Salva o arquivo no seu computador
             await writeFile(filePath, buffer);
 
             // Cria o link limpo que será salvo no Banco de Dados
@@ -84,7 +83,7 @@ export async function POST(req: Request) {
                 where: { email },
                 data: {
                     ...dadosAtualizados,
-                    ...(urlDocumentoReal && { urlDocumento: urlDocumentoReal }) // Agora salva a foto do mercado!
+                    ...(urlDocumentoReal && { urlDocumento: urlDocumentoReal })
                 }
             });
             await prisma.acesso.updateMany({

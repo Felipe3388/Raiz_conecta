@@ -15,7 +15,7 @@ export async function GET(req: Request) {
         { status: 400 },
       );
 
-    // Descobre quem é o usuário pela tabela de Acesso
+    // Pegao o usuário pela tabela de Acesso
     const acesso = await prisma.acesso.findFirst({ where: { login: email } });
     if (!acesso)
       return NextResponse.json(
@@ -71,7 +71,7 @@ export async function PUT(req: Request) {
     // Se o usuário digitou uma senha nova, atualiza ela também
     if (novaSenha && novaSenha.trim() !== "") {
       dadosAtualizados.senha = novaSenha;
-      // Atualiza a tabela de acesso (que gerencia o login)
+      // Atualiza a tabela de acesso que gerencia o login
       await prisma.acesso.updateMany({
         where: { login: email },
         data: { hash: novaSenha },
@@ -101,7 +101,7 @@ export async function PUT(req: Request) {
   }
 }
 
-// EXCLUIR CONTA (SCRUM-28)
+// EXCLUIR CONTA 
 export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url);

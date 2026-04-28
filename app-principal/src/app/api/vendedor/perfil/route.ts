@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
-// 1. ROTA GET: Devolve os dados do produtor para montar a tela
+// ROTA GET: Devolve os dados do produtor para montar a tela
 export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
@@ -21,7 +22,7 @@ export async function GET(req: Request) {
     }
 }
 
-// 2. ROTA POST: Recebe a foto, salva no PC e atualiza o Banco de Dados
+// ROTA POST: Recebe a foto, salva no PC e atualiza o Banco de Dados
 export async function POST(req: Request) {
     try {
         const formData = await req.formData();
@@ -32,22 +33,22 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Dados ou arquivo faltando" }, { status: 400 });
         }
 
-        // Transforma o arquivo em "bytes" para o Node.js conseguir salvar
+        // Transforma o arquivo em bytes para o Node conseguir salvar
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
 
-        // Cria um nome único para o arquivo (para não ter risco de duas fotos com nome "rg.jpg")
+        // Cria um nome único para o arquivo usando o date now como id e depois o nome do arquivo original (limpando os espaços)
         const nomeUnico = `doc_${Date.now()}_${file.name.replaceAll(" ", "_")}`;
 
-        // Define ONDE vai salvar (na pasta public do seu projeto)
+        // Define ONDE vai salvar que é na pasta "public/uploads/docs"
         const pastaUpload = path.join(process.cwd(), "public/uploads/docs");
 
-        // Garante que a pasta existe (se não existir, o sistema cria sozinho!)
+        // Garante que a pasta existe (se não existir, cria automaticamente)
         await mkdir(pastaUpload, { recursive: true });
 
         const caminhoCompleto = path.join(pastaUpload, nomeUnico);
 
-        // Salva o arquivo fisicamente no seu computador
+        // Salva o arquivo no seu computador
         await writeFile(caminhoCompleto, buffer);
 
         // O caminho que vai ficar salvo no banco de dados

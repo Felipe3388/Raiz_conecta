@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// ROTA GET: Busca TODOS os usuários do sistema
+// ROTA GET: Busca TODOS os usuários (produtores e mercados) para exibir na tela de administração
 export async function GET() {
   try {
     const produtores = await prisma.vendedor.findMany({
@@ -12,7 +12,6 @@ export async function GET() {
       orderBy: { nomeFantasia: "asc" },
     });
 
-    // Junta todo mundo em uma lista só para facilitar o frontend
     const todosUsuarios = [
       ...produtores.map((p) => ({ ...p, tipo: "produtor" })),
       ...mercados.map((m) => ({ ...m, tipo: "mercado" })),
@@ -27,7 +26,7 @@ export async function GET() {
   }
 }
 
-// ROTA PUT: Atualiza o status (Aprovar, Rejeitar, Suspender, Reativar)
+// PUT: Atualiza o status (Aprovar, Rejeitar, Suspender, Reativar)
 export async function PUT(req: Request) {
   try {
     const { email, tipo, novoStatus } = await req.json();
@@ -36,7 +35,7 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
     }
 
-    // 1. Atualiza a Tabela Principal (Produtor ou Mercado)
+    // Atualiza a Tabela Principal (Produtor ou Mercado)
     if (tipo === "produtor") {
       await prisma.vendedor.update({
         where: { email },
@@ -52,13 +51,13 @@ export async function PUT(req: Request) {
       });
     }
 
-    // 2. Atualiza a Tabela de ACESSO (Para o login liberar ou bloquear)
+    // Atualiza a Tabela de ACESSO (Para o login liberar ou bloquear)
     await prisma.acesso.updateMany({
       where: { login: email },
       data: { status: novoStatus },
     });
 
-    // 3. INTEGRAÇÃO COM MICROSSERVIÇO DE E-MAIL (Apenas para Aprovação/Rejeição inicial)
+    // Integração com o microsserviço de e-mail (Apenas para Aprovação/Rejeição inicial)
     if (novoStatus === "APROVADO") {
       try {
         await fetch("http://localhost:3001/api/email/aprovacao", {

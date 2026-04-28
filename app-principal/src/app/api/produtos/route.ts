@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
-// ROTA GET: O nosso "Garçom" que serve o catálogo para o mercado
+// ROTA GET: O catálogo de produtos para o mercado
 export async function GET() {
-  // Simulando a busca de um banco de dados com preços médios por KG
+
   const produtos = [
     {
       cdProduto: 1,
@@ -34,7 +34,7 @@ export async function GET() {
       icone: "🥬",
       unidadePadrao: "Kg",
       categoria: "Verduras",
-      preco: 12.0, // Equivale ao volume em Kg
+      preco: 12.0, 
     },
     {
       cdProduto: 5,

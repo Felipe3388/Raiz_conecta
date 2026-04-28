@@ -71,7 +71,6 @@ export default function PainelProdutor() {
         if (resPerfil.ok) {
           const dadosPerfil = await resPerfil.json();
 
-          // O CONSERTO DO ERRO DE NULL AQUI:
           if (!dadosPerfil) {
             router.push("/completar-perfil");
             return;
@@ -379,7 +378,6 @@ export default function PainelProdutor() {
                           Quanto você enviará?
                         </label>
                         <div className="flex items-center gap-2">
-                          {/* O NOVO INPUT NUMÉRICO LIMPO E BONITO */}
                           <div className="flex items-center bg-white border border-gray-300 rounded-xl p-1 shadow-sm w-1/2 h-12">
                             <button
                               onClick={() =>

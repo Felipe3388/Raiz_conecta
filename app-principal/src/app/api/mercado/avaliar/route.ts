@@ -12,7 +12,7 @@ export async function PATCH(req: Request) {
       );
     }
 
-    // Atualiza a oferta marcando como entregue e salvando a nota de 1 a 5
+    // Atualiza a oferta marcando como entregue e salva a nota de 1 a 5
     await prisma.oferta.update({
       where: { id: ofertaId },
       data: {

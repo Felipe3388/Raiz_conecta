@@ -21,7 +21,7 @@ export async function POST(req: Request) {
         data: {
           produto: item.nome,
           quantidade: item.qtd,
-          unidade: item.unidade || "Kg", // Oficializado para Kg
+          unidade: item.unidade || "Kg",
           precoMedio: item.precoEstimado,
           emailMercado: emailMercado,
           status: "ABERTA",
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     // Executa todas as criações ao mesmo tempo para não travar o banco
     await Promise.all(criacoes);
 
-    // TODO: Integração com microsserviço de e-mail para avisar produtores
+    // Integração com microsserviço de e-mail para avisar produtores
 
     return NextResponse.json(
       { message: "Demandas disparadas com sucesso!" },
@@ -47,11 +47,11 @@ export async function POST(req: Request) {
   }
 }
 
-// GET: Puxa as demandas abertas (Os produtores vão usar isso no painel deles)
+// GET: Puxa as demandas abertas
 export async function GET() {
   try {
     const demandas = await prisma.demanda.findMany({
-      include: { ofertas: true }, // Traz junto quem já fez oferta
+      include: { ofertas: true }, // Traz quem fez oferta
       orderBy: { criadoEm: "desc" },
     });
     return NextResponse.json(demandas);

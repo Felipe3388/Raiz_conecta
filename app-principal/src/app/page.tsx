@@ -37,15 +37,16 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col min-h-screen font-sans bg-white">
-      {/* ================= HERO SECTION ================= */}
+
+      {/* HERO SECTION*/}
+
       <section className="relative pt-24 pb-32 overflow-hidden" id="inicio">
-        {/* Fundo decorativo (Gradients) */}
         <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-green-50 to-white -z-10" />
         <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-green-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" />
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
           <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
-            {/* Texto Hero */}
+            {/* Mensagem Raiz Conecta */}
             <div className="lg:w-1/2 text-center lg:text-left z-10">
               <span className="inline-block py-1 px-3 rounded-full bg-green-100 text-green-700 text-sm font-bold tracking-wider mb-6 border border-green-200">
                 O FUTURO DO AGRONEGÓCIO
@@ -104,7 +105,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ================= COMO FUNCIONA (PASSO A PASSO) ================= */}
+      {/* COMO FUNCIONA (PASSO A PASSO)*/}
+
       <section className="py-24 bg-gray-900 text-white" id="como-funciona">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
           <div className="text-center mb-16">
@@ -117,10 +119,10 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
-            {/* Linha conectora (visível apenas no desktop) */}
             <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-0.5 bg-gray-700 z-0"></div>
 
             {/* Passo 1 */}
+
             <div className="relative z-10 flex flex-col items-center text-center">
               <div className="w-24 h-24 bg-gray-800 border-4 border-gray-700 rounded-full flex items-center justify-center mb-6 shadow-xl text-blue-400">
                 <Store size={40} />
@@ -135,6 +137,7 @@ export default function HomePage() {
             </div>
 
             {/* Passo 2 */}
+
             <div className="relative z-10 flex flex-col items-center text-center">
               <div className="w-24 h-24 bg-gray-800 border-4 border-gray-700 rounded-full flex items-center justify-center mb-6 shadow-xl text-green-400">
                 <Tractor size={40} />
@@ -149,6 +152,7 @@ export default function HomePage() {
             </div>
 
             {/* Passo 3 */}
+
             <div className="relative z-10 flex flex-col items-center text-center">
               <div className="w-24 h-24 bg-green-500 border-4 border-green-400 rounded-full flex items-center justify-center mb-6 shadow-xl shadow-green-900/50 text-white">
                 <Handshake size={40} />
@@ -165,7 +169,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ================= SOBRE E MISSÃO ================= */}
+      {/* SOBRE E MISSÃO */}
+
       <section className="py-24 bg-white" id="sobre">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
           <div className="bg-green-50 rounded-[3rem] p-8 md:p-16 lg:p-20 overflow-hidden relative">
@@ -212,7 +217,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ================= FUNCIONALIDADES ================= */}
+      {/* FUNCIONALIDADES */}
+
       <section
         className="py-24 bg-gray-50 border-t border-gray-200"
         id="funcionalidades"
@@ -262,7 +268,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ================= CTA FINAL ================= */}
+      {/*  CTA FINAL */}
+      
       {!roleLogado && (
         <section className="py-20 bg-green-700 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-green-600 rounded-full mix-blend-multiply filter blur-3xl opacity-50" />

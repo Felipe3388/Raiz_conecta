@@ -11,7 +11,7 @@ export async function POST(req: Request) {
 
     const qtdOfertada = Number(quantidade);
 
-    // 1. Busca o pedido original para saber o tamanho da "fatia" que falta
+    // Busca o pedido original para saber o tamanho da "fatia" que falta
     const demanda = await prisma.demanda.findUnique({
       where: { id: demandaId },
       include: { ofertas: true },
@@ -31,14 +31,14 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2. Calcula quanto já foi garantido por outros produtores
+    // Calcula quanto já foi garantido por outros produtores
     const qtdJaAtendida = demanda.ofertas.reduce(
       (acc, oferta) => acc + oferta.quantidade,
       0,
     );
     const qtdFaltante = demanda.quantidade - qtdJaAtendida;
 
-    // Trava de Segurança: Não deixa o produtor ofertar mais do que o mercado precisa
+    // Não deixa o produtor ofertar mais do que o mercado precisa
     if (qtdOfertada > qtdFaltante) {
       return NextResponse.json(
         {
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 3. Salva a oferta do produtor no banco
+    // Salva a oferta do produtor no banco
     await prisma.oferta.create({
       data: {
         quantidade: qtdOfertada,
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
       },
     });
 
-    // 4. A Grande Mágica: Se chegou a 100%, fecha a demanda para ninguém mais pegar!
+    //  Fecha a demanda automaticamente se já tiver sido totalmente atendida
     if (qtdJaAtendida + qtdOfertada >= demanda.quantidade) {
       await prisma.demanda.update({
         where: { id: demandaId },

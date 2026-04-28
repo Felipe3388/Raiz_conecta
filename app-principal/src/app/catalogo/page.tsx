@@ -37,7 +37,7 @@ export default function CatalogoMercado() {
   const [filtroBusca, setFiltroBusca] = useState("");
   const [filtroCategoria, setFiltroCategoria] = useState("Todas");
 
-  // Estados da Avaliação (SCRUM-78)
+  // Estados da Avaliação do Produtor após entrega
   const [avaliandoOfertaId, setAvaliandoOfertaId] = useState<string | null>(
     null,
   );
@@ -469,7 +469,7 @@ export default function CatalogoMercado() {
           </div>
         )}
 
-        {/* COTAÇÕES (SCRUM-78) */}
+        {/* COTAÇÕES */}
         {abaAtual === "cotacoes" && (
           <div>
             {minhasDemandas.length === 0 ? (

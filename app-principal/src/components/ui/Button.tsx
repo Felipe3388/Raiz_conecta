@@ -14,7 +14,7 @@ export function Button({
     ...props
 }: ButtonProps) {
 
-    // Estilos base que todo botão tem
+    // Estilos base para todos os botões
     const baseStyles = "px-6 py-3 font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
 
     // Estilos específicos de cada variante

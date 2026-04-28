@@ -1,8 +1,8 @@
 import * as Yup from 'yup';
 
-// ==========================================
-// 1. Regras para a tela de Login
-// ==========================================
+
+// Regras para a tela de Login
+
 export const loginSchema = Yup.object().shape({
     email: Yup.string()
         .email('Digite um e-mail válido')
@@ -12,9 +12,9 @@ export const loginSchema = Yup.object().shape({
         .required('A senha é obrigatória'),
 });
 
-// ==========================================
-// 2. Regras para a tela de Cadastro (Passo 1 - Limpo)
-// ==========================================
+
+// Regras para a tela de Cadastro (Passo 1 - Limpo)
+
 export const cadastroSchema = Yup.object().shape({
     tipoUsuario: Yup.string().oneOf(['produtor', 'mercado']).required('Selecione o tipo de perfil'),
     nome: Yup.string()
@@ -28,9 +28,9 @@ export const cadastroSchema = Yup.object().shape({
         .required('A senha é obrigatória'),
 });
 
-// ==========================================
-// 3. Regras para Completar Perfil (Passo 2)
-// ==========================================
+
+// Regras para Completar Perfil (Passo 2)
+
 export const completarPerfilSchema = Yup.object().shape({
     tipoDoc: Yup.string().oneOf(['CPF', 'CNPJ']).required(),
     documento: Yup.string()

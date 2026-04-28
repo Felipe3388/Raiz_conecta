@@ -301,7 +301,7 @@ export default function MeuPerfil() {
           </Card>
         </div>
 
-        {/* BLOCO 3: SEGURANÇA (Largura Total) */}
+        {/* BLOCO 3: SEGURANÇA */}
         <Card className="p-6 md:p-8 bg-white shadow-sm border border-gray-100">
           <div className="mb-6 border-b border-gray-100 pb-4">
             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2 mb-1">

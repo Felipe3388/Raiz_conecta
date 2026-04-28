@@ -33,7 +33,6 @@ export default function RootLayout({
     <html lang="pt-BR" className={`${lato.variable} ${sourceCodePro.variable} scroll-smooth`}>
       <body className="flex flex-col min-h-screen font-sans bg-gray-50 text-gray-900 antialiased">
         <SiteHeader />
-        {/* Aqui no meio (children) é onde o conteúdo de cada página vai aparecer */}
         <main className="grow">{children}</main>
         <SiteFooter />
       </body>

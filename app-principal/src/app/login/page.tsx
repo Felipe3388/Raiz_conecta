@@ -22,14 +22,13 @@ export default function LoginPage() {
             email: "",
             senha: "",
         },
-        // Se o seu cadastroSchema ainda estiver exigindo CPF, ele vai travar. 
-        // Lembre-se de tirar o documento e telefone de lá depois.
+
         validationSchema: isLogin ? loginSchema : cadastroSchema,
         onSubmit: async (values, { setSubmitting, setFieldError }) => {
             if (isLogin) {
-                // ==========================
+
                 // LÓGICA DE LOGIN REAL
-                // ==========================
+
                 try {
                     const resposta = await fetch('/api/auth/login', {
                         method: 'POST',
@@ -49,7 +48,7 @@ export default function LoginPage() {
                     localStorage.setItem("userName", nomeProvisorio);
                     localStorage.setItem("userRole", dados.tipoUser);
 
-                    // Redirecionamento
+                    // Redirecionamento para as telas específicas de cada tipo de usuário
                     if (dados.tipoUser === "produtor") {
                         router.push("/produtor");
                     } else if (dados.tipoUser === "mercado") {
@@ -67,9 +66,9 @@ export default function LoginPage() {
                     setSubmitting(false);
                 }
             } else {
-                // ==========================
+
                 // LÓGICA DE CADASTRO (Passo 1)
-                // ==========================
+
                 try {
                     const resposta = await fetch('/api/auth/cadastro', {
                         method: 'POST',

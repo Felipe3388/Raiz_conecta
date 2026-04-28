@@ -33,6 +33,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                 />
 
                 {/* Espaço reservado para a mensagem de erro */}
+                
                 {error && <span className="text-xs text-red-500 font-medium">{error}</span>}
             </div>
         );
