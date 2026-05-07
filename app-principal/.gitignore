@@ -8,7 +8,6 @@ node_modules/
 # 🔐 SEGURANÇA (NUNCA SUBIR PARA O GITHUB)
 # ==========================================
 .env
-.env.*
 *.pem
 # ==========================================
 # 🚀 NEXT.JS (app-principal)

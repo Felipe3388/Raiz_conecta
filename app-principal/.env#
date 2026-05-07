@@ -1,0 +1,9 @@
+# App-Principal
+DATABASE_URL=""
+
+# microserviço
+EMAIL_HOST=""
+EMAIL_PORT= 
+EMAIL_USER=""
+EMAIL_PASS=""
+PORT=
