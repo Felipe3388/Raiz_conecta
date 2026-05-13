@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: '../../.env' });
 const express = require('express');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
@@ -15,7 +15,7 @@ const transporter = nodemailer.createTransport({
     port: process.env.EMAIL_PORT || 587,
     auth: {
         user: process.env.EMAIL_USER, // Pega do arquivo .env do microsserviço
-        pass: process.env.EMAIL_PASS
+        pass: process.env.EMAIL_PASS  // Pega do arquivo .env do microsserviço
     }
 });
 
