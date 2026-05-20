@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner"; // Importando as notificações
 import { UploadCloud, MapPin, FileText, Loader2, CheckCircle } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -16,7 +17,7 @@ export default function CompletarPerfilPage() {
     const [formDados, setFormDados] = useState({
         tipoDoc: "CPF",
         documento: "",
-        tipoComprovante: "RG", // Novo campo para ele escolher o que está enviando
+        tipoComprovante: "RG",
         cep: "",
         rua: "",
         numero: "",
@@ -35,10 +36,9 @@ export default function CompletarPerfilPage() {
         if (!email) router.push("/login");
     }, [router]);
 
-    // FUNÇÕES DE MÁSCARA (Visual) autoprenchimento dos campos de documento e cep com a formatação correta, mas o valor que vai pro banco é sempre limpo (só números)
-
+    // FUNÇÕES DE MÁSCARA
     const handleDocumentoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        let value = e.target.value.replace(/\D/g, ""); // Remove tudo que não é número
+        let value = e.target.value.replace(/\D/g, "");
 
         if (formDados.tipoDoc === "CPF") {
             value = value.replace(/(\d{3})(\d)/, "$1.$2")
@@ -56,14 +56,11 @@ export default function CompletarPerfilPage() {
     };
 
     const handleCepChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        // eslint-disable-next-line prefer-const
         let cep = e.target.value.replace(/\D/g, "");
 
-        // Aplica a máscara 00000-000
         const cepMascarado = cep.replace(/^(\d{5})(\d)/, "$1-$2").slice(0, 9);
         setFormDados({ ...formDados, cep: cepMascarado });
 
-        // Busca no ViaCEP quando tiver 8 números
         if (cep.length === 8) {
             setBuscandoCep(true);
             try {
@@ -78,10 +75,10 @@ export default function CompletarPerfilPage() {
                         estado: data.uf
                     }));
                 } else {
-                    alert("CEP não encontrado.");
+                    toast.error("CEP não encontrado."); // Substituiu o alert
                 }
             } catch (error) {
-                console.error("Erro ao buscar CEP", error);
+                toast.error("Erro ao buscar CEP.");
             } finally {
                 setBuscandoCep(false);
             }
@@ -93,14 +90,14 @@ export default function CompletarPerfilPage() {
     };
 
     // ENVIO LIMPO PARA O BANCO
-
     const enviarDados = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!arquivo) return alert("Por favor, anexe a foto do seu documento.");
+
+        // Substituiu o alert e usou warning (amarelo)
+        if (!arquivo) return toast.warning("Por favor, anexe a foto do seu documento.");
 
         setLoading(true);
 
-        // .replace(/\D/g, "") garante que o SQL vai receber SÓ NÚMEROS limpos!
         const docLimpo = formDados.documento.replace(/\D/g, "");
         const cepLimpo = formDados.cep.replace(/\D/g, "");
 
@@ -121,22 +118,24 @@ export default function CompletarPerfilPage() {
         try {
             const res = await fetch("/api/perfil/completar", { method: "POST", body: formData });
             if (res.ok) {
-                alert("Perfil completo! Aguardando liberação do sistema.");
+                toast.success("Perfil completo!", {
+                    description: "Aguardando liberação do sistema."
+                });
+
                 if (usuarioLocal.role === "produtor") router.push("/produtor");
                 else router.push("/catalogo");
             } else {
-                alert("Erro ao salvar os dados.");
+                toast.error("Erro ao salvar os dados.");
             }
         } catch (err) {
-            console.error(err);
-            alert("Erro de conexão.");
+            toast.error("Erro de conexão com o servidor.");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-green-50/50 p-6 flex flex-col items-center justify-center">
+        <div className="min-h-screen bg-green-50/50 p-6 flex flex-col items-center justify-center pb-20">
             <div className="max-w-2xl w-full">
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold text-green-900 mb-2">Quase lá!</h1>
@@ -230,8 +229,12 @@ export default function CompletarPerfilPage() {
                             </div>
                         </div>
 
-                        <Button type="submit" className="w-full h-14 text-lg" disabled={loading}>
-                            {loading ? "Salvando dados..." : "Finalizar Cadastro e Entrar"}
+                        <Button
+                            type="submit"
+                            className="w-full h-14 text-lg font-bold"
+                            isLoading={loading}
+                        >
+                            Finalizar Cadastro e Entrar
                         </Button>
                     </form>
                 </Card>

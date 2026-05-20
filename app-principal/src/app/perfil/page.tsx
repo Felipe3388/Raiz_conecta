@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner"; // Notificações elegantes
 import {
   User,
   MapPin,
@@ -16,6 +17,8 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Badge } from "@/components/ui/Badge";
 
 export default function MeuPerfil() {
   const router = useRouter();
@@ -40,7 +43,7 @@ export default function MeuPerfil() {
           router.push("/login");
         }
       } catch (error) {
-        console.error("Erro:", error);
+        toast.error("Erro ao carregar os dados do perfil.");
       } finally {
         setLoading(false);
       }
@@ -55,9 +58,9 @@ export default function MeuPerfil() {
   const salvarAlteracoes = async () => {
     if (senhaNova || senhaConfirmar) {
       if (senhaNova !== senhaConfirmar)
-        return alert("As senhas não coincidem!");
+        return toast.warning("As senhas não coincidem!");
       if (senhaNova.length < 6)
-        return alert("A nova senha deve ter pelo menos 6 caracteres.");
+        return toast.warning("A nova senha deve ter pelo menos 6 caracteres.");
     }
 
     setSalvando(true);
@@ -74,17 +77,17 @@ export default function MeuPerfil() {
       });
 
       if (res.ok) {
-        alert("✅ Perfil atualizado com sucesso!");
+        toast.success("Perfil atualizado com sucesso!");
         setSenhaNova("");
         setSenhaConfirmar("");
         if (form.nomeFantasia)
           localStorage.setItem("userName", form.nomeFantasia);
         window.dispatchEvent(new Event("storage"));
       } else {
-        alert("Erro ao atualizar os dados.");
+        toast.error("Erro ao atualizar os dados.");
       }
     } catch (error) {
-      alert("Erro de conexão.");
+      toast.error("Erro de conexão com o servidor.");
     } finally {
       setSalvando(false);
     }
@@ -103,16 +106,16 @@ export default function MeuPerfil() {
       });
 
       if (res.ok) {
-        alert("Conta excluída com sucesso. Sentiremos sua falta!");
+        toast.success("Conta excluída. Sentiremos sua falta!");
         localStorage.clear();
         router.push("/login");
       } else {
-        alert(
-          "Não foi possível excluir a conta. Pode haver histórico de pedidos vinculados a ela.",
-        );
+        toast.error("Não foi possível excluir a conta.", {
+          description: "Pode haver histórico de pedidos vinculados a ela."
+        });
       }
     } catch (error) {
-      alert("Erro de conexão.");
+      toast.error("Erro de conexão.");
     } finally {
       setSalvando(false);
     }
@@ -120,8 +123,8 @@ export default function MeuPerfil() {
 
   if (loading) {
     return (
-      <div className="p-20 text-center font-bold text-green-700 flex justify-center items-center min-h-[60vh]">
-        <Loader2 className="animate-spin mr-2" size={32} /> Carregando perfil...
+      <div className="p-20 text-center font-bold text-green-700 flex flex-col justify-center items-center min-h-[60vh]">
+        <Loader2 className="animate-spin mb-4" size={40} /> Carregando perfil...
       </div>
     );
   }
@@ -129,173 +132,68 @@ export default function MeuPerfil() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] p-4 md:p-8">
       <div className="max-w-5xl mx-auto space-y-8">
+
         {/* CABEÇALHO */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <div>
-            <button
+            <Button
               onClick={() => router.back()}
-              className="flex items-center text-gray-500 hover:text-green-700 font-bold mb-3 transition-colors"
+              variant="ghost"
+              className="flex items-center text-gray-500 hover:text-green-700 font-bold mb-3 px-0 h-auto"
             >
               <ArrowLeft className="mr-2" size={18} /> Voltar
-            </button>
+            </Button>
             <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3">
-              <User
-                className="text-green-600 bg-green-50 p-2 rounded-xl"
-                size={40}
-              />{" "}
+              <User className="text-green-600 bg-green-50 p-2 rounded-xl" size={40} />
               Meu Perfil
             </h1>
             <p className="text-gray-500 mt-2 ml-1">
               Gerencie suas informações pessoais, endereço e segurança.
             </p>
           </div>
-          <span className="bg-gray-100 border border-gray-200 text-gray-700 px-5 py-2.5 rounded-xl font-black uppercase text-xs tracking-wider shadow-sm">
-            TIPO DE CONTA:{" "}
-            <span
-              className={
-                form.tipoUser === "produtor"
-                  ? "text-green-700"
-                  : "text-blue-700"
-              }
-            >
+          <div className="bg-gray-100 border border-gray-200 text-gray-700 px-5 py-2.5 rounded-xl font-black uppercase text-xs tracking-wider shadow-sm flex items-center gap-2">
+            TIPO DE CONTA:
+            <Badge variant={form.tipoUser === "produtor" ? "success" : "neutral"}>
               {form.tipoUser === "produtor" ? "Produtor Rural" : "Mercado"}
-            </span>
-          </span>
+            </Badge>
+          </div>
         </div>
 
         {/* ÁREA DE EDIÇÃO PRINCIPAL */}
         <div className="grid md:grid-cols-2 gap-6 items-start">
+
           {/* BLOCO 1: DADOS GERAIS */}
           <Card className="p-6 md:p-8 bg-white shadow-sm border border-gray-100 space-y-5">
             <h2 className="text-xl font-bold text-gray-800 border-b border-gray-100 pb-4 flex items-center gap-2">
               <User size={22} className="text-green-600" /> Dados Principais
             </h2>
 
-            <div>
-              <label className="text-sm font-bold text-gray-600 mb-1.5 block">
-                E-mail (Login)
-              </label>
-              <input
-                type="email"
-                value={form.email}
-                disabled
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-500 outline-none cursor-not-allowed font-medium"
-              />
-              <span className="text-xs text-gray-400 mt-1 block">
-                O e-mail não pode ser alterado.
-              </span>
-            </div>
-
-            <div>
-              <label className="text-sm font-bold text-gray-600 mb-1.5 block">
-                Nome Fantasia / Razão Social
-              </label>
-              <input
-                type="text"
-                name="nomeFantasia"
-                value={form.nomeFantasia || ""}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none font-medium text-gray-800"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-bold text-gray-600 mb-1.5 block">
-                Telefone / WhatsApp
-              </label>
-              <input
-                type="text"
-                name="telefone"
-                value={form.telefone || ""}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none font-medium text-gray-800"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-bold text-gray-600 mb-1.5 block">
-                Documento ({form.tipoDoc})
-              </label>
-              <input
-                type="text"
-                value={form.documento || ""}
-                disabled
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-500 outline-none cursor-not-allowed font-medium"
-              />
+            <div className="space-y-4">
+              <div>
+                <Input label="E-mail (Login)" type="email" value={form.email} disabled className="bg-gray-50 text-gray-500 cursor-not-allowed" />
+                <span className="text-[10px] text-gray-400 mt-1 ml-1 font-bold">O e-mail não pode ser alterado.</span>
+              </div>
+              <Input label="Nome Fantasia / Razão Social" name="nomeFantasia" type="text" value={form.nomeFantasia || ""} onChange={handleInputChange} />
+              <Input label="Telefone / WhatsApp" name="telefone" type="text" value={form.telefone || ""} onChange={handleInputChange} />
+              <Input label={`Documento (${form.tipoDoc})`} type="text" value={form.documento || ""} disabled className="bg-gray-50 text-gray-500 cursor-not-allowed" />
             </div>
           </Card>
 
           {/* BLOCO 2: LOCALIZAÇÃO */}
           <Card className="p-6 md:p-8 bg-white shadow-sm border border-gray-100 space-y-5">
             <h2 className="text-xl font-bold text-gray-800 border-b border-gray-100 pb-4 flex items-center gap-2">
-              <MapPin size={22} className="text-blue-500" /> Endereço de
-              Operação
+              <MapPin size={22} className="text-blue-500" /> Endereço de Operação
             </h2>
 
-            <div className="flex gap-4">
-              <div className="w-1/2">
-                <label className="text-sm font-bold text-gray-600 mb-1.5 block">
-                  CEP
-                </label>
-                <input
-                  type="text"
-                  name="cep"
-                  value={form.cep || ""}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none font-medium text-gray-800"
-                />
+            <div className="space-y-4">
+              <div className="flex gap-4">
+                <Input label="CEP" name="cep" value={form.cep || ""} onChange={handleInputChange} className="w-1/2" />
+                <Input label="Número" name="numero" value={form.numero || ""} onChange={handleInputChange} className="w-1/2" />
               </div>
-              <div className="w-1/2">
-                <label className="text-sm font-bold text-gray-600 mb-1.5 block">
-                  Número
-                </label>
-                <input
-                  type="text"
-                  name="numero"
-                  value={form.numero || ""}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none font-medium text-gray-800"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-bold text-gray-600 mb-1.5 block">
-                Rua / Estrada
-              </label>
-              <input
-                type="text"
-                name="rua"
-                value={form.rua || ""}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none font-medium text-gray-800"
-              />
-            </div>
-
-            <div className="flex gap-4">
-              <div className="w-1/2">
-                <label className="text-sm font-bold text-gray-600 mb-1.5 block">
-                  Cidade
-                </label>
-                <input
-                  type="text"
-                  name="cidade"
-                  value={form.cidade || ""}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none font-medium text-gray-800"
-                />
-              </div>
-              <div className="w-1/2">
-                <label className="text-sm font-bold text-gray-600 mb-1.5 block">
-                  Estado
-                </label>
-                <input
-                  type="text"
-                  name="estado"
-                  value={form.estado || ""}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none font-medium text-gray-800"
-                />
+              <Input label="Rua / Estrada" name="rua" value={form.rua || ""} onChange={handleInputChange} />
+              <div className="flex gap-4">
+                <Input label="Cidade" name="cidade" value={form.cidade || ""} onChange={handleInputChange} className="w-1/2" />
+                <Input label="Estado (UF)" name="estado" value={form.estado || ""} onChange={handleInputChange} className="w-1/2" />
               </div>
             </div>
           </Card>
@@ -313,30 +211,8 @@ export default function MeuPerfil() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <label className="text-sm font-bold text-gray-600 mb-1.5 block">
-                Nova Senha
-              </label>
-              <input
-                type="password"
-                placeholder="Mínimo 6 caracteres"
-                value={senhaNova}
-                onChange={(e) => setSenhaNova(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-amber-500 outline-none font-medium text-gray-800"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-bold text-gray-600 mb-1.5 block">
-                Confirmar Nova Senha
-              </label>
-              <input
-                type="password"
-                placeholder="Repita a nova senha"
-                value={senhaConfirmar}
-                onChange={(e) => setSenhaConfirmar(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-amber-500 outline-none font-medium text-gray-800"
-              />
-            </div>
+            <Input label="Nova Senha" type="password" placeholder="Mínimo 6 caracteres" value={senhaNova} onChange={(e) => setSenhaNova(e.target.value)} />
+            <Input label="Confirmar Nova Senha" type="password" placeholder="Repita a nova senha" value={senhaConfirmar} onChange={(e) => setSenhaConfirmar(e.target.value)} />
           </div>
         </Card>
 
@@ -344,16 +220,10 @@ export default function MeuPerfil() {
         <div className="flex justify-end pt-4">
           <Button
             onClick={salvarAlteracoes}
-            disabled={salvando}
-            className="w-full md:w-auto h-16 px-12 text-lg font-bold bg-green-600 hover:bg-green-700 shadow-xl shadow-green-200 transition-all flex items-center gap-2"
+            isLoading={salvando}
+            className="w-full md:w-auto h-16 px-12 text-lg font-bold shadow-xl shadow-green-200 transition-all"
           >
-            {salvando ? (
-              <Loader2 className="animate-spin" />
-            ) : (
-              <>
-                <Save size={24} /> Salvar Todas as Alterações
-              </>
-            )}
+            {!salvando && <Save size={24} className="mr-2" />} Salvar Todas as Alterações
           </Button>
         </div>
 
@@ -363,8 +233,7 @@ export default function MeuPerfil() {
         <Card className="p-6 md:p-8 bg-red-50 border border-red-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
             <h2 className="text-xl font-bold text-red-700 flex items-center gap-2 mb-2">
-              <AlertTriangle size={24} className="text-red-600" /> Zona de
-              Perigo
+              <AlertTriangle size={24} className="text-red-600" /> Zona de Perigo
             </h2>
             <p className="text-sm text-red-600 font-medium">
               A exclusão da conta removerá permanentemente todos os seus dados
@@ -374,9 +243,9 @@ export default function MeuPerfil() {
           <Button
             onClick={excluirConta}
             variant="outline"
-            className="w-full md:w-auto h-14 text-red-600 border-red-300 hover:bg-red-600 hover:text-white transition-colors font-bold flex items-center gap-2 px-8"
+            className="w-full md:w-auto h-14 text-red-600 border-red-300 hover:bg-red-600 hover:text-white transition-colors font-bold px-8"
           >
-            <Trash2 size={20} /> Excluir Minha Conta
+            <Trash2 size={20} className="mr-2" /> Excluir Minha Conta
           </Button>
         </Card>
       </div>

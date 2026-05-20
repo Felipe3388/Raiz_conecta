@@ -234,3 +234,14 @@ model Oferta {
   statusEntrega String   @default("PENDENTE")
   nota          Int?
 }
+
+model Sugestao {
+  id            Int      @id @default(autoincrement())
+  emailProdutor String
+  nomeProduto   String
+  descricao     String?
+  imagemUrl     String?
+  criadoEm      DateTime @default(now())
+
+  @@map("sugestoes")
+}

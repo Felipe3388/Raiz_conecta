@@ -4,17 +4,20 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image"; // O superpoder do Next.js para imagens
+import { toast } from "sonner"; // Notificações profissionais
 import {
   MapPin,
   ShieldCheck,
   ShoppingCart,
   ArrowLeft,
   Trash2,
-  Leaf,
   Send,
+  Loader2,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge"; // Nosso componente de status
 
 export default function CheckoutConfirmacao() {
   const router = useRouter();
@@ -41,7 +44,7 @@ export default function CheckoutConfirmacao() {
           router.push("/catalogo");
         }
       } catch (e) {
-        console.error(e);
+        toast.error("Erro ao carregar dados do carrinho.");
       } finally {
         setLoading(false);
       }
@@ -76,6 +79,7 @@ export default function CheckoutConfirmacao() {
   const limparCarrinho = () => {
     if (confirm("Tem certeza que deseja cancelar esta cotação?")) {
       localStorage.removeItem("carrinhoRaiz");
+      toast.info("Cotação cancelada e esvaziada.");
       router.push("/catalogo");
     }
   };
@@ -106,16 +110,16 @@ export default function CheckoutConfirmacao() {
       });
 
       if (res.ok) {
-        alert(
-          "🚀 Cotação enviada com sucesso! Produtores da região foram notificados.",
-        );
+        toast.success("Cotação enviada com sucesso!", {
+          description: "Os produtores da região foram notificados."
+        });
         localStorage.removeItem("carrinhoRaiz");
         router.push("/catalogo");
       } else {
-        alert("Erro ao disparar pedido. Tente novamente.");
+        toast.error("Erro ao disparar pedido. Tente novamente.");
       }
     } catch (error) {
-      alert("Erro de conexão ao tentar enviar a demanda.");
+      toast.error("Erro de conexão ao tentar enviar a demanda.");
     } finally {
       setEnviando(false);
     }
@@ -123,36 +127,42 @@ export default function CheckoutConfirmacao() {
 
   if (loading)
     return (
-      <div className="p-20 text-center font-bold">
+      <div className="p-20 text-center font-bold text-green-700 flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader2 className="animate-spin mb-4" size={40} />
         Preparando Cotação Final...
       </div>
     );
+
   if (!mercado) return <div className="p-20 text-center">Acesso Negado.</div>;
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] p-4 md:p-8">
       <div className="max-w-5xl mx-auto space-y-6">
+
+        {/* BOTÕES DE NAVEGAÇÃO DE TOPO */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <button
+          <Button
             onClick={() => router.push("/catalogo")}
+            variant="ghost"
             className="flex items-center text-gray-500 hover:text-green-700 font-bold transition-colors w-max bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-sm"
           >
             <ArrowLeft className="mr-2" size={20} /> Voltar e adicionar mais
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={limparCarrinho}
+            variant="ghost"
             className="flex items-center text-red-500 hover:text-red-700 hover:bg-red-50 font-bold transition-colors w-max px-4 py-2 rounded-xl"
           >
             <Trash2 className="mr-2" size={20} /> Cancelar Pedido
-          </button>
+          </Button>
         </div>
 
         <h1 className="text-3xl font-black text-gray-900 mb-8 flex items-center gap-3">
-          <Send className="text-green-600" size={32} /> Confirmar Disparo de
-          Cotação
+          <Send className="text-green-600" size={32} /> Confirmar Disparo de Cotação
         </h1>
 
         <div className="grid md:grid-cols-3 gap-8">
+
           {/* LADO ESQUERDO: Itens para Revisão */}
           <div className="md:col-span-2 space-y-6">
             <Card className="p-6 bg-white shadow-sm border border-gray-100">
@@ -167,9 +177,22 @@ export default function CheckoutConfirmacao() {
                     className="bg-gray-50 p-4 rounded-xl border border-gray-100 relative group"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="text-4xl bg-white p-2 rounded-xl shadow-sm border border-gray-100">
-                        {item.icone || "📦"}
-                      </div>
+
+                      {/* RENDERIZA FOTO REAL OU O EMOJI */}
+                      {item.imagemUrl ? (
+                        <Image
+                          src={item.imagemUrl}
+                          alt={item.nome}
+                          width={56}
+                          height={56}
+                          className="w-14 h-14 object-cover rounded-xl shadow-sm border border-gray-200 bg-white"
+                        />
+                      ) : (
+                        <div className="text-4xl bg-white p-2 rounded-xl shadow-sm border border-gray-100">
+                          {item.icone || "📦"}
+                        </div>
+                      )}
+
                       <div>
                         <p className="font-bold text-lg text-gray-900">
                           {item.nome}
@@ -180,7 +203,7 @@ export default function CheckoutConfirmacao() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
+                    <div className="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end mt-4 sm:mt-0 sm:absolute sm:right-4 sm:top-1/2 sm:-translate-y-1/2">
                       <div className="flex items-center bg-white border border-gray-300 rounded-lg p-1 shadow-sm">
                         <input
                           type="number"
@@ -209,8 +232,7 @@ export default function CheckoutConfirmacao() {
 
             <Card className="p-6 bg-white shadow-sm border border-gray-100">
               <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <MapPin size={20} className="text-blue-500" /> Logística: Seu
-                Endereço Atual
+                <MapPin size={20} className="text-blue-500" /> Logística: Seu Endereço Atual
               </h2>
               <div className="text-gray-700 bg-blue-50 p-4 rounded-xl border border-blue-100">
                 <p className="font-bold text-lg text-blue-900">
@@ -228,10 +250,9 @@ export default function CheckoutConfirmacao() {
 
           {/* LADO DIREITO: Resumo Financeiro */}
           <div className="md:col-span-1">
-            <div className="bg-white p-6 rounded-2xl shadow-xl border border-green-500 sticky top-8">
+            <div className="bg-white p-6 rounded-2xl shadow-xl border border-green-500 sticky top-8 animate-in slide-in-from-right-8 fade-in">
               <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <ShoppingCart size={20} className="text-green-600" /> Resumo do
-                Disparo
+                <ShoppingCart size={20} className="text-green-600" /> Resumo do Disparo
               </h2>
 
               <div className="space-y-3 mb-6 border-b border-gray-100 pb-6 text-sm text-gray-600">
@@ -239,11 +260,9 @@ export default function CheckoutConfirmacao() {
                   <span>Subtotal Estimado</span>
                   <span>R$ {totalEstimado.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span>Taxa de Sistema</span>
-                  <span className="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded">
-                    Isento
-                  </span>
+                  <Badge variant="success">Isento</Badge>
                 </div>
               </div>
 
@@ -258,16 +277,11 @@ export default function CheckoutConfirmacao() {
 
               <Button
                 onClick={dispararPedido}
-                disabled={enviando}
-                className="w-full h-16 text-lg font-bold bg-green-600 hover:bg-green-700 shadow-lg shadow-green-200 transition-all flex items-center justify-center gap-2"
+                isLoading={enviando}
+                className="w-full h-16 text-lg font-bold shadow-lg shadow-green-200 transition-all flex items-center justify-center gap-2"
               >
-                {enviando ? (
-                  "Processando..."
-                ) : (
-                  <>
-                    <ShieldCheck size={24} /> Confirmar Disparo
-                  </>
-                )}
+                {!enviando && <ShieldCheck size={24} />}
+                {enviando ? "Processando..." : "Confirmar Disparo"}
               </Button>
 
               <div className="mt-6 flex items-start gap-3 text-xs text-gray-500 bg-gray-50 p-4 rounded-xl border border-gray-100">
@@ -279,6 +293,7 @@ export default function CheckoutConfirmacao() {
               </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>

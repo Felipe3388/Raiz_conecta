@@ -96,6 +96,34 @@ app.post('/api/email/rejeicao', async (req, res) => {
     }
 });
 
+// 💡 ROTA 4: Nova Sugestão de Produto
+
+app.post('/api/email/sugestao', async (req, res) => {
+    const { emailProdutor, nomeProduto, descricao } = req.body;
+    try {
+        await transporter.sendMail({
+            from: '"Equipe Raiz Conecta" <nao-responda@raizconecta.com.br>',
+            to: "admin@raizconecta.com.br", // Aqui seria o e-mail real do administrador
+            subject: "💡 Nova Sugestão de Produto no Raiz Conecta!",
+            html: `
+        <div style="font-family: Arial, sans-serif; color: #333;">
+          <h2 style="color: #d97706;">Nova Sugestão Recebida!</h2>
+          <p>O produtor <b>${emailProdutor}</b> sugeriu a adição de um novo produto ao catálogo oficial:</p>
+          <div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #d97706;">
+              <p><b>Produto:</b> ${nomeProduto}</p>
+              <p><b>Descrição:</b> ${descricao || 'Nenhuma descrição fornecida.'}</p>
+          </div>
+          <p>Acesse o painel de Administração para avaliar a imagem enviada e cadastrar este produto no sistema.</p>
+        </div>
+      `
+        });
+        console.log(`[E-mail Enviado] Sugestão de produto: ${nomeProduto}`);
+        res.status(200).json({ message: "E-mail de sugestão enviado" });
+    } catch (error) {
+        console.error("Erro ao enviar sugestão:", error);
+        res.status(500).json({ error: "Erro ao enviar e-mail" });
+    }
+});
 // INICIAR O SERVIDOR
 
 const PORT = process.env.PORT || 3001;

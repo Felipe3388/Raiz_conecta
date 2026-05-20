@@ -1,53 +1,67 @@
 @import "tailwindcss";
 
-/* CONFIGURAÇÕES BASE */
-html {
-  scroll-behavior: smooth;
-}
+/* 1. CONFIGURAÇÃO DO TEMA DO TAILWIND */
+@theme {
+  /* Conecta as fontes do layout.tsx nativamente ao Tailwind */
+  --font-sans: var(--font-lato), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-source-code-pro), ui-monospace, SFMono-Regular, monospace;
 
-body {
-  background-color: #f8fafc;
-  color: #111827;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+  /* Registra a sua animação customizada no Tailwind */
+  --animate-blob: blob 7s infinite;
 
-/* SCROLLBAR PREMIUM */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #16a34a;
-}
-
-/* ANIMAÇÕES CUSTOMIZADAS */
-.animate-blob {
-  animation: blob 7s infinite;
-}
-
-@keyframes blob {
-  0% {
-    transform: translate(0px, 0px) scale(1);
+  @keyframes blob {
+    0% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(30px, -50px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+    100% { transform: translate(0px, 0px) scale(1); }
   }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
+}
+
+/* 2. ESTILOS BASE (Sobrescrevendo o HTML padrão) */
+@layer base {
+  html {
+    scroll-behavior: smooth;
   }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
+
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
   }
-  100% {
-    transform: translate(0px, 0px) scale(1);
+
+  /* SCROLLBAR PREMIUM COM CORES DO TAILWIND */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-100 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-green-600;
+  }
+}
+
+/* 3. UTILITÁRIOS CUSTOMIZADOS (Classes extras para você usar no HTML) */
+@layer utilities {
+  
+  /* Esconde a barra de rolagem visual, mas mantém o scroll funcionando 
+     (Excelente para listas horizontais no mobile!) */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE e Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  /* Efeito de vidro padronizado para usar em modais e cards flutuantes */
+  .glass-panel {
+    @apply bg-white/80 backdrop-blur-md border border-white/40 shadow-xl;
   }
 }

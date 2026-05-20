@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Lato, Source_Code_Pro } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "sonner"; // 1. Importação da biblioteca
 
 import SiteHeader from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -34,6 +35,15 @@ export default function RootLayout({
       <body className="flex flex-col min-h-screen font-sans bg-gray-50 text-gray-900 antialiased">
         <SiteHeader />
         <main className="grow">{children}</main>
+
+        {/* 2. Adicione este componente aqui no final do body */}
+        <Toaster
+          position="top-right"
+          richColors
+          expand={false}
+          closeButton
+        />
+
         <SiteFooter />
       </body>
     </html>
