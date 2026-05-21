@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd app-principal && npm install && npx prisma generate && npm run build",
+  "outputDirectory": "app-principal/.next",
+  "installCommand": "echo 'skip'",
+  "framework": "nextjs"
+}
