@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Lato, Source_Code_Pro } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "sonner"; // 1. Importação da biblioteca
+import { Toaster } from "sonner";
+import Script from "next/script";
 
 import SiteHeader from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -32,18 +33,28 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={`${lato.variable} ${sourceCodePro.variable} scroll-smooth`}>
+      <Script
+        id="microsoft-clarity"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            (function(c,l,a,r,i,t,y){
+              c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+              t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+              y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+            })(window, document, "clarity", "script", "wv2ah2u8lu");
+          `,
+        }}
+      />
       <body className="flex flex-col min-h-screen font-sans bg-gray-50 text-gray-900 antialiased">
         <SiteHeader />
         <main className="grow">{children}</main>
-
-        {/* 2. Adicione este componente aqui no final do body */}
         <Toaster
           position="top-right"
           richColors
           expand={false}
           closeButton
         />
-
         <SiteFooter />
       </body>
     </html>
