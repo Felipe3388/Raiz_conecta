@@ -140,7 +140,7 @@ export default function CompletarPerfilPage() {
   } finally {
     setLoading(false);
   }
-};
+    };
 
     return (
         <div className="min-h-screen bg-green-50/50 p-6 flex flex-col items-center justify-center pb-20">
