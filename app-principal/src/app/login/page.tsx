@@ -30,7 +30,7 @@ export default function LoginPage() {
                 // LÓGICA DE LOGIN
                 // ==========================================
                 try {
-                    const resposta = await fetch('/api/auth/login', {
+                    const resposta = await fetch(`${process.env.URL_API_NODE}/api/auth/login`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email: values.email, senha: values.senha }),

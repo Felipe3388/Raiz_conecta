@@ -1,0 +1,247 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // Mudamos oficialmente para PostgreSQL
+  url      = env("DATABASE_URL")
+}
+
+// TABELAS DO RAIZ CONECTA (Baseadas no seu SQL original)
+
+model Cliente {
+  cdCliente    Int       @id @default(autoincrement())
+  nomeFantasia String?
+  razaoSocial  String?
+  documento    String?   // CPF ou CNPJ
+  tipoDoc      String?
+  ie           String?
+  rua          String?
+  numero       String?
+  bairro       String?
+  cidade       String?
+  estado       String?
+  complemento  String?
+  cep          String?
+  email        String    @unique // Obrigatório e Único para o Login
+  senha        String?   // Adicionado para suportar o login no sistema
+  telefone     String?
+  status       String    @default("EM_ANALISE") // Simplificado: EM_ANALISE, APROVADO, REJEITADO
+  
+  Acessos      Acesso[]
+  Pedidos      Pedido[]
+
+  urlDocumento String?
+  criadoEm     DateTime? @default(now())
+
+  @@map("cliente")
+}
+
+model Vendedor {
+  cdVendedor   Int       @id @default(autoincrement())
+  nomeFantasia String?
+  razaoSocial  String?
+  documento    String?   // CPF ou CNPJ
+  tipoDoc      String?
+  ie           String?
+  rua          String?
+  numero       String?
+  bairro       String?
+  cidade       String?
+  estado       String?
+  complemento  String?
+  cep          String?
+  email        String    @unique // Obrigatório e Único para o Login
+  senha        String?   // Adicionado para suportar o login no sistema
+  telefone     String?
+  status       String    @default("EM_ANALISE") // Simplificado: EM_ANALISE, APROVADO, REJEITADO
+  urlDocumento String?   // Para a foto do RG/Comprovante
+
+  Acessos      Acesso[]
+  ItensPedido  ItemPedido[]
+  Estoques     Prod_Vendedor_Possui[]
+
+  criadoEm DateTime? @default(now())
+
+  @@map("vendedor")
+}
+
+model Entregador {
+  cdEntregador  Int       @id @default(autoincrement())
+  dataRegistro  DateTime? @default(now())
+  dataAprovacao DateTime?
+  nome          String?
+  documento     String?
+  tipoDoc       String?
+  rua           String?
+  numero        String?
+  bairro        String?
+  cidade        String?
+  estado        String?
+  complemento   String?
+  cep           String?
+  status        String    @default("EM_ANALISE")
+  
+  Acessos       Acesso[]
+  Rotas         Rota[]
+
+  @@map("entregador")
+}
+
+model Acesso {
+  id             Int       @id @default(autoincrement())
+  cdUser         Int?
+  login          String?
+  hash           String?
+  tipoUser       String?
+  status         String?
+  dtUltimoAcesso DateTime?
+  
+  cdCliente      Int?
+  cdVendedor     Int?
+  cdEntregador   Int?
+  
+  Cliente        Cliente?    @relation(fields: [cdCliente], references: [cdCliente])
+  Vendedor       Vendedor?   @relation(fields: [cdVendedor], references: [cdVendedor])
+  Entregador     Entregador? @relation(fields: [cdEntregador], references: [cdEntregador])
+
+  @@map("acesso")
+}
+
+model Produto {
+  cdProduto     Int       @id @default(autoincrement())
+  dtCadastro    DateTime? @default(now())
+  nome          String?
+  tipo          String?
+  preco         Float?
+  qtdTotal      Int?
+  dtUltimaAtz   DateTime?
+  status        String?   @default("ATIVO")
+  
+  imagemUrl     String? 
+  unidadePadrao String?
+
+  ItensPedido ItemPedido[]
+  Estoques    Prod_Vendedor_Possui[]
+
+  @@map("produtos")
+}
+
+model Pedido {
+  cdPedido    Int       @id @default(autoincrement())
+  dtInicio    DateTime? @default(now())
+  dtEntrega   DateTime?
+  dtFim       DateTime?
+  qtdItens    Int?
+  volumeAprox Float?
+  valorTotal  Float?
+  status      String?
+  vlFrete     Float?
+  
+  cdCliente   Int?
+  Cliente     Cliente?  @relation(fields: [cdCliente], references: [cdCliente])
+  Itens       ItemPedido[]
+  Coletas     ColetaEntrega[]
+
+  @@map("pedidos")
+}
+
+model ItemPedido {
+  id         Int       @id @default(autoincrement())
+  qtd        Int?
+  preco      Float?
+  un         String?
+  
+  cdVendedor Int?
+  cdProduto  Int?
+  cdPedidos  Int?
+  
+  Vendedor   Vendedor? @relation(fields: [cdVendedor], references: [cdVendedor])
+  Produto    Produto?  @relation(fields: [cdProduto], references: [cdProduto])
+  Pedido     Pedido?   @relation(fields: [cdPedidos], references: [cdPedido])
+
+  @@map("ItemPedido_Tem")
+}
+
+model Prod_Vendedor_Possui {
+  idRegistro Int       @id @default(autoincrement())
+  dtAdesao   DateTime? @default(now())
+  saldo      Int?
+  dtAtzSaldo DateTime?
+  preco      Float?
+  dtAtzPreco DateTime?
+  
+  cdVendedor Int?
+  cdProduto  Int?
+  
+  Vendedor   Vendedor? @relation(fields: [cdVendedor], references: [cdVendedor])
+  Produto    Produto?  @relation(fields: [cdProduto], references: [cdProduto])
+}
+
+model Rota {
+  cdRota       Int       @id @default(autoincrement())
+  dRegistro    DateTime? @default(now())
+  dtFim        DateTime?
+  percursoKM   Float?
+  valor        Float?
+  qtdColetas   Int?
+  qtdEntregas  Int?
+  duracaoHoras Float?
+  
+  cdEntregador Int?
+  Entregador   Entregador? @relation(fields: [cdEntregador], references: [cdEntregador])
+  Coletas      ColetaEntrega[]
+}
+
+model ColetaEntrega {
+  cdColEntrega Int       @id @default(autoincrement())
+  tipo         String?
+  dtRegistro   DateTime? @default(now())
+  dtPrevista   DateTime?
+  status       String?
+  valor        Float?
+  
+  cdPedidos    Int?
+  cdRota       Int?
+  
+  Pedido       Pedido?   @relation(fields: [cdPedidos], references: [cdPedido])
+  Rota         Rota?     @relation(fields: [cdRota], references: [cdRota])
+}
+
+// 🔄 FLUXO ATIVO: DEMANDA REVERSA
+
+model Demanda {
+  id           String   @id @default(uuid())
+  produto      String   
+  quantidade   Int      
+  unidade      String   @default("Caixas") 
+  precoMedio   Float?   // Adicionado para a tela de Checkout estimar o valor
+  emailMercado String   
+  status       String   @default("ABERTA") 
+  criadoEm     DateTime @default(now())
+
+  ofertas      Oferta[]
+}
+
+model Oferta {
+  id             String   @id @default(uuid())
+  quantidade     Int      
+  emailProdutor  String   
+  status         String   @default("ACEITA") 
+  criadoEm       DateTime @default(now())
+  demandaId      String
+  demanda        Demanda  @relation(fields: [demandaId], references: [id])
+  statusEntrega String   @default("PENDENTE")
+  nota          Int?
+}
+
+model Sugestao {
+  id            Int      @id @default(autoincrement())
+  emailProdutor String
+  nomeProduto   String
+  descricao     String?
+  imagemUrl     String?
+  criadoEm      DateTime @default(now())
+
+  @@map("sugestoes")
+}

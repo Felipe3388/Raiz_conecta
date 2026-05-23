@@ -35,7 +35,7 @@ export default function PainelAdmin() {
     setLoading(true);
     try {
       const [resUsuarios, resProdutos, resSugestoes] = await Promise.all([
-        fetch("/api/admin/usuarios"),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/usuarios`),
         fetch("/api/produtos"),
         fetch("/api/produtor/sugestao")
       ]);
@@ -58,7 +58,7 @@ export default function PainelAdmin() {
 
     setProcessando(email);
     try {
-      const res = await fetch("/api/admin/usuarios", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/usuarios`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, tipo, novoStatus })
@@ -80,7 +80,7 @@ export default function PainelAdmin() {
     if (!confirm("⚠️ EXCLUSÃO PERMANENTE: Tem certeza que deseja apagar este usuário do banco de dados?")) return;
     setProcessando(email);
     try {
-      const res = await fetch(`/api/admin/usuarios?email=${email}&tipo=${tipo}`, { method: "DELETE" });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/usuarios?email=${email}&tipo=${tipo}`, { method: "DELETE" });
       if (res.ok) {
         carregarDados();
         toast.success("Usuário excluído permanentemente.");

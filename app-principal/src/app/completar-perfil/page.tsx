@@ -120,7 +120,7 @@ export default function CompletarPerfilPage() {
   formData.append("file", arquivo);
 
   try {
-    const res = await fetch("/api/perfil/completar", { method: "POST", body: formData });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/perfil/completar`, { method: "POST", body: formData });
     if (res.ok) {
       // Limpa o localStorage após cadastro concluído
       localStorage.removeItem("userPass");
