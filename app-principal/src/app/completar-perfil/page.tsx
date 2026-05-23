@@ -91,48 +91,56 @@ export default function CompletarPerfilPage() {
 
     // ENVIO LIMPO PARA O BANCO
     const enviarDados = async (e: React.FormEvent) => {
-        e.preventDefault();
+  e.preventDefault();
+  if (!arquivo) return toast.warning("Por favor, anexe a foto do seu documento.");
 
-        // Substituiu o alert e usou warning (amarelo)
-        if (!arquivo) return toast.warning("Por favor, anexe a foto do seu documento.");
+  setLoading(true);
 
-        setLoading(true);
+  const docLimpo = formDados.documento.replace(/\D/g, "");
+  const cepLimpo = formDados.cep.replace(/\D/g, "");
 
-        const docLimpo = formDados.documento.replace(/\D/g, "");
-        const cepLimpo = formDados.cep.replace(/\D/g, "");
+  const formData = new FormData();
 
-        const formData = new FormData();
-        formData.append("email", usuarioLocal.email);
-        formData.append("tipoUsuario", usuarioLocal.role);
-        formData.append("tipoDoc", formDados.tipoDoc);
-        formData.append("documento", docLimpo);
-        formData.append("cep", cepLimpo);
-        formData.append("rua", formDados.rua);
-        formData.append("numero", formDados.numero);
-        formData.append("bairro", formDados.bairro);
-        formData.append("cidade", formDados.cidade);
-        formData.append("estado", formDados.estado);
-        formData.append("tipoComprovante", formDados.tipoComprovante);
-        formData.append("file", arquivo);
+  // Passo 1 — vindos do localStorage
+  formData.append("nome", localStorage.getItem("userName") || "");
+  formData.append("email", usuarioLocal.email);
+  formData.append("senha", localStorage.getItem("userPass") || "");
+  formData.append("tipoUsuario", usuarioLocal.role);
 
-        try {
-            const res = await fetch("/api/perfil/completar", { method: "POST", body: formData });
-            if (res.ok) {
-                toast.success("Perfil completo!", {
-                    description: "Aguardando liberação do sistema."
-                });
+  // Passo 2 — formulário atual
+  formData.append("tipoDoc", formDados.tipoDoc);
+  formData.append("documento", docLimpo);
+  formData.append("cep", cepLimpo);
+  formData.append("rua", formDados.rua);
+  formData.append("numero", formDados.numero);
+  formData.append("bairro", formDados.bairro);
+  formData.append("cidade", formDados.cidade);
+  formData.append("estado", formDados.estado);
+  formData.append("tipoComprovante", formDados.tipoComprovante);
+  formData.append("file", arquivo);
 
-                if (usuarioLocal.role === "produtor") router.push("/produtor");
-                else router.push("/catalogo");
-            } else {
-                toast.error("Erro ao salvar os dados.");
-            }
-        } catch (err) {
-            toast.error("Erro de conexão com o servidor.");
-        } finally {
-            setLoading(false);
-        }
-    };
+  try {
+    const res = await fetch("/api/perfil/completar", { method: "POST", body: formData });
+    if (res.ok) {
+      // Limpa o localStorage após cadastro concluído
+      localStorage.removeItem("userPass");
+
+      toast.success("Perfil completo!", {
+        description: "Aguardando liberação do sistema."
+      });
+
+      if (usuarioLocal.role === "produtor") router.push("/produtor");
+      else router.push("/catalogo");
+    } else {
+      const err = await res.json();
+      toast.error(err.error || "Erro ao salvar os dados.");
+    }
+  } catch (err) {
+    toast.error("Erro de conexão com o servidor.");
+  } finally {
+    setLoading(false);
+  }
+};
 
     return (
         <div className="min-h-screen bg-green-50/50 p-6 flex flex-col items-center justify-center pb-20">
