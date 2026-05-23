@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
@@ -12,8 +13,13 @@ export async function POST(req: Request) {
   try {
     const formData = await req.formData();
 
+    // Dados do passo 1 (vindos do localStorage via frontend)
+    const nome = formData.get("nome") as string;
     const email = formData.get("email") as string;
+    const senha = formData.get("senha") as string;
     const tipoUsuario = formData.get("tipoUsuario") as string;
+
+    // Dados do passo 2 (formulário)
     const tipoDoc = formData.get("tipoDoc") as string;
     const documento = formData.get("documento") as string;
     const cep = formData.get("cep") as string;
@@ -22,17 +28,30 @@ export async function POST(req: Request) {
     const bairro = formData.get("bairro") as string;
     const cidade = formData.get("cidade") as string;
     const estado = formData.get("estado") as string;
+    const tipoComprovante = formData.get("tipoComprovante") as string;
     const file = formData.get("file") as File;
 
-    if (!email || !tipoUsuario || !documento || !cep) {
+    if (!nome || !email || !senha || !tipoUsuario || !documento || !cep) {
       return NextResponse.json(
-        { error: "Dados obrigatórios incompletos" },
+        { error: "Dados obrigatórios incompletos." },
+        { status: 400 }
+      );
+    }
+
+    // Verifica se email já existe
+    const usuarioExistente = await prisma.acesso.findFirst({
+      where: { login: email },
+    });
+
+    if (usuarioExistente) {
+      return NextResponse.json(
+        { error: "Este e-mail já está cadastrado." },
         { status: 400 }
       );
     }
 
     // Upload da imagem para o Cloudinary
-    let urlDocumentoReal = null;
+    let urlDocumento = "";
     if (file && file.size > 0) {
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
@@ -51,10 +70,15 @@ export async function POST(req: Request) {
         }
       );
 
-      urlDocumentoReal = uploadResult.secure_url;
+      urlDocumento = uploadResult.secure_url;
     }
 
-    const dadosAtualizados = {
+    const hashSenha = await bcrypt.hash(senha, 10);
+
+    const dadosComuns = {
+      nomeFantasia: nome,
+      email,
+      status: "EM_ANALISE",
       tipoDoc,
       documento,
       cep,
@@ -63,41 +87,29 @@ export async function POST(req: Request) {
       bairro,
       cidade,
       estado,
-      status: "EM_ANALISE",
+      urlDocumento,
+      Acessos: {
+        create: {
+          login: email,
+          hash: hashSenha,
+          tipoUser: tipoUsuario === "produtor" ? "produtor" : "mercado",
+          status: "EM_ANALISE",
+        },
+      },
     };
 
     if (tipoUsuario === "produtor") {
-      await prisma.vendedor.update({
-        where: { email },
-        data: {
-          ...dadosAtualizados,
-          ...(urlDocumentoReal && { urlDocumento: urlDocumentoReal }),
-        },
-      });
-      await prisma.acesso.updateMany({
-        where: { login: email },
-        data: { status: "EM_ANALISE" },
-      });
-    } else if (tipoUsuario === "mercado") {
-      await prisma.cliente.update({
-        where: { email },
-        data: {
-          ...dadosAtualizados,
-          ...(urlDocumentoReal && { urlDocumento: urlDocumentoReal }),
-        },
-      });
-      await prisma.acesso.updateMany({
-        where: { login: email },
-        data: { status: "EM_ANALISE" },
-      });
+      await prisma.vendedor.create({ data: dadosComuns });
+    } else {
+      await prisma.cliente.create({ data: dadosComuns });
     }
 
     return NextResponse.json(
-      { message: "Perfil atualizado com sucesso!" },
-      { status: 200 }
+      { message: "Cadastro realizado com sucesso!" },
+      { status: 201 }
     );
   } catch (error) {
-    console.error("Erro ao atualizar perfil:", error);
+    console.error("Erro ao completar perfil:", error);
     return NextResponse.json(
       { error: "Erro interno ao salvar dados." },
       { status: 500 }
