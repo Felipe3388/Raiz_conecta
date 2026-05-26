@@ -33,6 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={`${lato.variable} ${sourceCodePro.variable} scroll-smooth`}>
+      {/* Microsoft Clarity Analytics */}
       <Script
         id="microsoft-clarity"
         strategy="afterInteractive"

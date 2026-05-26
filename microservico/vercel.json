@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "microservico/server.js",
+      "src": "src/app/server.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "microservico/server.js"
+      "dest": "src/app/server.js"
     }
   ]
 }

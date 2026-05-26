@@ -1,21 +1,29 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { writeFile, unlink } from "fs/promises";
-import path from "path";
+import { v2 as cloudinary } from "cloudinary";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // LER PRODUTOS
 export async function GET() {
   try {
     const produtos = await prisma.produto.findMany({
-      orderBy: { nome: 'asc' }
+      orderBy: { nome: "asc" },
     });
     return NextResponse.json(produtos);
   } catch (error) {
-    return NextResponse.json({ error: "Erro ao buscar produtos" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Erro ao buscar produtos" },
+      { status: 500 },
+    );
   }
 }
 
-// CRIAR NOVO PRODUTO COM IMAGEM
+// CRIAR NOVO PRODUTO COM IMAGEM — SCRUM-130 (Cloudinary)
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
@@ -28,16 +36,26 @@ export async function POST(req: Request) {
 
     let imagemUrl = "";
 
-    // Se o Admin enviou uma foto
+    // Upload para o Cloudinary (persistente no Vercel)
     if (file && file.size > 0) {
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
 
-      const nomeArquivo = `prod_${Date.now()}_${file.name.replace(/\s/g, '_')}`;
-      const caminhoDestino = path.join(process.cwd(), "public/uploads/produtos", nomeArquivo);
+      const uploadResult = await new Promise<{ secure_url: string }>(
+        (resolve, reject) => {
+          cloudinary.uploader
+            .upload_stream(
+              { folder: "raiz-conecta/produtos", resource_type: "image" },
+              (error, result) => {
+                if (error || !result) return reject(error);
+                resolve(result as { secure_url: string });
+              },
+            )
+            .end(buffer);
+        },
+      );
 
-      await writeFile(caminhoDestino, buffer);
-      imagemUrl = `/uploads/produtos/${nomeArquivo}`;
+      imagemUrl = uploadResult.secure_url;
     }
 
     const novoProduto = await prisma.produto.create({
@@ -47,56 +65,68 @@ export async function POST(req: Request) {
         preco: parseFloat(preco),
         imagemUrl,
         unidadePadrao,
-        status: "ATIVO"
-      }
+        status: "ATIVO",
+      },
     });
 
     return NextResponse.json(novoProduto, { status: 201 });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Erro ao cadastrar o produto" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Erro ao cadastrar o produto" },
+      { status: 500 },
+    );
   }
 }
 
-// EXCLUIR PRODUTO E APAGAR A FOTO DO HD
+// EXCLUIR PRODUTO (remove também do Cloudinary se tiver public_id)
 export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
+    const id = searchParams.get("id");
 
-    if (!id) return NextResponse.json({ error: "ID não informado" }, { status: 400 });
+    if (!id)
+      return NextResponse.json(
+        { error: "ID não informado" },
+        { status: 400 },
+      );
 
-    // 1. Busca o produto no banco primeiro para saber se ele tem foto
     const produto = await prisma.produto.findUnique({
-      where: { cdProduto: Number(id) }
+      where: { cdProduto: Number(id) },
     });
 
     if (!produto) {
-      return NextResponse.json({ error: "Produto não encontrado" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Produto não encontrado" },
+        { status: 404 },
+      );
     }
 
-    // 2. Se o produto tiver uma imagem, vamos apagá-la do HD físico do servidor
-    if (produto.imagemUrl) {
-      // O caminho no banco está como "/uploads/produtos/foto.png"
-      // Nós precisamos avisar ao Node que isso fica dentro da pasta "public"
-      const caminhoArquivoFisico = path.join(process.cwd(), "public", produto.imagemUrl);
-
+    // Se a imagem estiver no Cloudinary, tenta remover
+    if (produto.imagemUrl && produto.imagemUrl.includes("cloudinary.com")) {
       try {
-        await unlink(caminhoArquivoFisico); // Aqui é onde o Node apaga o arquivo!
-        console.log(`Foto do produto apagada do disco: ${produto.imagemUrl}`);
+        // Extrai o public_id da URL do Cloudinary
+        const parts = produto.imagemUrl.split("/");
+        const fileWithExt = parts[parts.length - 1];
+        const publicId = `raiz-conecta/produtos/${fileWithExt.split(".")[0]}`;
+        await cloudinary.uploader.destroy(publicId);
       } catch (err) {
-        // Se a foto já não existir no disco, a gente apenas ignora e segue a vida
-        console.log("Aviso: Foto não encontrada no disco para exclusão.");
+        console.log("Aviso: imagem não removida do Cloudinary.", err);
       }
     }
 
-    // 3. Finalmente, apaga o registro do banco de dados PostgreSQL
     await prisma.produto.delete({
-      where: { cdProduto: Number(id) }
+      where: { cdProduto: Number(id) },
     });
 
-    return NextResponse.json({ message: "Produto e foto apagados com sucesso" });
+    return NextResponse.json({ message: "Produto apagado com sucesso" });
   } catch (error) {
-    return NextResponse.json({ error: "Erro ao apagar. O produto já pode estar atrelado a um produtor." }, { status: 500 });
+    return NextResponse.json(
+      {
+        error:
+          "Erro ao apagar. O produto já pode estar atrelado a um produtor.",
+      },
+      { status: 500 },
+    );
   }
 }

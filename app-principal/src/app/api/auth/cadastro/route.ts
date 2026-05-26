@@ -13,20 +13,20 @@ export async function POST(req: Request) {
   try {
     const formData = await req.formData();
 
-    const tipoUsuario = formData.get("tipoUsuario") as string;
-    const nome = formData.get("nome") as string;
-    const email = formData.get("email") as string;
-    const senha = formData.get("senha") as string;
-    const tipoDoc = formData.get("tipoDoc") as string;
-    const documento = formData.get("documento") as string;
-    const cep = formData.get("cep") as string;
-    const rua = formData.get("rua") as string;
-    const numero = formData.get("numero") as string;
-    const bairro = formData.get("bairro") as string;
-    const cidade = formData.get("cidade") as string;
-    const estado = formData.get("estado") as string;
+    const tipoUsuario    = formData.get("tipoUsuario")    as string;
+    const nome           = formData.get("nome")           as string;
+    const email          = formData.get("email")          as string;
+    const senha          = formData.get("senha")          as string;
+    const tipoDoc        = formData.get("tipoDoc")        as string;
+    const documento      = formData.get("documento")      as string;
+    const cep            = formData.get("cep")            as string;
+    const rua            = formData.get("rua")            as string;
+    const numero         = formData.get("numero")         as string;
+    const bairro         = formData.get("bairro")         as string;
+    const cidade         = formData.get("cidade")         as string;
+    const estado         = formData.get("estado")         as string;
     const tipoComprovante = formData.get("tipoComprovante") as string;
-    const file = formData.get("file") as File;
+    const file           = formData.get("file")           as File;
 
     if (!nome || !email || !senha || !tipoUsuario || !documento) {
       return NextResponse.json(
@@ -38,7 +38,6 @@ export async function POST(req: Request) {
     const usuarioExistente = await prisma.acesso.findFirst({
       where: { login: email },
     });
-
     if (usuarioExistente) {
       return NextResponse.json(
         { error: "Este e-mail já está cadastrado." },
@@ -46,43 +45,40 @@ export async function POST(req: Request) {
       );
     }
 
-    // Upload da imagem para o Cloudinary
+    // Upload para Cloudinary (persistente no Vercel)
     let urlDocumento = "";
     if (file && file.size > 0) {
-      const bytes = await file.arrayBuffer();
+      const bytes  = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
-
-      const uploadResult = await new Promise<{ secure_url: string }>(
-        (resolve, reject) => {
-          cloudinary.uploader
-            .upload_stream(
-              { folder: "raiz-conecta/docs", resource_type: "auto" },
-              (error, result) => {
-                if (error || !result) return reject(error);
-                resolve(result as { secure_url: string });
-              }
-            )
-            .end(buffer);
-        }
-      );
-
-      urlDocumento = uploadResult.secure_url;
+      const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
+        cloudinary.uploader
+          .upload_stream(
+            { folder: "raiz-conecta/docs", resource_type: "auto" },
+            (error, res) => {
+              if (error || !res) return reject(error);
+              resolve(res as { secure_url: string });
+            }
+          )
+          .end(buffer);
+      });
+      urlDocumento = result.secure_url;
     }
 
     const hashSenha = await bcrypt.hash(senha, 10);
 
     const dadosComuns = {
       nomeFantasia: nome,
-      email: email,
+      email,
       status: "EM_ANALISE",
-      documento: documento,
-      cep: cep,
-      rua: rua,
-      numero: numero,
-      bairro: bairro,
-      cidade: cidade,
-      estado: estado,
-      urlDocumento: urlDocumento,
+      tipoDoc,
+      documento,
+      cep,
+      rua,
+      numero,
+      bairro,
+      cidade,
+      estado,
+      urlDocumento,
       Acessos: {
         create: {
           login: email,
@@ -99,14 +95,17 @@ export async function POST(req: Request) {
       await prisma.cliente.create({ data: dadosComuns });
     }
 
-    try {
-      await fetch("http://localhost:3001/api/email/boas-vindas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, nome, tipoUsuario }),
-      });
-    } catch (err) {
-      console.error("Falha ao comunicar com o microsserviço de e-mail:", err);
+    // Microsserviço de e-mail — falha silenciosa (não quebra o cadastro)
+    if (process.env.MICROSERVICE_URL) {
+      try {
+        await fetch(`${process.env.MICROSERVICE_URL}/api/email/boas-vindas`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, nome, tipoUsuario }),
+        });
+      } catch (err) {
+        console.error("Microsserviço de e-mail indisponível:", err);
+      }
     }
 
     return NextResponse.json(

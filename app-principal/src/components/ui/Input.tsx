@@ -1,40 +1,34 @@
-// src/components/ui/Input.tsx
-import { InputHTMLAttributes, forwardRef } from "react";
+import React, { forwardRef } from "react";
+import { LucideIcon } from "lucide-react";
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-    label: string;
-    error?: string;
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+    label?: string;
+    icon?: LucideIcon | React.ElementType; 
 }
 
-// Usamos forwardRef para permitir integrações com bibliotecas de formulário
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-    ({ label, error, className = "", id, ...props }, ref) => {
-
-        // Gera um ID aleatório se não for fornecido, para ligar a label ao input
-        const inputId = id || label.toLowerCase().replace(/\s+/g, "-");
-
+    ({ label, icon: Icon, className = "", ...props }, ref) => {
         return (
-            <div className={`flex flex-col gap-1 w-full ${className}`}>
-                <label htmlFor={inputId} className="text-sm font-semibold text-gray-700">
-                    {label}
-                </label>
-
-                <input
-                    id={inputId}
-                    ref={ref}
-                    className={`
-            px-4 py-3 rounded-lg border bg-white text-gray-900 
-            transition-colors duration-200 outline-none
-            focus:ring-2 focus:ring-green-500/50 focus:border-green-500
-            disabled:bg-gray-100 disabled:text-gray-500
-            ${error ? "border-red-500 focus:ring-red-500/50 focus:border-red-500" : "border-gray-300"}
-          `}
-                    {...props}
-                />
-
-                {/* Espaço reservado para a mensagem de erro */}
-                
-                {error && <span className="text-xs text-red-500 font-medium">{error}</span>}
+            <div className="space-y-1.5 w-full">
+                {label && (
+                    <label className="text-sm font-semibold text-gray-700 block">
+                        {label}
+                    </label>
+                )}
+                <div className="relative">
+                    {/* Renderiza o ícone dentro do input se ele for passado */}
+                    {Icon && (
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                            <Icon size={18} />
+                        </div>
+                    )}
+                    <input
+                        ref={ref}
+                        // Se tiver ícone, aumenta o padding da esquerda (pl-10) para o texto não ficar em cima dele
+                        className={`w-full ${Icon ? 'pl-10' : 'px-4'} pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 bg-white text-sm outline-none transition-all ${className}`}
+                        {...props}
+                    />
+                </div>
             </div>
         );
     }

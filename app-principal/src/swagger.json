@@ -7,30 +7,59 @@
   },
   "servers": [
     {
-      "url": "https://raiz-conecta-qa94.vercel.app",
+      "url": "https://seu-app.vercel.app",
+      "description": "Produção (Vercel)"
+    },
+    {
+      "url": "http://localhost:3000",
       "description": "Desenvolvimento local"
     }
   ],
   "tags": [
-    { "name": "Auth", "description": "Cadastro e login de usuários" },
-    { "name": "Perfil", "description": "Dados e gestão do perfil do usuário logado" },
-    { "name": "Produtor", "description": "Operações exclusivas do produtor" },
-    { "name": "Mercado", "description": "Operações exclusivas do mercado" },
-    { "name": "Produtos", "description": "Catálogo de produtos disponíveis" },
-    { "name": "Admin", "description": "Painel administrativo — gestão de usuários" },
-    { "name": "Utilitários", "description": "Endpoints auxiliares de setup" }
+    {
+      "name": "Auth",
+      "description": "Cadastro e login de usuários"
+    },
+    {
+      "name": "Perfil",
+      "description": "Dados e gestão do perfil do usuário logado"
+    },
+    {
+      "name": "Produtor",
+      "description": "Operações exclusivas do produtor"
+    },
+    {
+      "name": "Mercado",
+      "description": "Operações exclusivas do mercado"
+    },
+    {
+      "name": "Produtos",
+      "description": "Catálogo de produtos disponíveis"
+    },
+    {
+      "name": "Admin",
+      "description": "Painel administrativo — gestão de usuários"
+    },
+    {
+      "name": "Utilitários",
+      "description": "Endpoints auxiliares de setup"
+    }
   ],
   "paths": {
     "/api/auth/cadastro": {
       "post": {
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "summary": "Cadastrar novo usuário",
         "description": "Cria uma conta de produtor ou mercado. O status inicial é `EM_ANALISE` — o admin precisa aprovar antes do primeiro acesso.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/CadastroInput" },
+              "schema": {
+                "$ref": "#/components/schemas/CadastroInput"
+              },
               "example": {
                 "tipoUsuario": "produtor",
                 "nome": "Fazenda Boa Vista",
@@ -45,8 +74,12 @@
             "description": "Cadastro realizado com sucesso",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/MensagemSucesso" },
-                "example": { "message": "Cadastro realizado com sucesso!" }
+                "schema": {
+                  "$ref": "#/components/schemas/MensagemSucesso"
+                },
+                "example": {
+                  "message": "Cadastro realizado com sucesso!"
+                }
               }
             }
           },
@@ -54,29 +87,48 @@
             "description": "Dados inválidos ou e-mail já cadastrado",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Erro" },
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
                 "examples": {
-                  "camposVazios": { "value": { "error": "Preencha todos os campos obrigatórios." } },
-                  "emailExistente": { "value": { "error": "Este e-mail já está cadastrado." } }
+                  "camposVazios": {
+                    "value": {
+                      "error": "Preencha todos os campos obrigatórios."
+                    }
+                  },
+                  "emailExistente": {
+                    "value": {
+                      "error": "Este e-mail já está cadastrado."
+                    }
+                  }
                 }
               }
             }
           },
-          "500": { "$ref": "#/components/responses/ErroInterno" }
+          "500": {
+            "$ref": "#/components/responses/ErroInterno"
+          }
         }
       }
     },
     "/api/auth/login": {
       "post": {
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "summary": "Fazer login",
         "description": "Autentica o usuário com e-mail e senha. Retorna o tipo de usuário para redirecionar ao painel correto.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/LoginInput" },
-              "example": { "email": "fazenda@email.com", "senha": "Senha@123" }
+              "schema": {
+                "$ref": "#/components/schemas/LoginInput"
+              },
+              "example": {
+                "email": "fazenda@email.com",
+                "senha": "Senha@123"
+              }
             }
           }
         },
@@ -85,8 +137,13 @@
             "description": "Login realizado com sucesso",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/LoginResponse" },
-                "example": { "message": "Login realizado com sucesso!", "tipoUser": "produtor" }
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                },
+                "example": {
+                  "message": "Login realizado com sucesso!",
+                  "tipoUser": "produtor"
+                }
               }
             }
           },
@@ -94,8 +151,12 @@
             "description": "Senha incorreta",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Erro" },
-                "example": { "error": "Senha incorreta." }
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "error": "Senha incorreta."
+                }
               }
             }
           },
@@ -103,25 +164,35 @@
             "description": "E-mail não encontrado",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Erro" },
-                "example": { "error": "E-mail não encontrado." }
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "error": "E-mail não encontrado."
+                }
               }
             }
           },
-          "500": { "$ref": "#/components/responses/ErroInterno" }
+          "500": {
+            "$ref": "#/components/responses/ErroInterno"
+          }
         }
       }
     },
     "/api/perfil/completar": {
       "post": {
-        "tags": ["Perfil"],
+        "tags": [
+          "Perfil"
+        ],
         "summary": "Completar perfil após cadastro",
         "description": "Recebe dados complementares (documento, endereço) e um arquivo de documento via `multipart/form-data`. Coloca o usuário em status `EM_ANALISE` aguardando aprovação do admin.",
         "requestBody": {
           "required": true,
           "content": {
             "multipart/form-data": {
-              "schema": { "$ref": "#/components/schemas/CompletarPerfilInput" }
+              "schema": {
+                "$ref": "#/components/schemas/CompletarPerfilInput"
+              }
             }
           }
         },
@@ -130,8 +201,12 @@
             "description": "Perfil atualizado com sucesso",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/MensagemSucesso" },
-                "example": { "message": "Perfil atualizado com sucesso!" }
+                "schema": {
+                  "$ref": "#/components/schemas/MensagemSucesso"
+                },
+                "example": {
+                  "message": "Perfil atualizado com sucesso!"
+                }
               }
             }
           },
@@ -139,18 +214,26 @@
             "description": "Dados obrigatórios ausentes",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Erro" },
-                "example": { "error": "Dados obrigatórios incompletos" }
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "error": "Dados obrigatórios incompletos"
+                }
               }
             }
           },
-          "500": { "$ref": "#/components/responses/ErroInterno" }
+          "500": {
+            "$ref": "#/components/responses/ErroInterno"
+          }
         }
       }
     },
     "/api/perfil/meus-dados": {
       "get": {
-        "tags": ["Perfil"],
+        "tags": [
+          "Perfil"
+        ],
         "summary": "Buscar dados do usuário logado",
         "description": "Retorna os dados completos do produtor ou mercado com base no e-mail. O tipo de usuário (`tipoUser`) é incluído na resposta.",
         "parameters": [
@@ -158,7 +241,10 @@
             "name": "email",
             "in": "query",
             "required": true,
-            "schema": { "type": "string", "format": "email" },
+            "schema": {
+              "type": "string",
+              "format": "email"
+            },
             "example": "fazenda@email.com"
           }
         ],
@@ -167,7 +253,9 @@
             "description": "Dados do usuário",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UsuarioCompleto" }
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioCompleto"
+                }
               }
             }
           },
@@ -175,8 +263,12 @@
             "description": "E-mail não informado",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Erro" },
-                "example": { "error": "Email não informado" }
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "error": "Email não informado"
+                }
               }
             }
           },
@@ -184,23 +276,33 @@
             "description": "Usuário não encontrado",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Erro" },
-                "example": { "error": "Usuário não encontrado" }
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "error": "Usuário não encontrado"
+                }
               }
             }
           },
-          "500": { "$ref": "#/components/responses/ErroInterno" }
+          "500": {
+            "$ref": "#/components/responses/ErroInterno"
+          }
         }
       },
       "put": {
-        "tags": ["Perfil"],
+        "tags": [
+          "Perfil"
+        ],
         "summary": "Atualizar dados e senha do usuário",
         "description": "Atualiza dados de contato e endereço. Se `novaSenha` for informada, a senha de acesso também é alterada.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/AtualizarPerfilInput" },
+              "schema": {
+                "$ref": "#/components/schemas/AtualizarPerfilInput"
+              },
               "example": {
                 "email": "fazenda@email.com",
                 "tipoUser": "produtor",
@@ -222,16 +324,24 @@
             "description": "Perfil atualizado com sucesso",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/MensagemSucesso" },
-                "example": { "message": "Perfil atualizado com sucesso!" }
+                "schema": {
+                  "$ref": "#/components/schemas/MensagemSucesso"
+                },
+                "example": {
+                  "message": "Perfil atualizado com sucesso!"
+                }
               }
             }
           },
-          "500": { "$ref": "#/components/responses/ErroInterno" }
+          "500": {
+            "$ref": "#/components/responses/ErroInterno"
+          }
         }
       },
       "delete": {
-        "tags": ["Perfil"],
+        "tags": [
+          "Perfil"
+        ],
         "summary": "Excluir própria conta",
         "description": "Remove permanentemente o perfil e o acesso de login do usuário. Pode falhar se houver pedidos vinculados.",
         "parameters": [
@@ -239,7 +349,10 @@
             "name": "email",
             "in": "query",
             "required": true,
-            "schema": { "type": "string", "format": "email" },
+            "schema": {
+              "type": "string",
+              "format": "email"
+            },
             "example": "fazenda@email.com"
           }
         ],
@@ -248,8 +361,12 @@
             "description": "Conta excluída com sucesso",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/MensagemSucesso" },
-                "example": { "message": "Conta excluída com sucesso!" }
+                "schema": {
+                  "$ref": "#/components/schemas/MensagemSucesso"
+                },
+                "example": {
+                  "message": "Conta excluída com sucesso!"
+                }
               }
             }
           },
@@ -257,8 +374,12 @@
             "description": "E-mail não informado",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Erro" },
-                "example": { "error": "Email não informado" }
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "error": "Email não informado"
+                }
               }
             }
           },
@@ -266,18 +387,26 @@
             "description": "Usuário não encontrado",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Erro" },
-                "example": { "error": "Usuário não encontrado" }
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "error": "Usuário não encontrado"
+                }
               }
             }
           },
-          "500": { "$ref": "#/components/responses/ErroInterno" }
+          "500": {
+            "$ref": "#/components/responses/ErroInterno"
+          }
         }
       }
     },
     "/api/vendedor/perfil": {
       "get": {
-        "tags": ["Produtor"],
+        "tags": [
+          "Produtor"
+        ],
         "summary": "Buscar perfil do produtor",
         "description": "Retorna os dados do produtor (vendedor) pelo e-mail.",
         "parameters": [
@@ -285,7 +414,10 @@
             "name": "email",
             "in": "query",
             "required": true,
-            "schema": { "type": "string", "format": "email" },
+            "schema": {
+              "type": "string",
+              "format": "email"
+            },
             "example": "fazenda@email.com"
           }
         ],
@@ -294,7 +426,9 @@
             "description": "Dados do produtor",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Vendedor" }
+                "schema": {
+                  "$ref": "#/components/schemas/Vendedor"
+                }
               }
             }
           },
@@ -302,16 +436,24 @@
             "description": "E-mail não fornecido",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Erro" },
-                "example": { "error": "E-mail não fornecido" }
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "error": "E-mail não fornecido"
+                }
               }
             }
           },
-          "500": { "$ref": "#/components/responses/ErroInterno" }
+          "500": {
+            "$ref": "#/components/responses/ErroInterno"
+          }
         }
       },
       "post": {
-        "tags": ["Produtor"],
+        "tags": [
+          "Produtor"
+        ],
         "summary": "Upload de documento do produtor",
         "description": "Recebe um arquivo de documento via `multipart/form-data`, salva em `/uploads/docs/` e atualiza o status do produtor para `A_ANALISE`.",
         "requestBody": {
@@ -320,10 +462,20 @@
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": ["email", "file"],
+                "required": [
+                  "email",
+                  "file"
+                ],
                 "properties": {
-                  "email": { "type": "string", "format": "email" },
-                  "file": { "type": "string", "format": "binary", "description": "Arquivo do documento (PDF, imagem, etc.)" }
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Arquivo do documento (PDF, imagem, etc.)"
+                  }
                 }
               }
             }
@@ -334,8 +486,12 @@
             "description": "Documento enviado com sucesso",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/MensagemSucesso" },
-                "example": { "message": "Documento enviado com sucesso!" }
+                "schema": {
+                  "$ref": "#/components/schemas/MensagemSucesso"
+                },
+                "example": {
+                  "message": "Documento enviado com sucesso!"
+                }
               }
             }
           },
@@ -343,25 +499,35 @@
             "description": "Dados ou arquivo faltando",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Erro" },
-                "example": { "error": "Dados ou arquivo faltando" }
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "error": "Dados ou arquivo faltando"
+                }
               }
             }
           },
-          "500": { "$ref": "#/components/responses/ErroInterno" }
+          "500": {
+            "$ref": "#/components/responses/ErroInterno"
+          }
         }
       }
     },
     "/api/produtor/ofertas": {
       "post": {
-        "tags": ["Produtor"],
+        "tags": [
+          "Produtor"
+        ],
         "summary": "Registrar oferta em uma demanda",
         "description": "O produtor oferta uma quantidade de produto para atender uma demanda aberta do mercado. Se a oferta completar a demanda, ela é fechada automaticamente com status `CONCLUIDA`.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/OfertaInput" },
+              "schema": {
+                "$ref": "#/components/schemas/OfertaInput"
+              },
               "example": {
                 "demandaId": "clxyz123",
                 "quantidade": 50,
@@ -375,8 +541,12 @@
             "description": "Oferta registrada com sucesso",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/MensagemSucesso" },
-                "example": { "message": "Sua oferta foi registrada com sucesso!" }
+                "schema": {
+                  "$ref": "#/components/schemas/MensagemSucesso"
+                },
+                "example": {
+                  "message": "Sua oferta foi registrada com sucesso!"
+                }
               }
             }
           },
@@ -384,11 +554,25 @@
             "description": "Dados incompletos, demanda já concluída ou quantidade excedida",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Erro" },
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
                 "examples": {
-                  "incompleto": { "value": { "error": "Dados incompletos" } },
-                  "concluida": { "value": { "error": "Este pedido já foi totalmente atendido." } },
-                  "excedido": { "value": { "error": "O mercado só precisa de mais 30 Kg deste item." } }
+                  "incompleto": {
+                    "value": {
+                      "error": "Dados incompletos"
+                    }
+                  },
+                  "concluida": {
+                    "value": {
+                      "error": "Este pedido já foi totalmente atendido."
+                    }
+                  },
+                  "excedido": {
+                    "value": {
+                      "error": "O mercado só precisa de mais 30 Kg deste item."
+                    }
+                  }
                 }
               }
             }
@@ -397,18 +581,26 @@
             "description": "Demanda não encontrada",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Erro" },
-                "example": { "error": "Demanda não encontrada" }
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "error": "Demanda não encontrada"
+                }
               }
             }
           },
-          "500": { "$ref": "#/components/responses/ErroInterno" }
+          "500": {
+            "$ref": "#/components/responses/ErroInterno"
+          }
         }
       }
     },
     "/api/mercado/demandas": {
       "get": {
-        "tags": ["Mercado"],
+        "tags": [
+          "Mercado"
+        ],
         "summary": "Listar todas as demandas",
         "description": "Retorna todas as demandas cadastradas, incluindo as ofertas vinculadas a cada uma. Ordenadas da mais recente para a mais antiga.",
         "responses": {
@@ -418,28 +610,46 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/DemandaComOfertas" }
+                  "items": {
+                    "$ref": "#/components/schemas/DemandaComOfertas"
+                  }
                 }
               }
             }
           },
-          "500": { "$ref": "#/components/responses/ErroInterno" }
+          "500": {
+            "$ref": "#/components/responses/ErroInterno"
+          }
         }
       },
       "post": {
-        "tags": ["Mercado"],
+        "tags": [
+          "Mercado"
+        ],
         "summary": "Disparar novas demandas (pedido do mercado)",
         "description": "Cria uma ou mais demandas a partir do carrinho do mercado. Cada item do carrinho vira uma demanda independente com status `ABERTA`.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/DemandaInput" },
+              "schema": {
+                "$ref": "#/components/schemas/DemandaInput"
+              },
               "example": {
                 "emailMercado": "mercado@email.com",
                 "carrinho": [
-                  { "nome": "Tomate", "qtd": 100, "unidade": "Kg", "precoEstimado": 7.5 },
-                  { "nome": "Alface", "qtd": 50, "unidade": "Kg", "precoEstimado": 12.0 }
+                  {
+                    "nome": "Tomate",
+                    "qtd": 100,
+                    "unidade": "Kg",
+                    "precoEstimado": 7.5
+                  },
+                  {
+                    "nome": "Alface",
+                    "qtd": 50,
+                    "unidade": "Kg",
+                    "precoEstimado": 12.0
+                  }
                 ]
               }
             }
@@ -450,8 +660,12 @@
             "description": "Demandas disparadas com sucesso",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/MensagemSucesso" },
-                "example": { "message": "Demandas disparadas com sucesso!" }
+                "schema": {
+                  "$ref": "#/components/schemas/MensagemSucesso"
+                },
+                "example": {
+                  "message": "Demandas disparadas com sucesso!"
+                }
               }
             }
           },
@@ -459,18 +673,26 @@
             "description": "Dados inválidos ou carrinho vazio",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Erro" },
-                "example": { "error": "Dados inválidos ou carrinho vazio" }
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "error": "Dados inválidos ou carrinho vazio"
+                }
               }
             }
           },
-          "500": { "$ref": "#/components/responses/ErroInterno" }
+          "500": {
+            "$ref": "#/components/responses/ErroInterno"
+          }
         }
       }
     },
     "/api/mercado/perfil": {
       "get": {
-        "tags": ["Mercado"],
+        "tags": [
+          "Mercado"
+        ],
         "summary": "Buscar perfil do mercado",
         "description": "Retorna os dados do mercado (cliente) pelo e-mail.",
         "parameters": [
@@ -478,7 +700,10 @@
             "name": "email",
             "in": "query",
             "required": true,
-            "schema": { "type": "string", "format": "email" },
+            "schema": {
+              "type": "string",
+              "format": "email"
+            },
             "example": "mercado@email.com"
           }
         ],
@@ -487,7 +712,9 @@
             "description": "Dados do mercado",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Cliente" }
+                "schema": {
+                  "$ref": "#/components/schemas/Cliente"
+                }
               }
             }
           },
@@ -495,8 +722,12 @@
             "description": "E-mail não fornecido",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Erro" },
-                "example": { "error": "E-mail não fornecido" }
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "error": "E-mail não fornecido"
+                }
               }
             }
           },
@@ -504,26 +735,39 @@
             "description": "Mercado não encontrado",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Erro" },
-                "example": { "error": "Mercado não encontrado" }
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "error": "Mercado não encontrado"
+                }
               }
             }
           },
-          "500": { "$ref": "#/components/responses/ErroInterno" }
+          "500": {
+            "$ref": "#/components/responses/ErroInterno"
+          }
         }
       }
     },
     "/api/mercado/avaliar": {
       "patch": {
-        "tags": ["Mercado"],
+        "tags": [
+          "Mercado"
+        ],
         "summary": "Avaliar entrega de uma oferta",
         "description": "O mercado confirma o recebimento de uma entrega e registra uma nota de 1 a 5. A oferta passa para o status `ENTREGUE`.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/AvaliacaoInput" },
-              "example": { "ofertaId": "clxyz456", "nota": 5 }
+              "schema": {
+                "$ref": "#/components/schemas/AvaliacaoInput"
+              },
+              "example": {
+                "ofertaId": "clxyz456",
+                "nota": 5
+              }
             }
           }
         },
@@ -532,8 +776,12 @@
             "description": "Avaliação registrada com sucesso",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/MensagemSucesso" },
-                "example": { "message": "Recebimento e avaliação registrados com sucesso!" }
+                "schema": {
+                  "$ref": "#/components/schemas/MensagemSucesso"
+                },
+                "example": {
+                  "message": "Recebimento e avaliação registrados com sucesso!"
+                }
               }
             }
           },
@@ -541,18 +789,26 @@
             "description": "Dados incompletos para avaliação",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Erro" },
-                "example": { "error": "Dados incompletos para avaliação" }
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "error": "Dados incompletos para avaliação"
+                }
               }
             }
           },
-          "500": { "$ref": "#/components/responses/ErroInterno" }
+          "500": {
+            "$ref": "#/components/responses/ErroInterno"
+          }
         }
       }
     },
     "/api/produtos": {
       "get": {
-        "tags": ["Produtos"],
+        "tags": [
+          "Produtos"
+        ],
         "summary": "Listar catálogo de produtos",
         "description": "Retorna a lista fixa de produtos disponíveis na plataforma (frutas, verduras e legumes), com preço estimado e unidade padrão.",
         "responses": {
@@ -562,11 +818,27 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/Produto" }
+                  "items": {
+                    "$ref": "#/components/schemas/Produto"
+                  }
                 },
                 "example": [
-                  { "cdProduto": 1, "nome": "Maçã Gala", "icone": "🍎", "unidadePadrao": "Kg", "categoria": "Frutas", "preco": 8.5 },
-                  { "cdProduto": 2, "nome": "Laranja Pera", "icone": "🍊", "unidadePadrao": "Kg", "categoria": "Frutas", "preco": 4.2 }
+                  {
+                    "cdProduto": 1,
+                    "nome": "Maçã Gala",
+                    "icone": "🍎",
+                    "unidadePadrao": "Kg",
+                    "categoria": "Frutas",
+                    "preco": 8.5
+                  },
+                  {
+                    "cdProduto": 2,
+                    "nome": "Laranja Pera",
+                    "icone": "🍊",
+                    "unidadePadrao": "Kg",
+                    "categoria": "Frutas",
+                    "preco": 4.2
+                  }
                 ]
               }
             }
@@ -576,7 +848,9 @@
     },
     "/api/admin/usuarios": {
       "get": {
-        "tags": ["Admin"],
+        "tags": [
+          "Admin"
+        ],
         "summary": "Listar todos os usuários",
         "description": "Retorna todos os produtores e mercados cadastrados, ordenados por nome. Cada item inclui o campo `tipo` indicando se é `produtor` ou `mercado`.",
         "responses": {
@@ -586,23 +860,31 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/UsuarioAdmin" }
+                  "items": {
+                    "$ref": "#/components/schemas/UsuarioAdmin"
+                  }
                 }
               }
             }
           },
-          "500": { "$ref": "#/components/responses/ErroInterno" }
+          "500": {
+            "$ref": "#/components/responses/ErroInterno"
+          }
         }
       },
       "put": {
-        "tags": ["Admin"],
+        "tags": [
+          "Admin"
+        ],
         "summary": "Atualizar status de um usuário",
         "description": "Aprova, rejeita, suspende ou reativa um produtor ou mercado. Atualiza tanto a tabela do perfil quanto a tabela de acesso. Em caso de aprovação ou rejeição, dispara e-mail via microsserviço.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/AtualizarStatusInput" },
+              "schema": {
+                "$ref": "#/components/schemas/AtualizarStatusInput"
+              },
               "example": {
                 "email": "fazenda@email.com",
                 "tipo": "produtor",
@@ -616,8 +898,12 @@
             "description": "Status atualizado com sucesso",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/MensagemSucesso" },
-                "example": { "message": "Status alterado para APROVADO" }
+                "schema": {
+                  "$ref": "#/components/schemas/MensagemSucesso"
+                },
+                "example": {
+                  "message": "Status alterado para APROVADO"
+                }
               }
             }
           },
@@ -625,16 +911,24 @@
             "description": "Dados inválidos",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Erro" },
-                "example": { "error": "Dados inválidos" }
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "error": "Dados inválidos"
+                }
               }
             }
           },
-          "500": { "$ref": "#/components/responses/ErroInterno" }
+          "500": {
+            "$ref": "#/components/responses/ErroInterno"
+          }
         }
       },
       "delete": {
-        "tags": ["Admin"],
+        "tags": [
+          "Admin"
+        ],
         "summary": "Excluir usuário permanentemente",
         "description": "Remove o perfil e o acesso de login do usuário. Pode falhar caso existam pedidos vinculados.",
         "parameters": [
@@ -642,14 +936,23 @@
             "name": "email",
             "in": "query",
             "required": true,
-            "schema": { "type": "string", "format": "email" },
+            "schema": {
+              "type": "string",
+              "format": "email"
+            },
             "example": "fazenda@email.com"
           },
           {
             "name": "tipo",
             "in": "query",
             "required": true,
-            "schema": { "type": "string", "enum": ["produtor", "mercado"] },
+            "schema": {
+              "type": "string",
+              "enum": [
+                "produtor",
+                "mercado"
+              ]
+            },
             "example": "produtor"
           }
         ],
@@ -658,8 +961,12 @@
             "description": "Usuário excluído com sucesso",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/MensagemSucesso" },
-                "example": { "message": "Usuário excluído com sucesso" }
+                "schema": {
+                  "$ref": "#/components/schemas/MensagemSucesso"
+                },
+                "example": {
+                  "message": "Usuário excluído com sucesso"
+                }
               }
             }
           },
@@ -667,8 +974,12 @@
             "description": "Dados inválidos",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Erro" },
-                "example": { "error": "Dados inválidos" }
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "error": "Dados inválidos"
+                }
               }
             }
           },
@@ -676,8 +987,12 @@
             "description": "Erro interno — pode haver pedidos vinculados",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Erro" },
-                "example": { "error": "Erro ao excluir. Pode haver pedidos vinculados." }
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "error": "Erro ao excluir. Pode haver pedidos vinculados."
+                }
               }
             }
           }
@@ -686,7 +1001,9 @@
     },
     "/api/setup-admin": {
       "get": {
-        "tags": ["Utilitários"],
+        "tags": [
+          "Utilitários"
+        ],
         "summary": "Criar Super Admin inicial",
         "description": "Cria o primeiro usuário administrador no banco de dados caso ainda não exista. **Use apenas na configuração inicial do ambiente.**",
         "responses": {
@@ -697,9 +1014,15 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": { "type": "string" },
-                    "login": { "type": "string" },
-                    "senha": { "type": "string" }
+                    "message": {
+                      "type": "string"
+                    },
+                    "login": {
+                      "type": "string"
+                    },
+                    "senha": {
+                      "type": "string"
+                    }
                   }
                 },
                 "examples": {
@@ -720,7 +1043,9 @@
               }
             }
           },
-          "500": { "$ref": "#/components/responses/ErroInterno" }
+          "500": {
+            "$ref": "#/components/responses/ErroInterno"
+          }
         }
       }
     }
@@ -730,141 +1055,368 @@
       "MensagemSucesso": {
         "type": "object",
         "properties": {
-          "message": { "type": "string" }
+          "message": {
+            "type": "string"
+          }
         }
       },
       "Erro": {
         "type": "object",
         "properties": {
-          "error": { "type": "string" }
+          "error": {
+            "type": "string"
+          }
         }
       },
       "CadastroInput": {
         "type": "object",
-        "required": ["tipoUsuario", "nome", "email", "senha"],
+        "required": [
+          "tipoUsuario",
+          "nome",
+          "email",
+          "senha"
+        ],
         "properties": {
-          "tipoUsuario": { "type": "string", "enum": ["produtor", "mercado"] },
-          "nome": { "type": "string" },
-          "email": { "type": "string", "format": "email" },
-          "senha": { "type": "string", "minLength": 6 }
+          "tipoUsuario": {
+            "type": "string",
+            "enum": [
+              "produtor",
+              "mercado"
+            ]
+          },
+          "nome": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "senha": {
+            "type": "string",
+            "minLength": 6
+          }
         }
       },
       "LoginInput": {
         "type": "object",
-        "required": ["email", "senha"],
+        "required": [
+          "email",
+          "senha"
+        ],
         "properties": {
-          "email": { "type": "string", "format": "email" },
-          "senha": { "type": "string" }
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "senha": {
+            "type": "string"
+          }
         }
       },
       "LoginResponse": {
         "type": "object",
         "properties": {
-          "message": { "type": "string" },
-          "tipoUser": { "type": "string", "enum": ["produtor", "mercado", "admin"] }
+          "message": {
+            "type": "string"
+          },
+          "tipoUser": {
+            "type": "string",
+            "enum": [
+              "produtor",
+              "mercado",
+              "admin"
+            ]
+          }
         }
       },
       "CompletarPerfilInput": {
         "type": "object",
-        "required": ["email", "tipoUsuario", "documento", "cep"],
+        "required": [
+          "email",
+          "tipoUsuario",
+          "documento",
+          "cep"
+        ],
         "properties": {
-          "email": { "type": "string", "format": "email" },
-          "tipoUsuario": { "type": "string", "enum": ["produtor", "mercado"] },
-          "tipoDoc": { "type": "string", "description": "Tipo do documento (CPF, CNPJ, etc.)" },
-          "documento": { "type": "string" },
-          "cep": { "type": "string" },
-          "rua": { "type": "string" },
-          "numero": { "type": "string" },
-          "bairro": { "type": "string" },
-          "cidade": { "type": "string" },
-          "estado": { "type": "string" },
-          "file": { "type": "string", "format": "binary", "description": "Arquivo do documento comprobatório" }
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "tipoUsuario": {
+            "type": "string",
+            "enum": [
+              "produtor",
+              "mercado"
+            ]
+          },
+          "tipoDoc": {
+            "type": "string",
+            "description": "Tipo do documento (CPF, CNPJ, etc.)"
+          },
+          "documento": {
+            "type": "string"
+          },
+          "cep": {
+            "type": "string"
+          },
+          "rua": {
+            "type": "string"
+          },
+          "numero": {
+            "type": "string"
+          },
+          "bairro": {
+            "type": "string"
+          },
+          "cidade": {
+            "type": "string"
+          },
+          "estado": {
+            "type": "string"
+          },
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "description": "Arquivo do documento comprobatório"
+          }
         }
       },
       "AtualizarPerfilInput": {
         "type": "object",
-        "required": ["email", "tipoUser"],
+        "required": [
+          "email",
+          "tipoUser"
+        ],
         "properties": {
-          "email": { "type": "string", "format": "email" },
-          "tipoUser": { "type": "string", "enum": ["produtor", "mercado"] },
-          "nomeFantasia": { "type": "string" },
-          "telefone": { "type": "string" },
-          "cep": { "type": "string" },
-          "rua": { "type": "string" },
-          "numero": { "type": "string" },
-          "bairro": { "type": "string" },
-          "cidade": { "type": "string" },
-          "estado": { "type": "string" },
-          "novaSenha": { "type": "string", "description": "Deixar vazio para não alterar a senha" }
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "tipoUser": {
+            "type": "string",
+            "enum": [
+              "produtor",
+              "mercado"
+            ]
+          },
+          "nomeFantasia": {
+            "type": "string"
+          },
+          "telefone": {
+            "type": "string"
+          },
+          "cep": {
+            "type": "string"
+          },
+          "rua": {
+            "type": "string"
+          },
+          "numero": {
+            "type": "string"
+          },
+          "bairro": {
+            "type": "string"
+          },
+          "cidade": {
+            "type": "string"
+          },
+          "estado": {
+            "type": "string"
+          },
+          "novaSenha": {
+            "type": "string",
+            "description": "Deixar vazio para não alterar a senha"
+          }
         }
       },
       "UsuarioCompleto": {
         "type": "object",
         "properties": {
-          "email": { "type": "string" },
-          "nomeFantasia": { "type": "string" },
-          "telefone": { "type": "string" },
-          "cep": { "type": "string" },
-          "rua": { "type": "string" },
-          "numero": { "type": "string" },
-          "bairro": { "type": "string" },
-          "cidade": { "type": "string" },
-          "estado": { "type": "string" },
-          "status": { "type": "string", "enum": ["EM_ANALISE", "APROVADO", "REJEITADO", "SUSPENSO"] },
-          "tipoUser": { "type": "string", "enum": ["produtor", "mercado", "admin"] },
-          "urlDocumento": { "type": "string", "nullable": true }
+          "email": {
+            "type": "string"
+          },
+          "nomeFantasia": {
+            "type": "string"
+          },
+          "telefone": {
+            "type": "string"
+          },
+          "cep": {
+            "type": "string"
+          },
+          "rua": {
+            "type": "string"
+          },
+          "numero": {
+            "type": "string"
+          },
+          "bairro": {
+            "type": "string"
+          },
+          "cidade": {
+            "type": "string"
+          },
+          "estado": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "EM_ANALISE",
+              "APROVADO",
+              "REJEITADO",
+              "SUSPENSO"
+            ]
+          },
+          "tipoUser": {
+            "type": "string",
+            "enum": [
+              "produtor",
+              "mercado",
+              "admin"
+            ]
+          },
+          "urlDocumento": {
+            "type": "string",
+            "nullable": true
+          }
         }
       },
       "Vendedor": {
         "type": "object",
         "properties": {
-          "email": { "type": "string" },
-          "nomeFantasia": { "type": "string" },
-          "status": { "type": "string", "enum": ["EM_ANALISE", "APROVADO", "REJEITADO", "A_ANALISE", "SUSPENSO"] },
-          "urlDocumento": { "type": "string", "nullable": true },
-          "telefone": { "type": "string", "nullable": true },
-          "cep": { "type": "string", "nullable": true },
-          "cidade": { "type": "string", "nullable": true },
-          "estado": { "type": "string", "nullable": true }
+          "email": {
+            "type": "string"
+          },
+          "nomeFantasia": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "EM_ANALISE",
+              "APROVADO",
+              "REJEITADO",
+              "A_ANALISE",
+              "SUSPENSO"
+            ]
+          },
+          "urlDocumento": {
+            "type": "string",
+            "nullable": true
+          },
+          "telefone": {
+            "type": "string",
+            "nullable": true
+          },
+          "cep": {
+            "type": "string",
+            "nullable": true
+          },
+          "cidade": {
+            "type": "string",
+            "nullable": true
+          },
+          "estado": {
+            "type": "string",
+            "nullable": true
+          }
         }
       },
       "Cliente": {
         "type": "object",
         "properties": {
-          "email": { "type": "string" },
-          "nomeFantasia": { "type": "string" },
-          "status": { "type": "string", "enum": ["EM_ANALISE", "APROVADO", "REJEITADO", "SUSPENSO"] },
-          "urlDocumento": { "type": "string", "nullable": true },
-          "telefone": { "type": "string", "nullable": true },
-          "cep": { "type": "string", "nullable": true },
-          "cidade": { "type": "string", "nullable": true },
-          "estado": { "type": "string", "nullable": true }
+          "email": {
+            "type": "string"
+          },
+          "nomeFantasia": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "EM_ANALISE",
+              "APROVADO",
+              "REJEITADO",
+              "SUSPENSO"
+            ]
+          },
+          "urlDocumento": {
+            "type": "string",
+            "nullable": true
+          },
+          "telefone": {
+            "type": "string",
+            "nullable": true
+          },
+          "cep": {
+            "type": "string",
+            "nullable": true
+          },
+          "cidade": {
+            "type": "string",
+            "nullable": true
+          },
+          "estado": {
+            "type": "string",
+            "nullable": true
+          }
         }
       },
       "OfertaInput": {
         "type": "object",
-        "required": ["demandaId", "quantidade", "emailProdutor"],
+        "required": [
+          "demandaId",
+          "quantidade",
+          "emailProdutor"
+        ],
         "properties": {
-          "demandaId": { "type": "string", "description": "ID da demanda (gerado pelo banco)" },
-          "quantidade": { "type": "number" },
-          "emailProdutor": { "type": "string", "format": "email" }
+          "demandaId": {
+            "type": "string",
+            "description": "ID da demanda (gerado pelo banco)"
+          },
+          "quantidade": {
+            "type": "number"
+          },
+          "emailProdutor": {
+            "type": "string",
+            "format": "email"
+          }
         }
       },
       "DemandaInput": {
         "type": "object",
-        "required": ["emailMercado", "carrinho"],
+        "required": [
+          "emailMercado",
+          "carrinho"
+        ],
         "properties": {
-          "emailMercado": { "type": "string", "format": "email" },
+          "emailMercado": {
+            "type": "string",
+            "format": "email"
+          },
           "carrinho": {
             "type": "array",
             "items": {
               "type": "object",
-              "required": ["nome", "qtd"],
+              "required": [
+                "nome",
+                "qtd"
+              ],
               "properties": {
-                "nome": { "type": "string" },
-                "qtd": { "type": "number" },
-                "unidade": { "type": "string", "default": "Kg" },
-                "precoEstimado": { "type": "number" }
+                "nome": {
+                  "type": "string"
+                },
+                "qtd": {
+                  "type": "number"
+                },
+                "unidade": {
+                  "type": "string",
+                  "default": "Kg"
+                },
+                "precoEstimado": {
+                  "type": "number"
+                }
               }
             }
           }
@@ -873,67 +1425,180 @@
       "DemandaComOfertas": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "produto": { "type": "string" },
-          "quantidade": { "type": "number" },
-          "unidade": { "type": "string" },
-          "precoMedio": { "type": "number", "nullable": true },
-          "emailMercado": { "type": "string" },
-          "status": { "type": "string", "enum": ["ABERTA", "CONCLUIDA"] },
-          "criadoEm": { "type": "string", "format": "date-time" },
+          "id": {
+            "type": "string"
+          },
+          "produto": {
+            "type": "string"
+          },
+          "quantidade": {
+            "type": "number"
+          },
+          "unidade": {
+            "type": "string"
+          },
+          "precoMedio": {
+            "type": "number",
+            "nullable": true
+          },
+          "emailMercado": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ABERTA",
+              "CONCLUIDA"
+            ]
+          },
+          "criadoEm": {
+            "type": "string",
+            "format": "date-time"
+          },
           "ofertas": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/Oferta" }
+            "items": {
+              "$ref": "#/components/schemas/Oferta"
+            }
           }
         }
       },
       "Oferta": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "quantidade": { "type": "number" },
-          "emailProdutor": { "type": "string" },
-          "demandaId": { "type": "string" },
-          "statusEntrega": { "type": "string", "enum": ["PENDENTE", "ENTREGUE"], "nullable": true },
-          "nota": { "type": "integer", "minimum": 1, "maximum": 5, "nullable": true }
+          "id": {
+            "type": "string"
+          },
+          "quantidade": {
+            "type": "number"
+          },
+          "emailProdutor": {
+            "type": "string"
+          },
+          "demandaId": {
+            "type": "string"
+          },
+          "statusEntrega": {
+            "type": "string",
+            "enum": [
+              "PENDENTE",
+              "ENTREGUE"
+            ],
+            "nullable": true
+          },
+          "nota": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5,
+            "nullable": true
+          }
         }
       },
       "AvaliacaoInput": {
         "type": "object",
-        "required": ["ofertaId", "nota"],
+        "required": [
+          "ofertaId",
+          "nota"
+        ],
         "properties": {
-          "ofertaId": { "type": "string" },
-          "nota": { "type": "integer", "minimum": 1, "maximum": 5 }
+          "ofertaId": {
+            "type": "string"
+          },
+          "nota": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          }
         }
       },
       "Produto": {
         "type": "object",
         "properties": {
-          "cdProduto": { "type": "integer" },
-          "nome": { "type": "string" },
-          "icone": { "type": "string" },
-          "unidadePadrao": { "type": "string" },
-          "categoria": { "type": "string", "enum": ["Frutas", "Verduras", "Legumes"] },
-          "preco": { "type": "number" }
+          "cdProduto": {
+            "type": "integer"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "icone": {
+            "type": "string"
+          },
+          "unidadePadrao": {
+            "type": "string"
+          },
+          "categoria": {
+            "type": "string",
+            "enum": [
+              "Frutas",
+              "Verduras",
+              "Legumes"
+            ]
+          },
+          "preco": {
+            "type": "number"
+          }
         }
       },
       "UsuarioAdmin": {
         "type": "object",
         "properties": {
-          "email": { "type": "string" },
-          "nomeFantasia": { "type": "string" },
-          "status": { "type": "string", "enum": ["EM_ANALISE", "APROVADO", "REJEITADO", "SUSPENSO", "A_ANALISE"] },
-          "tipo": { "type": "string", "enum": ["produtor", "mercado"] },
-          "urlDocumento": { "type": "string", "nullable": true }
+          "email": {
+            "type": "string"
+          },
+          "nomeFantasia": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "EM_ANALISE",
+              "APROVADO",
+              "REJEITADO",
+              "SUSPENSO",
+              "A_ANALISE"
+            ]
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "produtor",
+              "mercado"
+            ]
+          },
+          "urlDocumento": {
+            "type": "string",
+            "nullable": true
+          }
         }
       },
       "AtualizarStatusInput": {
         "type": "object",
-        "required": ["email", "tipo", "novoStatus"],
+        "required": [
+          "email",
+          "tipo",
+          "novoStatus"
+        ],
         "properties": {
-          "email": { "type": "string", "format": "email" },
-          "tipo": { "type": "string", "enum": ["produtor", "mercado"] },
-          "novoStatus": { "type": "string", "enum": ["APROVADO", "REJEITADO", "SUSPENSO", "ATIVO"] }
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "produtor",
+              "mercado"
+            ]
+          },
+          "novoStatus": {
+            "type": "string",
+            "enum": [
+              "APROVADO",
+              "REJEITADO",
+              "SUSPENSO",
+              "ATIVO"
+            ]
+          }
         }
       }
     },
@@ -942,8 +1607,12 @@
         "description": "Erro interno no servidor",
         "content": {
           "application/json": {
-            "schema": { "$ref": "#/components/schemas/Erro" },
-            "example": { "error": "Erro interno no servidor" }
+            "schema": {
+              "$ref": "#/components/schemas/Erro"
+            },
+            "example": {
+              "error": "Erro interno no servidor"
+            }
           }
         }
       }

@@ -1,9 +1,0 @@
-# App-Principal
-DATABASE_URL="postgresql://neondb_owner:npg_CzeMLA3u4qJy@ep-withered-night-achnvmpx-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-
-# microserviço
-EMAIL_HOST="sandbox.smtp.mailtrap.io"
-EMAIL_PORT= 587 
-EMAIL_USER="c70fcdebb7f576"
-EMAIL_PASS="92799ce10d8a8c"
-PORT= 3001

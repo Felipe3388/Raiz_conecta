@@ -13,6 +13,8 @@
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.10.0",
     "formik": "^2.4.9",
+    "framer-motion": "^12.40.0",
+    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.8.0",
     "next": "16.2.3",
     "next-swagger-doc": "^0.4.1",
@@ -26,7 +28,8 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
-    "@types/node": "^20",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^20.19.41",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/swagger-ui-react": "^5.18.0",
@@ -35,6 +38,10 @@
     "eslint-config-next": "16.2.3",
     "prisma": "^6.19.3",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "prisma": {
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   }
 }

@@ -1,132 +1,124 @@
-require('dotenv').config({ path: '../../.env' });
+require('dotenv').config();
 const express = require('express');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
-
-// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Configuração do Mailtrap (O "Correio" do nosso sistema)
+// Lê os templates HTML uma vez ao iniciar
+const templates = {
+    'boas-vindas': fs.readFileSync(path.join(__dirname, 'templates/boas-vindas.html'), 'utf8'),
+    'aprovacao':   fs.readFileSync(path.join(__dirname, 'templates/aprovacao.html'),   'utf8'),
+    'rejeicao':    fs.readFileSync(path.join(__dirname, 'templates/rejeicao.html'),    'utf8'),
+    'sugestao':    fs.readFileSync(path.join(__dirname, 'templates/sugestao.html'),    'utf8'),
+};
+
+function preencherTemplate(template, variaveis) {
+    return Object.entries(variaveis).reduce(
+        (html, [chave, valor]) => html.replaceAll(`{{${chave}}}`, valor || ''),
+        template
+    );
+}
+
 const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || "sandbox.smtp.mailtrap.io",
-    port: process.env.EMAIL_PORT || 587,
+    host: process.env.EMAIL_HOST || 'sandbox.smtp.mailtrap.io',
+    port: Number(process.env.EMAIL_PORT) || 587,
     auth: {
-        user: process.env.EMAIL_USER, // Pega do arquivo .env do microsserviço
-        pass: process.env.EMAIL_PASS  // Pega do arquivo .env do microsserviço
-    }
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
 });
 
-// ROTA 1: Boas-vindas (Ao criar a conta)
+// ── Health check ──────────────────────────────────────────────────────
+app.get('/health', (req, res) => res.json({ status: 'ok', service: 'microservico-email' }));
 
+// ── ROTA 1: Boas-vindas ───────────────────────────────────────────────
 app.post('/api/email/boas-vindas', async (req, res) => {
-    const { email, nome } = req.body;
+    const { email, nome, tipoUsuario } = req.body;
     try {
+        const html = preencherTemplate(templates['boas-vindas'], {
+            nome: nome || 'Usuário',
+            tipo: tipoUsuario === 'produtor' ? 'Produtor Rural' : 'Mercado',
+        });
         await transporter.sendMail({
             from: '"Equipe Raiz Conecta" <nao-responda@raizconecta.com.br>',
             to: email,
-            subject: "🌱 Bem-vindo ao Raiz Conecta!",
-            html: `
-        <h2>Olá, ${nome || 'Produtor'}!</h2>
-        <p>Que alegria ter você com a gente na plataforma <b>Raiz Conecta</b>.</p>
-        <p>Você acabou de dar o primeiro passo (Nível Semente). Para começar a vender, acesse o sistema e envie a foto do seu documento de identificação.</p>
-        <p>Estamos ansiosos para ver seus produtos!</p>
-      `
+            subject: '🌱 Bem-vindo ao Raiz Conecta!',
+            html,
         });
-        console.log(`[E-mail Enviado] Boas-vindas para: ${email}`);
-        res.status(200).json({ message: "E-mail enviado com sucesso" });
+        console.log(`[E-mail] Boas-vindas → ${email}`);
+        res.status(200).json({ message: 'E-mail enviado com sucesso.' });
     } catch (error) {
-        console.error("Erro ao enviar e-mail:", error);
-        res.status(500).json({ error: "Erro ao enviar e-mail" });
+        console.error('[E-mail] Erro boas-vindas:', error.message);
+        res.status(500).json({ error: 'Erro ao enviar e-mail.' });
     }
 });
 
-// 📧 ROTA 2: Aprovação (Nível Raiz)
-
+// ── ROTA 2: Aprovação ─────────────────────────────────────────────────
 app.post('/api/email/aprovacao', async (req, res) => {
     const { email } = req.body;
     try {
+        const html = preencherTemplate(templates['aprovacao'], { email });
         await transporter.sendMail({
             from: '"Equipe Raiz Conecta" <nao-responda@raizconecta.com.br>',
             to: email,
-            subject: "🎉 Aprovado! Você agora é um Produtor Raiz!",
-            html: `
-        <div style="font-family: Arial, sans-serif; color: #333;">
-          <h2 style="color: #16a34a;">Parabéns! Sua documentação foi aprovada. 🌳</h2>
-          <p>Temos o prazer de informar que você atingiu o <b>Nível Raiz</b> na plataforma Raiz Conecta.</p>
-          <p>Seu acesso total foi liberado. A partir de agora, você já pode acessar seu painel e começar a cadastrar seus produtos para venda.</p>
-          <br/>
-          <p>Boas vendas!</p>
-        </div>
-      `
+            subject: '🎉 Aprovado! Seu acesso foi liberado.',
+            html,
         });
-        console.log(`[E-mail Enviado] Aprovação para: ${email}`);
-        res.status(200).json({ message: "E-mail de aprovação enviado" });
+        console.log(`[E-mail] Aprovação → ${email}`);
+        res.status(200).json({ message: 'E-mail de aprovação enviado.' });
     } catch (error) {
-        console.error("Erro ao enviar aprovação:", error);
-        res.status(500).json({ error: "Erro ao enviar e-mail" });
+        console.error('[E-mail] Erro aprovação:', error.message);
+        res.status(500).json({ error: 'Erro ao enviar e-mail.' });
     }
 });
 
-// ROTA 3: Rejeição (Documento Inválido)
-
+// ── ROTA 3: Rejeição ──────────────────────────────────────────────────
 app.post('/api/email/rejeicao', async (req, res) => {
     const { email } = req.body;
     try {
+        const html = preencherTemplate(templates['rejeicao'], { email });
         await transporter.sendMail({
             from: '"Equipe Raiz Conecta" <nao-responda@raizconecta.com.br>',
             to: email,
-            subject: "⚠️ Atualização sobre sua documentação",
-            html: `
-        <div style="font-family: Arial, sans-serif; color: #333;">
-          <h2 style="color: #dc2626;">Houve um problema com seu documento.</h2>
-          <p>Infelizmente nossa equipe não conseguiu validar a foto do documento enviada em seu cadastro.</p>
-          <p>Isso geralmente ocorre por imagens embaçadas, cortadas ou envio do documento errado.</p>
-          <p><b>Não se preocupe!</b> Acesse seu painel na plataforma Raiz Conecta e anexe uma nova foto nítida para tentarmos novamente.</p>
-        </div>
-      `
+            subject: '⚠️ Atualização sobre sua documentação',
+            html,
         });
-        console.log(`[E-mail Enviado] Rejeição para: ${email}`);
-        res.status(200).json({ message: "E-mail de rejeição enviado" });
+        console.log(`[E-mail] Rejeição → ${email}`);
+        res.status(200).json({ message: 'E-mail de rejeição enviado.' });
     } catch (error) {
-        console.error("Erro ao enviar rejeição:", error);
-        res.status(500).json({ error: "Erro ao enviar e-mail" });
+        console.error('[E-mail] Erro rejeição:', error.message);
+        res.status(500).json({ error: 'Erro ao enviar e-mail.' });
     }
 });
 
-// 💡 ROTA 4: Nova Sugestão de Produto
-
+// ── ROTA 4: Sugestão de produto ───────────────────────────────────────
 app.post('/api/email/sugestao', async (req, res) => {
     const { emailProdutor, nomeProduto, descricao } = req.body;
+    const emailAdmin = process.env.EMAIL_ADMIN || 'admin@raizconecta.com.br';
     try {
+        const html = preencherTemplate(templates['sugestao'], {
+            emailProdutor,
+            nomeProduto,
+            descricao: descricao || 'Nenhuma descrição fornecida.',
+        });
         await transporter.sendMail({
             from: '"Equipe Raiz Conecta" <nao-responda@raizconecta.com.br>',
-            to: "admin@raizconecta.com.br", // Aqui seria o e-mail real do administrador
-            subject: "💡 Nova Sugestão de Produto no Raiz Conecta!",
-            html: `
-        <div style="font-family: Arial, sans-serif; color: #333;">
-          <h2 style="color: #d97706;">Nova Sugestão Recebida!</h2>
-          <p>O produtor <b>${emailProdutor}</b> sugeriu a adição de um novo produto ao catálogo oficial:</p>
-          <div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #d97706;">
-              <p><b>Produto:</b> ${nomeProduto}</p>
-              <p><b>Descrição:</b> ${descricao || 'Nenhuma descrição fornecida.'}</p>
-          </div>
-          <p>Acesse o painel de Administração para avaliar a imagem enviada e cadastrar este produto no sistema.</p>
-        </div>
-      `
+            to: emailAdmin,
+            subject: `💡 Nova Sugestão: ${nomeProduto}`,
+            html,
         });
-        console.log(`[E-mail Enviado] Sugestão de produto: ${nomeProduto}`);
-        res.status(200).json({ message: "E-mail de sugestão enviado" });
+        console.log(`[E-mail] Sugestão "${nomeProduto}" → ${emailAdmin}`);
+        res.status(200).json({ message: 'E-mail de sugestão enviado.' });
     } catch (error) {
-        console.error("Erro ao enviar sugestão:", error);
-        res.status(500).json({ error: "Erro ao enviar e-mail" });
+        console.error('[E-mail] Erro sugestão:', error.message);
+        res.status(500).json({ error: 'Erro ao enviar e-mail.' });
     }
 });
-// INICIAR O SERVIDOR
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-    console.log(`🚀 Microsserviço de E-mail rodando na porta ${PORT}`);
-});
+app.listen(PORT, () => console.log(`📧 Microsserviço de e-mail rodando na porta ${PORT}`));

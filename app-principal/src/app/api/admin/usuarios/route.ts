@@ -1,17 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// ROTA GET: Busca TODOS os usuários (produtores e mercados) para exibir na tela de administração
-/**
- * @swagger
- *  /api/admin/usuarios:
- *   get:
- *    summary: Lista todos os usuários
- *   responses:
- *    200:
- *     description: OK
- */
+// GET: Busca TODOS os usuários (produtores, mercados e admins)
 export async function GET() {
   try {
     const produtores = await prisma.vendedor.findMany({
@@ -20,18 +10,24 @@ export async function GET() {
     const mercados = await prisma.cliente.findMany({
       orderBy: { nomeFantasia: "asc" },
     });
+    const admins = await prisma.acesso.findMany({
+      where: { tipoUser: "admin" },
+    });
 
     const todosUsuarios = [
       ...produtores.map((p) => ({ ...p, tipo: "produtor" })),
-      ...mercados.map((m) => ({ ...m, tipo: "mercado" })),
+      ...mercados.map((m)   => ({ ...m, tipo: "mercado" })),
+      ...admins.map((a)     => ({
+        email: a.login,
+        nomeFantasia: "Administrador",
+        status: a.status,
+        tipo: "admin",
+      })),
     ];
 
     return NextResponse.json(todosUsuarios);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Erro ao buscar usuários" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Erro ao buscar usuários" }, { status: 500 });
   }
 }
 
@@ -44,7 +40,6 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
     }
 
-    // Atualiza a Tabela Principal (Produtor ou Mercado)
     if (tipo === "produtor") {
       await prisma.vendedor.update({
         where: { email },
@@ -60,38 +55,39 @@ export async function PUT(req: Request) {
       });
     }
 
-    // Atualiza a Tabela de ACESSO (Para o login liberar ou bloquear)
     await prisma.acesso.updateMany({
       where: { login: email },
       data: { status: novoStatus },
     });
 
-    // Integração com o microsserviço de e-mail (Apenas para Aprovação/Rejeição inicial)
-    if (novoStatus === "APROVADO") {
-      try {
-        await fetch("http://localhost:3001/api/email/aprovacao", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, status: "aprovado" }),
-        });
-      } catch (e) {
-        console.log("Aviso: Microsserviço de e-mail offline.");
-      }
-    } else if (novoStatus === "REJEITADO") {
-      try {
-        await fetch("http://localhost:3001/api/email/rejeicao", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, status: "rejeitado" }),
-        });
-      } catch (e) {
-        console.log("Aviso: Microsserviço de e-mail offline.");
+    // Microsserviço de e-mail — só chama se a URL estiver configurada
+    if (process.env.MICROSERVICE_URL) {
+      if (novoStatus === "APROVADO") {
+        try {
+          await fetch(`${process.env.MICROSERVICE_URL}/api/email/aprovacao`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, status: "aprovado" }),
+          });
+        } catch (e) {
+          console.log("Aviso: Microsserviço de e-mail indisponível.");
+        }
+      } else if (novoStatus === "REJEITADO") {
+        try {
+          await fetch(`${process.env.MICROSERVICE_URL}/api/email/rejeicao`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, status: "rejeitado" }),
+          });
+        } catch (e) {
+          console.log("Aviso: Microsserviço de e-mail indisponível.");
+        }
       }
     }
 
     return NextResponse.json(
       { message: `Status alterado para ${novoStatus}` },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (error) {
     console.error("Erro ao atualizar usuário:", error);
@@ -99,33 +95,29 @@ export async function PUT(req: Request) {
   }
 }
 
-// ROTA DELETE: Exclui o usuário permanentemente
+// DELETE: Exclui o usuário permanentemente
 export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const email = searchParams.get("email");
-    const tipo = searchParams.get("tipo");
+    const tipo  = searchParams.get("tipo");
 
     if (!email || !tipo)
       return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
 
     if (tipo === "produtor") {
       await prisma.vendedor.delete({ where: { email } });
-    } else {
+    } else if (tipo === "mercado") {
       await prisma.cliente.delete({ where: { email } });
     }
 
-    // Apaga também o login dele
     await prisma.acesso.deleteMany({ where: { login: email } });
 
-    return NextResponse.json(
-      { message: "Usuário excluído com sucesso" },
-      { status: 200 },
-    );
+    return NextResponse.json({ message: "Usuário excluído com sucesso" }, { status: 200 });
   } catch (error) {
     return NextResponse.json(
       { error: "Erro ao excluir. Pode haver pedidos vinculados." },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
