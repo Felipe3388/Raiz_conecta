@@ -55,6 +55,5 @@ export const config = {
     "/perfil/:path*",
     "/api-docs/:path*",
     "/checkout/:path*",
-    "/completar-perfil/:path*",
   ],
 };
