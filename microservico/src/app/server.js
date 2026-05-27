@@ -45,7 +45,7 @@ app.post('/api/email/boas-vindas', async (req, res) => {
             tipo: tipoUsuario === 'produtor' ? 'Produtor Rural' : 'Mercado',
         });
         await transporter.sendMail({
-            from: '"Equipe Raiz Conecta" <estoque@visioshop.com.br>',
+            from: '"Equipe Raiz Conecta"',
             to: email,
             subject: '🌱 Bem-vindo ao Raiz Conecta!',
             html,
@@ -107,7 +107,7 @@ app.post('/api/email/sugestao', async (req, res) => {
             descricao: descricao || 'Nenhuma descrição fornecida.',
         });
         await transporter.sendMail({
-            from: '"Equipe Raiz Conecta" <nao-responda@raizconecta.com.br>',
+            from: '"Equipe Raiz Conecta" <estoque@visioshop.com.br>',
             to: emailAdmin,
             subject: `💡 Nova Sugestão: ${nomeProduto}`,
             html,
