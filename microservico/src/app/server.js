@@ -45,7 +45,7 @@ app.post('/api/email/boas-vindas', async (req, res) => {
             tipo: tipoUsuario === 'produtor' ? 'Produtor Rural' : 'Mercado',
         });
         await transporter.sendMail({
-            from: '"Equipe Raiz Conecta" <nao-responda@raizconecta.com.br>',
+            from: '"Equipe Raiz Conecta" <estoque@visioshop.com.br>',
             to: email,
             subject: '🌱 Bem-vindo ao Raiz Conecta!',
             html,
@@ -64,7 +64,7 @@ app.post('/api/email/aprovacao', async (req, res) => {
     try {
         const html = preencherTemplate(templates['aprovacao'], { email });
         await transporter.sendMail({
-            from: '"Equipe Raiz Conecta" <nao-responda@raizconecta.com.br>',
+            from: '"Equipe Raiz Conecta" <estoque@visioshop.com.br>',
             to: email,
             subject: '🎉 Aprovado! Seu acesso foi liberado.',
             html,
@@ -83,7 +83,7 @@ app.post('/api/email/rejeicao', async (req, res) => {
     try {
         const html = preencherTemplate(templates['rejeicao'], { email });
         await transporter.sendMail({
-            from: '"Equipe Raiz Conecta" <nao-responda@raizconecta.com.br>',
+            from: '"Equipe Raiz Conecta" <estoque@visioshop.com.br>',
             to: email,
             subject: '⚠️ Atualização sobre sua documentação',
             html,
@@ -99,7 +99,7 @@ app.post('/api/email/rejeicao', async (req, res) => {
 // ── ROTA 4: Sugestão de produto ───────────────────────────────────────
 app.post('/api/email/sugestao', async (req, res) => {
     const { emailProdutor, nomeProduto, descricao } = req.body;
-    const emailAdmin = process.env.EMAIL_ADMIN || 'admin@raizconecta.com.br';
+    const emailAdmin = process.env.EMAIL_ADMIN || 'estoque@visioshop.com.br';
     try {
         const html = preencherTemplate(templates['sugestao'], {
             emailProdutor,
