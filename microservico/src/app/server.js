@@ -45,7 +45,7 @@ app.post('/api/email/boas-vindas', async (req, res) => {
             tipo: tipoUsuario === 'produtor' ? 'Produtor Rural' : 'Mercado',
         });
         await transporter.sendMail({
-            from: '"Equipe Raiz Conecta"',
+            from: '"Equipe Raiz Conecta" <estoque@visioshop.com.br>',
             to: email,
             subject: '🌱 Bem-vindo ao Raiz Conecta!',
             html,
