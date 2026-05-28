@@ -130,3 +130,36 @@ export async function DELETE(req: Request) {
     );
   }
 }
+
+// 🚀 PUT: Admin edita um produto existente (SCRUM-138)
+export async function PUT(req: Request) {
+  try {
+    const data = await req.json();
+    const { id, nome, tipo, preco, unidadePadrao } = data;
+
+    if (!id) {
+      return NextResponse.json({ error: "ID do produto é obrigatório" }, { status: 400 });
+    }
+
+    // Tratamento de segurança para o preço (garante que vírgulas virem pontos para o banco)
+    const precoFormatado = typeof preco === 'string'
+      ? parseFloat(preco.replace(',', '.'))
+      : Number(preco);
+
+    // Atualiza o produto direto no banco
+    const produtoAtualizado = await prisma.produto.update({
+      where: { cdProduto: Number(id) },
+      data: {
+        nome,
+        tipo,
+        preco: precoFormatado,
+        unidadePadrao,
+      },
+    });
+
+    return NextResponse.json(produtoAtualizado, { status: 200 });
+  } catch (error) {
+    console.error("Erro no PUT /api/produtos:", error);
+    return NextResponse.json({ error: "Erro ao atualizar produto" }, { status: 500 });
+  }
+}

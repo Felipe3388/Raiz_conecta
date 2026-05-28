@@ -240,6 +240,7 @@ model Sugestao {
   emailProdutor String
   nomeProduto   String
   descricao     String?
+  precoSugerido Float?  
   imagemUrl     String?
   criadoEm      DateTime @default(now())
 

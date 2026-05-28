@@ -20,19 +20,20 @@ export async function GET() {
   }
 }
 
-// POST: Produtor cria a sugestão com imagem — SCRUM-126 (Cloudinary)
+// POST: Produtor cria a sugestão com imagem e PREÇO
 export async function POST(req: Request) {
   try {
-    const formData     = await req.formData();
+    const formData = await req.formData();
     const emailProdutor = formData.get("emailProdutor") as string;
-    const nomeProduto  = formData.get("nomeProduto")   as string;
-    const descricao    = formData.get("descricao")     as string;
-    const file         = formData.get("file")          as File;
+    const nomeProduto = formData.get("nomeProduto") as string;
+    const descricao = formData.get("descricao") as string;
+    const precoSugerido = formData.get("precoSugerido") as string; // <--- NOVO
+    const file = formData.get("file") as File;
 
     let imagemUrl = "";
 
     if (file && file.size > 0) {
-      const bytes  = await file.arrayBuffer();
+      const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
       const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
         cloudinary.uploader
@@ -49,7 +50,13 @@ export async function POST(req: Request) {
     }
 
     await prisma.sugestao.create({
-      data: { emailProdutor, nomeProduto, descricao, imagemUrl },
+      data: {
+        emailProdutor,
+        nomeProduto,
+        descricao,
+        imagemUrl,
+        precoSugerido: precoSugerido ? parseFloat(precoSugerido) : null // <--- SALVA NO BANCO
+      },
     });
 
     // Microsserviço de e-mail — só chama se URL configurada
@@ -83,9 +90,9 @@ export async function DELETE(req: Request) {
 
     if (sugestao?.imagemUrl?.includes("cloudinary.com")) {
       try {
-        const parts      = sugestao.imagemUrl.split("/");
+        const parts = sugestao.imagemUrl.split("/");
         const fileWithExt = parts[parts.length - 1];
-        const publicId   = `raiz-conecta/sugestoes/${fileWithExt.split(".")[0]}`;
+        const publicId = `raiz-conecta/sugestoes/${fileWithExt.split(".")[0]}`;
         await cloudinary.uploader.destroy(publicId);
       } catch (e) {
         console.log("Aviso: imagem não removida do Cloudinary.");

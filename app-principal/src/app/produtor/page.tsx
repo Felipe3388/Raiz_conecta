@@ -40,8 +40,8 @@ export default function PainelProdutor() {
   const [filtroBusca, setFiltroBusca] = useState("");
   const [modalSugestaoOpen, setModalSugestaoOpen] = useState(false);
 
-  // Estado do Modal de Sugestão
-  const [formSugestao, setFormSugestao] = useState({ nome: "", descricao: "" });
+  // Estado do Modal de Sugestão (SCRUM-137 - Atualizado com precoSugerido)
+  const [formSugestao, setFormSugestao] = useState({ nome: "", descricao: "", precoSugerido: "" });
   const [fotoSugestao, setFotoSugestao] = useState<File | null>(null);
 
   useEffect(() => {
@@ -97,6 +97,7 @@ export default function PainelProdutor() {
     finally { setSalvandoCatalogo(false); }
   };
 
+  // Enviar Sugestão Atualizada (SCRUM-137)
   const enviarSugestao = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formSugestao.nome) return toast.warning("Dê um nome ao produto.");
@@ -106,6 +107,12 @@ export default function PainelProdutor() {
     formData.append("emailProdutor", produtor?.email || "");
     formData.append("nomeProduto", formSugestao.nome);
     formData.append("descricao", formSugestao.descricao);
+
+    // Injeta o preço sugerido se ele tiver sido preenchido
+    if (formSugestao.precoSugerido) {
+      formData.append("precoSugerido", formSugestao.precoSugerido);
+    }
+
     if (fotoSugestao) formData.append("file", fotoSugestao);
 
     try {
@@ -113,7 +120,7 @@ export default function PainelProdutor() {
       if (res.ok) {
         toast.success("Sugestão enviada!", { description: "Nossa equipe irá avaliar e adicionar ao catálogo oficial." });
         setModalSugestaoOpen(false);
-        setFormSugestao({ nome: "", descricao: "" });
+        setFormSugestao({ nome: "", descricao: "", precoSugerido: "" }); // Reseta todos os campos
         setFotoSugestao(null);
       }
     } catch (err) { toast.error("Erro ao enviar sugestão."); }
@@ -129,15 +136,15 @@ export default function PainelProdutor() {
   };
 
   const enviarOferta = async (demanda: Demanda) => {
-    const quantidade = inputsOferta[demanda.id];
-    if (!quantidade || Number(quantidade) <= 0 || !produtor) return toast.warning("Insira uma quantidade válida para ofertar.");
+    const quantity = inputsOferta[demanda.id];
+    if (!quantity || Number(quantity) <= 0 || !produtor) return toast.warning("Insira uma quantidade válida para ofertar.");
 
     setEnviando(true);
     try {
       const res = await fetch("/api/produtor/ofertas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ demandaId: demanda.id, quantidade: quantidade, emailProdutor: produtor.email })
+        body: JSON.stringify({ demandaId: demanda.id, quantidade: quantity, emailProdutor: produtor.email })
       });
       if (res.ok) {
         toast.success("Negócio registrado!", { description: "O mercado será notificado da sua oferta." });
@@ -329,9 +336,9 @@ export default function PainelProdutor() {
                             <label className="text-sm font-bold text-gray-700 block mb-2">Quanto você enviará?</label>
                             <div className="flex items-center gap-2">
                               <div className="flex items-center bg-white border border-gray-300 rounded-xl p-1 shadow-sm w-1/2 h-12">
-                                <button onClick={() => alterarQuantidade(demanda.id, -1, qtdFaltante)} className="w-8 h-full flex items-center justify-center text-gray-500 hover:bg-gray-100 rounded"><Minus size={16} /></button>
+                                <button type="button" onClick={() => alterarQuantidade(demanda.id, -1, qtdFaltante)} className="w-8 h-full flex items-center justify-center text-gray-500 hover:bg-gray-100 rounded"><Minus size={16} /></button>
                                 <input type="number" min="0" max={qtdFaltante} value={inputsOferta[demanda.id] || "0"} onChange={(e) => setInputsOferta({ ...inputsOferta, [demanda.id]: e.target.value })} className="w-full text-center font-black text-lg bg-transparent border-none outline-none focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-                                <button onClick={() => alterarQuantidade(demanda.id, 1, qtdFaltante)} className="w-8 h-full flex items-center justify-center text-gray-500 hover:bg-gray-100 rounded"><Plus size={16} /></button>
+                                <button type="button" onClick={() => alterarQuantidade(demanda.id, 1, qtdFaltante)} className="w-8 h-full flex items-center justify-center text-gray-500 hover:bg-gray-100 rounded"><Plus size={16} /></button>
                               </div>
                               <Button
                                 onClick={() => enviarOferta(demanda)}
@@ -354,14 +361,14 @@ export default function PainelProdutor() {
         )}
       </div>
 
-      {/* MODAL DE SUGESTÃO DE PRODUTO */}
+      {/* MODAL DE SUGESTÃO DE PRODUTO (SCRUM-137 - Atualizado com Campo de Preço) */}
       <Modal
         isOpen={modalSugestaoOpen}
         onClose={() => setModalSugestaoOpen(false)}
         title="Sugerir Novo Produto"
       >
         <p className="text-sm text-gray-500 mb-6">
-          Não achou o que planta na lista? Envie os detalhes e uma foto para nossa equipe avaliar e adicionar ao catálogo oficial.
+          Não achou o que planta na lista? Envie os detalhes, o preço sugerido por Kg e uma foto para nossa equipe avaliar e adicionar ao catálogo oficial.
         </p>
 
         <form onSubmit={enviarSugestao} className="space-y-4">
@@ -374,13 +381,24 @@ export default function PainelProdutor() {
             required
           />
 
+          {/* NOVO CAMPO: PREÇO SUGERIDO (MATCH COM A API DO PROD/ADMIN) */}
+          <Input
+            label="Preço Sugerido por Kg (R$)"
+            name="precoSugerido"
+            type="number"
+            step="0.01"
+            value={formSugestao.precoSugerido}
+            onChange={e => setFormSugestao({ ...formSugestao, precoSugerido: e.target.value })}
+            placeholder="Ex: 8.50"
+          />
+
           <div>
             <label className="text-sm font-semibold text-gray-700 block mb-1">Descrição Breve</label>
             <textarea
               rows={3}
               value={formSugestao.descricao}
               onChange={e => setFormSugestao({ ...formSugestao, descricao: e.target.value })}
-              placeholder="Ex: Cultivamos pitaya orgânica..."
+              placeholder="Ex: Cultivamos pitaya orgânica livre de agrotóxicos..."
               className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 outline-none resize-none"
             ></textarea>
           </div>

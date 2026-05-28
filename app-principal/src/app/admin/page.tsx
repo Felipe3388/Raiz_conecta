@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
 import {
-  ShieldAlert, CheckCircle, XCircle, Users, Ban, Trash2, Search,
-  FileText, Loader2, RefreshCw, Package, Plus, Tag, Lightbulb,
-  ShieldPlus, LayoutDashboard, TrendingUp, Activity, Store, Leaf, ArrowUpRight
+  CheckCircle, XCircle, Users, Trash2, Search, FileText,
+  Loader2, RefreshCw, Package, Plus, Tag, Lightbulb,
+  ShieldPlus, LayoutDashboard, TrendingUp, Activity, Store, Leaf, ArrowUpRight, Edit2 // <-- Adicionado o Edit2 aqui
 } from "lucide-react";
 
 import { Card } from "@/components/ui/Card";
@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
-import { ConfirmModal } from "@/components/ui/ConfirmModal"; // IMPORTANDO O SEU MODAL!
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 export default function PainelAdmin() {
   const router = useRouter();
@@ -27,6 +27,7 @@ export default function PainelAdmin() {
   const [processando, setProcessando] = useState<string | number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Estados de Modais Admin
   const [isModalAdminOpen, setIsModalAdminOpen] = useState(false);
   const [criandoAdmin, setCriandoAdmin] = useState(false);
   const [formAdmin, setFormAdmin] = useState({ email: "", senha: "" });
@@ -37,7 +38,7 @@ export default function PainelAdmin() {
   const [formProduto, setFormProduto] = useState({ nome: "", tipo: "Frutas", preco: "", unidadePadrao: "Kg" });
   const [fotoProduto, setFotoProduto] = useState<File | null>(null);
 
-  // ESTADO DO MODAL DE CONFIRMAÇÃO
+  // ESTADOS DO MODAL DE CONFIRMAÇÃO
   const [confirmConfig, setConfirmConfig] = useState({
     isOpen: false,
     title: "",
@@ -49,6 +50,16 @@ export default function PainelAdmin() {
 
   const fecharConfirmacao = () => setConfirmConfig((prev) => ({ ...prev, isOpen: false }));
 
+  // ESTADOS PARA PROMOÇÃO DE SUGESTÃO
+  const [isModalPromoverOpen, setIsModalPromoverOpen] = useState(false);
+  const [sugestaoSelecionada, setSugestaoSelecionada] = useState<any>(null);
+  const [formPromocao, setFormPromocao] = useState({ nome: "", tipo: "Frutas", preco: "", unidadePadrao: "Kg" });
+
+  // 🚀 NOVOS ESTADOS PARA EDIÇÃO DE PRODUTO DO CATÁLOGO (SCRUM-138)
+  const [isModalEditarProdutoOpen, setIsModalEditarProdutoOpen] = useState(false);
+  const [produtoEditando, setProdutoEditando] = useState<any>(null);
+  const [formEditarProduto, setFormEditarProduto] = useState({ nome: "", tipo: "Frutas", preco: "", unidadePadrao: "Kg" });
+
   const carregarDados = async () => {
     setLoading(true);
     try {
@@ -58,17 +69,14 @@ export default function PainelAdmin() {
       if (resUsuarios.ok) setUsuarios(await resUsuarios.json());
       if (resProdutos.ok) setProdutos(await resProdutos.json());
       if (resSugestoes.ok) setSugestoes(await resSugestoes.json());
-    } catch (error) {
-      toast.error("Erro ao carregar dados do sistema.");
-    } finally {
-      setLoading(false);
-    }
+    } catch (error) { toast.error("Erro ao carregar dados do sistema."); }
+    finally { setLoading(false); }
   };
 
   useEffect(() => { carregarDados(); }, []);
 
   // ==========================================
-  // FUNÇÕES COM O NOVO CONFIRM MODAL
+  // FUNÇÕES DE AÇÃO GERAIS
   // ==========================================
 
   const alterarStatus = (email: string, tipo: string, novoStatus: string) => {
@@ -82,12 +90,12 @@ export default function PainelAdmin() {
       confirmLabel: "Sim, confirmar",
       variant,
       onConfirm: async () => {
-        fecharConfirmacao();
         setProcessando(email);
         try {
           const res = await fetch("/api/admin/usuarios", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, tipo, novoStatus }) });
           if (res.ok) { carregarDados(); toast.success(`Usuário ${novoStatus.toLowerCase()} com sucesso!`); }
-        } catch (e) { toast.error("Falha na conexão."); } finally { setProcessando(null); }
+        } catch (e) { toast.error("Falha na conexão."); }
+        finally { setProcessando(null); fecharConfirmacao(); }
       }
     });
   };
@@ -100,12 +108,12 @@ export default function PainelAdmin() {
       confirmLabel: "Sim, Excluir",
       variant: "danger",
       onConfirm: async () => {
-        fecharConfirmacao();
         setProcessando(email);
         try {
           const res = await fetch(`/api/admin/usuarios?email=${email}&tipo=${tipo}`, { method: "DELETE" });
           if (res.ok) { carregarDados(); toast.success("Usuário excluído permanentemente."); }
-        } catch (e) { toast.error("Erro de conexão."); } finally { setProcessando(null); }
+        } catch (e) { toast.error("Erro de conexão."); }
+        finally { setProcessando(null); fecharConfirmacao(); }
       }
     });
   };
@@ -118,11 +126,11 @@ export default function PainelAdmin() {
       confirmLabel: "Deletar Produto",
       variant: "danger",
       onConfirm: async () => {
-        fecharConfirmacao();
         try {
           const res = await fetch(`/api/produtos?id=${id}`, { method: "DELETE" });
           if (res.ok) { carregarDados(); toast.info("Produto removido da vitrine."); }
         } catch (error) { toast.error("Erro de conexão."); }
+        finally { fecharConfirmacao(); }
       }
     });
   };
@@ -135,48 +143,101 @@ export default function PainelAdmin() {
       confirmLabel: "Descartar",
       variant: "danger",
       onConfirm: async () => {
-        fecharConfirmacao();
         setProcessando(id);
         try {
           const res = await fetch(`/api/produtor/sugestao?id=${id}`, { method: "DELETE" });
           if (res.ok) { carregarDados(); toast.info("Sugestão removida."); }
-        } catch (error) { toast.error("Erro ao remover sugestão."); } finally { setProcessando(null); }
+        } catch (error) { toast.error("Erro ao remover sugestão."); }
+        finally { setProcessando(null); fecharConfirmacao(); }
       }
     });
   };
 
-  // 🚀 NOVA FUNÇÃO: PROMOVER SUGESTÃO
-  const promoverSugestao = (idSugestao: number, nomeProduto: string) => {
-    setConfirmConfig({
-      isOpen: true,
-      title: "Adicionar ao Catálogo",
-      description: `Deseja transformar a sugestão "${nomeProduto}" em um produto oficial na vitrine? A imagem também será copiada automaticamente.`,
-      confirmLabel: "Adicionar Produto",
-      variant: "success",
-      onConfirm: async () => {
-        fecharConfirmacao();
-        setProcessando(idSugestao);
-        try {
-          const res = await fetch("/api/admin/promover-sugestao", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ idSugestao })
-          });
-          if (res.ok) {
-            carregarDados();
-            toast.success("Produto adicionado ao catálogo com sucesso!");
-          } else {
-            toast.error("Erro ao promover a sugestão.");
-          }
-        } catch (error) {
-          toast.error("Erro de conexão com o servidor.");
-        } finally {
-          setProcessando(null);
-        }
-      }
+  // 🚀 ABRIR MODAL PARA REVISAR E PROMOVER SUGESTÃO
+  const abrirModalPromover = (sug: any) => {
+    setSugestaoSelecionada(sug);
+    setFormPromocao({
+      nome: sug.nomeProduto,
+      tipo: "Frutas",
+      preco: sug.precoSugerido ? String(sug.precoSugerido) : "",
+      unidadePadrao: "Kg"
     });
+    setIsModalPromoverOpen(true);
   };
 
+  // 🚀 ENVIAR A SUGESTÃO EDITADA PARA VIRAR PRODUTO
+  const confirmarPromocao = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formPromocao.preco || !formPromocao.nome) return toast.warning("Preencha o nome e o preço.");
+
+    setProcessando(sugestaoSelecionada.id);
+    try {
+      const res = await fetch("/api/admin/promover-sugestao", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idSugestao: sugestaoSelecionada.id,
+          ...formPromocao
+        })
+      });
+
+      if (res.ok) {
+        carregarDados();
+        setIsModalPromoverOpen(false);
+        toast.success("Produto configurado e adicionado ao catálogo!");
+      } else {
+        toast.error("Erro ao promover a sugestão.");
+      }
+    } catch (error) {
+      toast.error("Erro de conexão.");
+    } finally {
+      setProcessando(null);
+    }
+  };
+
+  // 🚀 ABRIR MODAL PARA EDITAR PRODUTO EXISTENTE (SCRUM-138)
+  const abrirModalEditarProduto = (prod: any) => {
+    setProdutoEditando(prod);
+    setFormEditarProduto({
+      nome: prod.nome,
+      tipo: prod.tipo,
+      preco: String(prod.preco),
+      unidadePadrao: prod.unidadePadrao
+    });
+    setIsModalEditarProdutoOpen(true);
+  };
+
+  // 🚀 SALVAR EDIÇÃO DO PRODUTO (SCRUM-138)
+  const salvarEdicaoProduto = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formEditarProduto.preco || !formEditarProduto.nome) return toast.warning("Preencha o nome e o preço.");
+
+    setProcessando(produtoEditando.cdProduto);
+    try {
+      const res = await fetch("/api/produtos", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: produtoEditando.cdProduto,
+          ...formEditarProduto
+        })
+      });
+
+      if (res.ok) {
+        carregarDados();
+        setIsModalEditarProdutoOpen(false);
+        toast.success("Produto atualizado com sucesso!");
+      } else {
+        toast.error("Erro ao atualizar o produto.");
+      }
+    } catch (error) {
+      toast.error("Erro de conexão com o servidor.");
+    } finally {
+      setProcessando(null);
+    }
+  };
+
+  // Funções de Cadastros Nativos...
   const criarNovoAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formAdmin.email || !formAdmin.senha) return toast.warning("Preencha e-mail e senha.");
@@ -335,7 +396,17 @@ export default function PainelAdmin() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {produtos.map((prod) => (
                     <div key={prod.cdProduto} className="border border-gray-200 rounded-xl p-4 flex flex-col items-center text-center relative group hover:border-green-400 transition-colors bg-gray-50/50">
-                      <button onClick={() => apagarProduto(prod.cdProduto)} className="absolute top-2 right-2 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 bg-white rounded-full p-1 shadow-sm transition-opacity"><Trash2 size={16} /></button>
+
+                      {/* BOTÕES DE AÇÃO: EDITAR E DELETAR (MUDANÇA AQUI) */}
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                        <button onClick={() => abrirModalEditarProduto(prod)} className="bg-white text-blue-500 hover:text-blue-700 rounded-full p-1.5 shadow-sm transition-colors" title="Editar Produto">
+                          <Edit2 size={16} />
+                        </button>
+                        <button onClick={() => apagarProduto(prod.cdProduto)} className="bg-white text-gray-300 hover:text-red-500 rounded-full p-1.5 shadow-sm transition-colors" title="Excluir Produto">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+
                       {prod.imagemUrl ? (<Image src={prod.imagemUrl} alt={prod.nome} width={96} height={96} className="w-24 h-24 object-cover rounded-full mb-3 border-4 border-white shadow-sm" />) : (<div className="w-24 h-24 bg-gray-200 rounded-full mb-3 flex items-center justify-center text-gray-400 font-bold text-xs shadow-sm border-4 border-white">Sem Foto</div>)}
                       <h3 className="font-bold text-gray-800 leading-tight">{prod.nome}</h3>
                       <Badge variant="neutral" className="mt-2">{prod.tipo}</Badge>
@@ -370,18 +441,21 @@ export default function PainelAdmin() {
                         </div>
                       )}
 
-                      <div className="bg-white p-3.5 rounded-xl border border-gray-100 text-sm text-gray-700 mb-6 italic shadow-sm">
-                        "{sug.descricao || "Nenhuma descrição detalhada."}"
+                      <div className="bg-gray-50 p-3.5 rounded-xl border border-gray-100 text-sm text-gray-700 mb-6 italic shadow-sm flex flex-col gap-2">
+                        <span>"{sug.descricao || "Nenhuma descrição detalhada."}"</span>
+                        {sug.precoSugerido && (
+                          <span className="font-bold text-green-700">Preço Sugerido: R$ {Number(sug.precoSugerido).toFixed(2)}</span>
+                        )}
                       </div>
                     </div>
 
                     <div className="flex flex-col gap-2 mt-auto">
                       <Button
-                        onClick={() => promoverSugestao(sug.id, sug.nomeProduto)}
+                        onClick={() => abrirModalPromover(sug)}
                         isLoading={processando === sug.id}
                         className="w-full bg-green-600 hover:bg-green-700 h-12 font-bold shadow-md text-white"
                       >
-                        <ArrowUpRight size={18} className="mr-2" /> Promover ao Catálogo
+                        <ArrowUpRight size={18} className="mr-2" /> Revisar e Promover
                       </Button>
                       <Button
                         onClick={() => apagarSugestao(sug.id)}
@@ -400,7 +474,10 @@ export default function PainelAdmin() {
         )}
       </div>
 
-      {/* COMPONENTES DE MODAL */}
+      {/* ============================== */}
+      {/* COMPONENTES GLOBAIS DE MODAL */}
+      {/* ============================== */}
+
       <ConfirmModal
         isOpen={confirmConfig.isOpen}
         onClose={fecharConfirmacao}
@@ -409,7 +486,84 @@ export default function PainelAdmin() {
         description={confirmConfig.description}
         confirmLabel={confirmConfig.confirmLabel}
         variant={confirmConfig.variant}
+        isLoading={processando !== null}
       />
+
+      {/* MODAL: PROMOVER SUGESTÃO */}
+      <Modal isOpen={isModalPromoverOpen} onClose={() => setIsModalPromoverOpen(false)} title="Promover ao Catálogo">
+        <form onSubmit={confirmarPromocao} className="space-y-4 mt-2">
+          <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+            Revise os dados enviados pelo produtor e defina o preço final e a categoria antes de publicar na vitrine.
+          </p>
+
+          <Input label="Nome Oficial do Produto" name="nome" type="text" value={formPromocao.nome} onChange={(e) => setFormPromocao({ ...formPromocao, nome: e.target.value })} required />
+
+          <div className="flex gap-4">
+            <div className="w-1/2">
+              <label className="text-xs font-bold text-gray-500 block mb-1">Categoria</label>
+              <select value={formPromocao.tipo} onChange={(e) => setFormPromocao({ ...formPromocao, tipo: e.target.value })} className="w-full p-2.5 border border-gray-300 rounded-xl text-sm outline-none">
+                <option value="Frutas">Frutas</option>
+                <option value="Verduras">Verduras</option>
+                <option value="Legumes">Legumes</option>
+                <option value="Grãos">Grãos</option>
+                <option value="Outros">Outros</option>
+              </select>
+            </div>
+            <div className="w-1/2">
+              <label className="text-xs font-bold text-gray-500 block mb-1">Unidade</label>
+              <select value={formPromocao.unidadePadrao} onChange={(e) => setFormPromocao({ ...formPromocao, unidadePadrao: e.target.value })} className="w-full p-2.5 border border-gray-300 rounded-xl text-sm outline-none">
+                <option value="Kg">Kg</option>
+                <option value="Unidade">Un</option>
+                <option value="Maço">Maço</option>
+                <option value="Caixa">Caixa</option>
+              </select>
+            </div>
+          </div>
+
+          <Input label="Preço Final de Venda (R$)" name="preco" type="number" step="0.01" value={formPromocao.preco} onChange={(e) => setFormPromocao({ ...formPromocao, preco: e.target.value })} required placeholder="Ex: 5.90" />
+
+          <div className="pt-4 flex gap-3">
+            <Button type="button" variant="outline" onClick={() => setIsModalPromoverOpen(false)} className="w-1/2 border-gray-300 text-gray-600 hover:bg-gray-50">Cancelar</Button>
+            <Button type="submit" isLoading={processando === sugestaoSelecionada?.id} className="w-1/2 bg-green-600 hover:bg-green-700 text-white shadow-md">Publicar Produto</Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* MODAL: EDITAR PRODUTO EXISTENTE (SCRUM-138) */}
+      <Modal isOpen={isModalEditarProdutoOpen} onClose={() => setIsModalEditarProdutoOpen(false)} title="Editar Produto">
+        <form onSubmit={salvarEdicaoProduto} className="space-y-4 mt-2">
+          <Input label="Nome do Produto" name="nome" type="text" value={formEditarProduto.nome} onChange={(e) => setFormEditarProduto({ ...formEditarProduto, nome: e.target.value })} required />
+
+          <div className="flex gap-4">
+            <div className="w-1/2">
+              <label className="text-xs font-bold text-gray-500 block mb-1">Categoria</label>
+              <select value={formEditarProduto.tipo} onChange={(e) => setFormEditarProduto({ ...formEditarProduto, tipo: e.target.value })} className="w-full p-2.5 border border-gray-300 rounded-xl text-sm outline-none">
+                <option value="Frutas">Frutas</option>
+                <option value="Verduras">Verduras</option>
+                <option value="Legumes">Legumes</option>
+                <option value="Grãos">Grãos</option>
+                <option value="Outros">Outros</option>
+              </select>
+            </div>
+            <div className="w-1/2">
+              <label className="text-xs font-bold text-gray-500 block mb-1">Unidade</label>
+              <select value={formEditarProduto.unidadePadrao} onChange={(e) => setFormEditarProduto({ ...formEditarProduto, unidadePadrao: e.target.value })} className="w-full p-2.5 border border-gray-300 rounded-xl text-sm outline-none">
+                <option value="Kg">Kg</option>
+                <option value="Unidade">Un</option>
+                <option value="Maço">Maço</option>
+                <option value="Caixa">Caixa</option>
+              </select>
+            </div>
+          </div>
+
+          <Input label="Preço (R$)" name="preco" type="number" step="0.01" value={formEditarProduto.preco} onChange={(e) => setFormEditarProduto({ ...formEditarProduto, preco: e.target.value })} required />
+
+          <div className="pt-4 flex gap-3">
+            <Button type="button" variant="outline" onClick={() => setIsModalEditarProdutoOpen(false)} className="w-1/2 border-gray-300 text-gray-600 hover:bg-gray-50">Cancelar</Button>
+            <Button type="submit" isLoading={processando === produtoEditando?.cdProduto} className="w-1/2 bg-blue-600 hover:bg-blue-700 text-white shadow-md">Salvar Alterações</Button>
+          </div>
+        </form>
+      </Modal>
 
       {/* MODAL: CRIAR NOVO ADMIN */}
       <Modal isOpen={isModalAdminOpen} onClose={() => setIsModalAdminOpen(false)} title="Criar Novo Administrador">
@@ -423,6 +577,7 @@ export default function PainelAdmin() {
           </div>
         </form>
       </Modal>
+
     </div>
   );
 }

@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
-    const { idSugestao } = await req.json();
+    // Recebe os dados ajustados pelo Modal do Admin
+    const { idSugestao, nome, tipo, preco, unidadePadrao } = await req.json();
 
     if (!idSugestao) {
       return NextResponse.json({ error: "ID da sugestão é obrigatório" }, { status: 400 });
@@ -18,14 +19,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Sugestão não encontrada" }, { status: 404 });
     }
 
-    // 2. Cria o Produto Oficial usando os dados da sugestão e a imagem do Cloudinary
+    // 2. Cria o Produto Oficial usando os dados ajustados e a imagem da sugestão
     await prisma.produto.create({
       data: {
-        nome: sugestao.nomeProduto,
-        tipo: "Outros", // Categoria padrão (Admin ajusta depois se quiser)
-        preco: 0.00,    // Preço base
-        unidadePadrao: "Kg",
-        imagemUrl: sugestao.imagemUrl, 
+        nome: nome || sugestao.nomeProduto,
+        tipo: tipo || "Outros",
+        preco: Number(preco) || 0,
+        unidadePadrao: unidadePadrao || "Kg",
+        imagemUrl: sugestao.imagemUrl,
         status: "ATIVO"
       }
     });
