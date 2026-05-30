@@ -288,7 +288,7 @@ function LoginContent() {
                       name="nome"
                       type="text"
                       icon={User}
-                      placeholder="Fazenda São João"
+                      placeholder="Fazenda Imaginária"
                       value={formCadastro.nome}
                       onChange={(e) => setFormCadastro({ ...formCadastro, nome: e.target.value })}
                       required

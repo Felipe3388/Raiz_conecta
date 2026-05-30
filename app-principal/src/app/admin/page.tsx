@@ -380,7 +380,7 @@ export default function PainelAdmin() {
               <h2 className="text-lg font-bold text-green-800 flex items-center gap-2 mb-4 border-b pb-2"><Plus size={20} /> Cadastrar Produto</h2>
               <form onSubmit={adicionarProduto} className="space-y-4">
                 <div><label className="text-xs font-bold text-gray-500 block mb-1">Foto (Opcional)</label><input type="file" accept="image/*" onChange={(e) => setFotoProduto(e.target.files?.[0] || null)} className="w-full p-2 border rounded-lg bg-gray-50 text-sm outline-none" /></div>
-                <Input label="Nome do Produto" name="nome" type="text" value={formProduto.nome} onChange={(e) => setFormProduto({ ...formProduto, nome: e.target.value })} placeholder="Ex: Maçã Fuji" />
+                <Input label="Nome do Produto" name="nome" type="text" value={formProduto.nome} onChange={(e) => setFormProduto({ ...formProduto, nome: e.target.value })} placeholder="Nome do Produto" />
                 <div className="flex gap-4">
                   <div className="w-1/2"><label className="text-xs font-bold text-gray-500 block mb-1">Categoria</label><select value={formProduto.tipo} onChange={(e) => setFormProduto({ ...formProduto, tipo: e.target.value })} className="w-full p-2.5 border rounded-lg text-sm bg-white outline-none"><option value="Frutas">Frutas</option><option value="Verduras">Verduras</option><option value="Legumes">Legumes</option><option value="Grãos">Grãos</option><option value="Outros">Outros</option></select></div>
                   <div className="w-1/2"><label className="text-xs font-bold text-gray-500 block mb-1">Unidade</label><select value={formProduto.unidadePadrao} onChange={(e) => setFormProduto({ ...formProduto, unidadePadrao: e.target.value })} className="w-full p-2.5 border rounded-lg text-sm bg-white outline-none"><option value="Kg">Kg</option><option value="Unidade">Un</option><option value="Maço">Maço</option><option value="Caixa">Caixa</option></select></div>
@@ -520,7 +520,7 @@ export default function PainelAdmin() {
             </div>
           </div>
 
-          <Input label="Preço Final de Venda (R$)" name="preco" type="number" step="0.01" value={formPromocao.preco} onChange={(e) => setFormPromocao({ ...formPromocao, preco: e.target.value })} required placeholder="Ex: 5.90" />
+          <Input label="Preço Final de Venda (R$)" name="preco" type="number" step="0.01" value={formPromocao.preco} onChange={(e) => setFormPromocao({ ...formPromocao, preco: e.target.value })} required placeholder="Ex: 0.00" />
 
           <div className="pt-4 flex gap-3">
             <Button type="button" variant="outline" onClick={() => setIsModalPromoverOpen(false)} className="w-1/2 border-gray-300 text-gray-600 hover:bg-gray-50">Cancelar</Button>

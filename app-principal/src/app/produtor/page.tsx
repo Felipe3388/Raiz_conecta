@@ -377,7 +377,7 @@ export default function PainelProdutor() {
             name="nome"
             value={formSugestao.nome}
             onChange={e => setFormSugestao({ ...formSugestao, nome: e.target.value })}
-            placeholder="Ex: Pitaya Vermelha"
+            placeholder="Nome do Produto"
             required
           />
 
@@ -389,7 +389,7 @@ export default function PainelProdutor() {
             step="0.01"
             value={formSugestao.precoSugerido}
             onChange={e => setFormSugestao({ ...formSugestao, precoSugerido: e.target.value })}
-            placeholder="Ex: 8.50"
+            placeholder="Ex: 0.00"
           />
 
           <div>
@@ -398,7 +398,7 @@ export default function PainelProdutor() {
               rows={3}
               value={formSugestao.descricao}
               onChange={e => setFormSugestao({ ...formSugestao, descricao: e.target.value })}
-              placeholder="Ex: Cultivamos pitaya orgânica livre de agrotóxicos..."
+              placeholder="Adicione uma descrição sobre sua Sugestão"
               className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 outline-none resize-none"
             ></textarea>
           </div>
