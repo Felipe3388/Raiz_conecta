@@ -81,7 +81,7 @@ Administrador aprova usuário → API Principal → Microsserviço (Express.js) 
 | Nº Sprint | Objetivo | Data Início | Data Término |
 | :---: | :--- | :---: | :---: |
 | **Sprint 1** | Autenticação, cadastro de usuários, painel do produtor, vitrine, carrinho, checkout, painel admin, landing page e avaliações | 2026-04-08 | 2026-04-29 |
-| **Sprint 2** | Melhorias e correções apontadas pela banca avaliadora | 2026-04-29 | - |
+| **Sprint 2** | Melhorias e correções apontadas pela banca avaliadora | 2026-04-29 | 2026-05-01 |
 
 > Datas precisas e status de cada task disponíveis diretamente no [painel do Jira](https://raizconectado.atlassian.net).
 
