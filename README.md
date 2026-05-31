@@ -171,7 +171,7 @@ cd raiz-conecta
 **Passo 2 — Rodar a Aplicação Principal (Next.js)**
 
 ```bash
-cd app-principal
+cd \app-principal
 npm install
 npx prisma generate
 npm run dev
@@ -184,8 +184,9 @@ npx prisma studio
 **Passo 3 — Rodar o Microsserviço de E-mail (Express.js)**
 
 ```bash
-cd microservico
+cd \microservico
 npm install
+cd \microservico\src\app
 node server.js
 # Disponível em http://localhost:3001
 ```
