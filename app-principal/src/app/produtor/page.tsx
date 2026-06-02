@@ -217,23 +217,40 @@ export default function PainelProdutor() {
         {/* ABA: MEU CATÁLOGO */}
         {abaAtual === "meus_produtos" && (
           <div className="space-y-6">
-            <div className="bg-amber-50 border border-amber-200 p-6 rounded-xl text-amber-800 flex justify-between items-center flex-col md:flex-row gap-4">
-              <div>
+            <div className="bg-amber-50 border border-amber-200 p-6 rounded-xl text-amber-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex-1">
                 <h3 className="text-lg font-black flex items-center gap-2"><Sprout /> Selecione o que você produz</h3>
                 <p className="text-sm mt-1">Marque abaixo os produtos que você tem capacidade de vender. <b>O Mural de Oportunidades só mostrará demandas para os produtos que você marcar aqui.</b></p>
               </div>
-              <div className="flex gap-3 w-full md:w-auto">
-                <Button onClick={() => setModalSugestaoOpen(true)} variant="outline" className="bg-white border-amber-300 text-amber-700 hover:bg-amber-100 flex-1 md:flex-none">
+              <div className="flex flex-row gap-3 w-full md:w-auto shrink-0">
+                <Button onClick={() => setModalSugestaoOpen(true)} variant="outline" className="bg-white border-amber-300 text-amber-700 hover:bg-amber-100 flex-1 md:flex-none whitespace-nowrap">
                   <MessageSquarePlus size={18} className="mr-2" /> Sugerir Novo
                 </Button>
-                <Button onClick={salvarMeuCatalogo} isLoading={salvandoCatalogo} className="bg-amber-600 hover:bg-amber-700 flex-1 md:flex-none">
+                <Button onClick={salvarMeuCatalogo} isLoading={salvandoCatalogo} className="bg-amber-600 hover:bg-amber-700 flex-1 md:flex-none whitespace-nowrap">
                   {!salvandoCatalogo && <Save size={18} className="mr-2" />} Salvar Escolhas
                 </Button>
               </div>
             </div>
 
+            <div className="flex flex-col md:flex-row gap-3 items-center">
+              <div className="relative w-full md:w-80">
+                <Search className="absolute left-3 top-3 text-gray-400" size={18} />
+                <input
+                  type="text"
+                  placeholder="Buscar produto no catálogo..."
+                  value={filtroBusca}
+                  onChange={(e) => setFiltroBusca(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-amber-200 focus:ring-2 focus:ring-amber-400 outline-none bg-white text-sm"
+                />
+              </div>
+              <p className="text-sm text-amber-700 font-medium">
+                {meusProdutosIds.length} selecionado{meusProdutosIds.length !== 1 ? "s" : ""}
+                {filtroBusca && ` · ${catalogoOficial.filter(p => p.nome.toLowerCase().includes(filtroBusca.toLowerCase())).length} resultado${catalogoOficial.filter(p => p.nome.toLowerCase().includes(filtroBusca.toLowerCase())).length !== 1 ? "s" : ""}`}
+              </p>
+            </div>
+
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {catalogoOficial.map((prod) => {
+              {catalogoOficial.filter(p => !filtroBusca || p.nome.toLowerCase().includes(filtroBusca.toLowerCase())).map((prod) => {
                 const isSelecionado = meusProdutosIds.includes(prod.cdProduto);
                 return (
                   <div key={prod.cdProduto} onClick={() => toggleProduto(prod.cdProduto)} className={`cursor-pointer border-2 rounded-xl p-4 flex flex-col items-center text-center transition-all ${isSelecionado ? "border-amber-500 bg-amber-50/50 shadow-md" : "border-gray-200 bg-white hover:border-amber-300"}`}>

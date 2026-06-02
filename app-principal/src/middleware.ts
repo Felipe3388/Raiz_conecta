@@ -53,7 +53,6 @@ export const config = {
     "/produtor/:path*",
     "/mercado/:path*",
     "/perfil/:path*",
-    "/api-docs/:path*",
     "/checkout/:path*",
   ],
 };

@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import {
   User, MapPin, Lock, Save, Loader2, ArrowLeft,
   AlertTriangle, Trash2, ShieldCheck, Headset,
-  CheckCircle2,
 } from "lucide-react";
 
 import { Card } from "@/components/ui/Card";
@@ -199,7 +198,7 @@ export default function MeuPerfil() {
       />
 
       <div className="min-h-screen bg-[#F8FAFC] p-4 md:p-8 pb-24">
-        <div className="max-w-[800px] mx-auto space-y-6">
+        <div className="max-w-200 mx-auto space-y-6">
 
           {/* CABEÇALHO */}
           <motion.div {...fadeUp} className="mb-2 flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -262,7 +261,6 @@ export default function MeuPerfil() {
                   Dados sensíveis travados por segurança. Contate o suporte para alterar.
                 </div>
               </div>
-
               {/* Campos editáveis */}
               <div className="grid md:grid-cols-2 gap-6">
                 <Input

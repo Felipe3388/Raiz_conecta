@@ -8,7 +8,7 @@ import Image from "next/image"; // Adicionado para suportar fotos reais
 import { toast } from "sonner"; // Nossas notificações profissionais
 import {
   Search, Plus, Minus, ShoppingCart, PackageOpen, ArrowRight, Trash2, Filter,
-  LayoutDashboard, ListChecks, CheckCircle, Star
+  LayoutDashboard, ListChecks, CheckCircle, Star, XCircle, AlertTriangle, Clock
 } from "lucide-react";
 
 import { Card } from "@/components/ui/Card";
@@ -33,6 +33,11 @@ export default function CatalogoMercado() {
   const [avaliandoOfertaId, setAvaliandoOfertaId] = useState<string | null>(null);
   const [notaAtual, setNotaAtual] = useState<number>(5);
   const [enviandoAvaliacao, setEnviandoAvaliacao] = useState(false);
+
+  // Estados de cancelamento
+  const [cancelandoDemandaId, setCelandoDemandaId] = useState<string | null>(null);
+  const [motivoCancelamento, setMotivoCancelamento] = useState("");
+  const [processandoCancelamento, setProcessandoCancelamento] = useState(false);
 
   useEffect(() => {
     async function carregarDados() {
@@ -106,6 +111,39 @@ export default function CatalogoMercado() {
     setCarrinho(novoCarrinho);
     if (novoCarrinho.length === 0) localStorage.removeItem("carrinhoRaiz");
     else localStorage.setItem("carrinhoRaiz", JSON.stringify(novoCarrinho));
+  };
+
+  const cancelarPedido = async (demandaId: string) => {
+    if (!mercado) return;
+    setProcessandoCancelamento(true);
+    try {
+      const res = await fetch("/api/mercado/cancelar", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          demandaId,
+          emailMercado: mercado.email,
+          motivo: motivoCancelamento || "Cancelamento solicitado pelo mercado",
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Pedido cancelado com sucesso!", { description: data.reembolso });
+        setCelandoDemandaId(null);
+        setMotivoCancelamento("");
+        carregarMinhasCotacoes();
+      } else if (data.prazoExpirado) {
+        toast.error("Prazo de cancelamento expirado", {
+          description: `Este pedido foi feito há ${data.diasPassados} dias úteis. O limite é de ${data.prazoMaximo} dias úteis.`,
+        });
+      } else {
+        toast.error(data.error || "Erro ao cancelar o pedido.");
+      }
+    } catch {
+      toast.error("Erro de conexão ao tentar cancelar.");
+    } finally {
+      setProcessandoCancelamento(false);
+    }
   };
 
   const alterarQtdInputCard = (id: number, delta: number) => {
@@ -405,19 +443,4 @@ export default function CatalogoMercado() {
                                     </Button>
                                   </div>
                                 )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+                              </div>\n                            ))}\n                          </div>\n                        )}\n                      </div>\n\n                      {/* CANCELAMENTO DO PEDIDO */}\n                      {demanda.status !== "CANCELADA" && demanda.status !== "CONCLUIDA" && (\n                        <div className="mt-4 pt-4 border-t border-gray-100">\n                          {cancelandoDemandaId === demanda.id ? (\n                            <div className="bg-red-50 border border-red-200 rounded-xl p-4 space-y-3">\n                              <div className="flex items-center gap-2 text-red-700">\n                                <AlertTriangle size={18} />\n                                <p className="text-sm font-bold">Confirmar cancelamento?</p>\n                              </div>\n                              <p className="text-xs text-red-600">\n                                O cancelamento só é permitido em até <strong>7 dias úteis</strong> após o pedido. Esta ação não pode ser desfeita.\n                              </p>\n                              <div>\n                                <label className="text-xs font-semibold text-gray-600 block mb-1">Motivo (opcional)</label>\n                                <textarea\n                                  rows={2}\n                                  value={motivoCancelamento}\n                                  onChange={e => setMotivoCancelamento(e.target.value)}\n                                  placeholder="Ex: Estoque já abastecido, produto não necessário..."\n                                  className="w-full px-3 py-2 rounded-lg border border-red-200 text-sm outline-none focus:ring-2 focus:ring-red-300 resize-none"\n                                />\n                              </div>\n                              <div className="flex gap-2">\n                                <Button\n                                  variant="outline"\n                                  onClick={() => { setCelandoDemandaId(null); setMotivoCancelamento(""); }}\n                                  className="flex-1 text-xs h-9 border-gray-300"\n                                >\n                                  Voltar\n                                </Button>\n                                <Button\n                                  isLoading={processandoCancelamento}\n                                  onClick={() => cancelarPedido(demanda.id)}\n                                  className="flex-1 text-xs h-9 bg-red-600 hover:bg-red-700"\n                                >\n                                  <XCircle size={14} className="mr-1" /> Cancelar Pedido\n                                </Button>\n                              </div>\n                            </div>\n                          ) : (\n                            <button\n                              onClick={() => setCelandoDemandaId(demanda.id)}\n                              className="w-full text-xs text-gray-400 hover:text-red-600 font-medium flex items-center justify-center gap-1.5 py-2 rounded-lg hover:bg-red-50 transition-colors border border-dashed border-transparent hover:border-red-200"\n                            >\n                              <XCircle size={14} /> Cancelar este pedido\n                            </button>\n                          )}\n                        </div>\n                      )}\n\n                      {demanda.status === "CANCELADA" && (\n                        <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2 text-red-500 text-sm font-bold">\n                          <XCircle size={16} /> Pedido cancelado\n                        </div>\n                      )}\n                    </Card>\n                  );\n                })}\n              </div>\n            )}\n          </div>\n        )}\n      </div>\n    </div>\n  );\n}

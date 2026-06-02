@@ -19,6 +19,7 @@ export async function POST(req: Request) {
     const senha          = formData.get("senha")          as string;
     const tipoDoc        = formData.get("tipoDoc")        as string;
     const documento      = formData.get("documento")      as string;
+    const telefone       = formData.get("telefone")       as string;
     const cep            = formData.get("cep")            as string;
     const rua            = formData.get("rua")            as string;
     const numero         = formData.get("numero")         as string;
@@ -72,6 +73,7 @@ export async function POST(req: Request) {
       status: "EM_ANALISE",
       tipoDoc,
       documento,
+      telefone: telefone || null,
       cep,
       rua,
       numero,

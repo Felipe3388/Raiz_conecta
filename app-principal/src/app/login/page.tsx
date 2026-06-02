@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import {
   LogIn, UserPlus, Mail, Lock, User, Building2, Clock,
-  ArrowLeft, Eye, EyeOff, AlertCircle, Loader2, Leaf,
+  ArrowLeft, Eye, EyeOff, AlertCircle, Loader2, Leaf, Phone,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
@@ -25,6 +25,7 @@ function LoginContent() {
   const [erro, setErro] = useState("");
   const [mostrarSenhaLogin, setMostrarSenhaLogin] = useState(false);
   const [mostrarSenhaCadastro, setMostrarSenhaCadastro] = useState(false);
+  const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
   const [isTermosOpen, setIsTermosOpen] = useState(false);
   const [isPrivacidadeOpen, setIsPrivacidadeOpen] = useState(false);
 
@@ -34,6 +35,8 @@ function LoginContent() {
     nome: "",
     email: "",
     senha: "",
+    confirmarSenha: "",
+    telefone: "",
   });
 
   useEffect(() => {
@@ -44,6 +47,9 @@ function LoginContent() {
   const trocarView = useCallback((novaView: "login" | "cadastro") => {
     setView(novaView);
     setErro("");
+    if (novaView === "cadastro") {
+      setFormCadastro({ tipoUsuario: "produtor", nome: "", email: "", senha: "", confirmarSenha: "", telefone: "" });
+    }
   }, []);
 
   const tabs = [
@@ -99,8 +105,23 @@ function LoginContent() {
 
   const handleCadastroPasso1 = (e: React.FormEvent) => {
     e.preventDefault();
+    if (formCadastro.senha !== formCadastro.confirmarSenha) {
+      setErro("As senhas não coincidem. Verifique e tente novamente.");
+      return;
+    }
+    if (formCadastro.senha.length < 6) {
+      setErro("A senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
     sessionStorage.setItem("cadastro_temporario", JSON.stringify(formCadastro));
     router.push("/completar-perfil");
+  };
+
+  const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let v = e.target.value.replace(/\D/g, "");
+    v = v.replace(/^(\d{2})(\d)/, "($1) $2");
+    v = v.replace(/(\d{5})(\d{1,4})$/, "$1-$2");
+    setFormCadastro({ ...formCadastro, telefone: v.slice(0, 15) });
   };
 
   return (
@@ -227,7 +248,7 @@ function LoginContent() {
                           type={mostrarSenhaLogin ? "text" : "password"}
                           value={formLogin.senha}
                           onChange={(e) => setFormLogin({ ...formLogin, senha: e.target.value })}
-                          placeholder="••••••••"
+                          placeholder="Sua senha"
                           className="w-full pl-10 pr-11 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 bg-white text-sm outline-none transition-all"
                           disabled={carregando}
                           required
@@ -308,6 +329,18 @@ function LoginContent() {
                       required
                     />
 
+                    {/* Telefone */}
+                    <Input
+                      label="Telefone / WhatsApp"
+                      name="telefone"
+                      type="tel"
+                      icon={Phone}
+                      placeholder="(11) 99999-9999"
+                      value={formCadastro.telefone}
+                      onChange={handleTelefoneChange}
+                      required
+                    />
+
                     <div className="space-y-1.5 w-full">
                       <label className="text-sm font-semibold text-gray-700 block">Senha</label>
                       <div className="relative">
@@ -331,6 +364,44 @@ function LoginContent() {
                           {mostrarSenhaCadastro ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                       </div>
+                    </div>
+
+                    {/* SCRUM-146: Confirmação de Senha */}
+                    <div className="space-y-1.5 w-full">
+                      <label className="text-sm font-semibold text-gray-700 block">Confirmar Senha</label>
+                      <div className="relative">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                          <Lock size={18} />
+                        </div>
+                        <input
+                          type={mostrarConfirmarSenha ? "text" : "password"}
+                          value={formCadastro.confirmarSenha}
+                          onChange={(e) => setFormCadastro({ ...formCadastro, confirmarSenha: e.target.value })}
+                          placeholder="Repita a senha"
+                          className={`w-full pl-10 pr-11 py-3 rounded-lg border focus:ring-2 bg-white text-sm outline-none transition-all ${
+                            formCadastro.confirmarSenha && formCadastro.senha !== formCadastro.confirmarSenha
+                              ? "border-red-400 focus:ring-red-400"
+                              : formCadastro.confirmarSenha && formCadastro.senha === formCadastro.confirmarSenha
+                              ? "border-green-400 focus:ring-green-500"
+                              : "border-gray-300 focus:ring-green-500"
+                          }`}
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setMostrarConfirmarSenha(!mostrarConfirmarSenha)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          tabIndex={-1}
+                        >
+                          {mostrarConfirmarSenha ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                      {formCadastro.confirmarSenha && formCadastro.senha !== formCadastro.confirmarSenha && (
+                        <p className="text-xs text-red-500 font-medium mt-1">As senhas não coincidem.</p>
+                      )}
+                      {formCadastro.confirmarSenha && formCadastro.senha === formCadastro.confirmarSenha && (
+                        <p className="text-xs text-green-600 font-medium mt-1">Senhas conferem!</p>
+                      )}
                     </div>
 
                     <label className="flex items-start gap-2.5 text-xs text-gray-600 pt-1 cursor-pointer">

@@ -359,7 +359,7 @@ export default function PainelAdmin() {
                 }`}
               >
                 {aba.icon} {aba.label}
-                {aba.badge && aba.badge > 0 && (
+                {aba.badge !== undefined && aba.badge > 0 && (
                   <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full text-xs ml-1">{aba.badge}</span>
                 )}
               </button>
@@ -510,7 +510,7 @@ export default function PainelAdmin() {
                   <div className="w-1/2"><label className="text-xs font-bold text-gray-500 block mb-1">Categoria</label><select value={formProduto.tipo} onChange={(e) => setFormProduto({ ...formProduto, tipo: e.target.value })} className="w-full p-2.5 border rounded-lg text-sm bg-white outline-none"><option value="Frutas">Frutas</option><option value="Verduras">Verduras</option><option value="Legumes">Legumes</option><option value="Grãos">Grãos</option><option value="Outros">Outros</option></select></div>
                   <div className="w-1/2"><label className="text-xs font-bold text-gray-500 block mb-1">Unidade</label><select value={formProduto.unidadePadrao} onChange={(e) => setFormProduto({ ...formProduto, unidadePadrao: e.target.value })} className="w-full p-2.5 border rounded-lg text-sm bg-white outline-none"><option value="Kg">Kg</option><option value="Unidade">Un</option><option value="Maço">Maço</option><option value="Caixa">Caixa</option></select></div>
                 </div>
-                <Input label="Preço Sugerido (R$)" name="preco" type="number" step="0.01" value={formProduto.preco} onChange={(e) => setFormProduto({ ...formProduto, preco: e.target.value })} placeholder="0.00" />
+                <Input label="Preço Sugerido (R$)" name="preco" type="number" step="0.01" value={formProduto.preco} onChange={(e) => setFormProduto({ ...formProduto, preco: e.target.value })} placeholder="Ex: 5.90" />
                 <div>
                   <label className="text-xs font-bold text-gray-500 block mb-1">Descrição (Opcional)</label>
                   <textarea
@@ -774,8 +774,8 @@ export default function PainelAdmin() {
       <Modal isOpen={isModalAdminOpen} onClose={() => setIsModalAdminOpen(false)} title="Criar Novo Administrador">
         <form onSubmit={criarNovoAdmin} className="space-y-4 mt-2">
           <p className="text-sm text-gray-600 mb-4 leading-relaxed">O novo administrador terá acesso total ao painel. Crie uma senha forte e segura.</p>
-          <Input label="E-mail de Acesso" type="email" value={formAdmin.email} onChange={(e) => setFormAdmin({ ...formAdmin, email: e.target.value })} required placeholder="admin@raizconecta.com.br" />
-          <Input label="Senha (Mínimo 8 caracteres)" type="password" value={formAdmin.senha} onChange={(e) => setFormAdmin({ ...formAdmin, senha: e.target.value })} required placeholder="********" />
+          <Input label="E-mail de Acesso" type="email" value={formAdmin.email} onChange={(e) => setFormAdmin({ ...formAdmin, email: e.target.value })} required placeholder="email@raizconecta.com.br" />
+          <Input label="Senha (Mínimo 8 caracteres)" type="password" value={formAdmin.senha} onChange={(e) => setFormAdmin({ ...formAdmin, senha: e.target.value })} required placeholder="Crie uma senha forte" />
           <div className="pt-4 flex gap-3">
             <Button type="button" variant="outline" onClick={() => setIsModalAdminOpen(false)} className="w-1/2 border-gray-300 text-gray-600 hover:bg-gray-50">Cancelar</Button>
             <Button type="submit" isLoading={criandoAdmin} className="w-1/2 bg-gray-900 hover:bg-black text-white">Criar Conta</Button>

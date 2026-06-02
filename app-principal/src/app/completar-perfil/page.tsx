@@ -28,6 +28,8 @@ export default function CompletarPerfilPage() {
     nome: "",
     email: "",
     senha: "",
+    confirmarSenha: "",
+    telefone: "",
   });
 
   const [formDados, setFormDados] = useState({
@@ -135,6 +137,7 @@ export default function CompletarPerfilPage() {
     formData.append("senha", dadosPasso1.senha);
     formData.append("nome", dadosPasso1.nome);
     formData.append("tipoUsuario", dadosPasso1.tipoUsuario);
+    formData.append("telefone", dadosPasso1.telefone || "");
     formData.append("tipoDoc", formDados.tipoDoc);
     formData.append("documento", docLimpo);
     formData.append("cep", cepLimpo);
@@ -236,8 +239,8 @@ export default function CompletarPerfilPage() {
                     onChange={handleDocumentoChange}
                     placeholder={
                       formDados.tipoDoc === "CPF"
-                        ? "000.000.000-00"
-                        : "00.000.000/0001-00"
+                        ? "Seu CPF (somente números)"
+                        : "Seu CNPJ (somente números)"
                     }
                     required
                   />
@@ -258,7 +261,7 @@ export default function CompletarPerfilPage() {
                   name="cep"
                   value={formDados.cep}
                   onChange={handleCepChange}
-                  placeholder="00000-000"
+                  placeholder="Seu CEP"
                   required
                 />
                 {buscandoCep && (
@@ -286,7 +289,7 @@ export default function CompletarPerfilPage() {
                     name="numero"
                     value={formDados.numero}
                     onChange={handleInputChange}
-                    placeholder="S/N"
+                    placeholder="Nº ou S/N"
                     required
                   />
                 </div>
@@ -317,7 +320,7 @@ export default function CompletarPerfilPage() {
                     name="estado"
                     value={formDados.estado}
                     onChange={handleInputChange}
-                    placeholder="SP"
+                    placeholder="UF"
                     required
                   />
                 </div>

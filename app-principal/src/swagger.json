@@ -870,7 +870,12 @@
           "500": {
             "$ref": "#/components/responses/ErroInterno"
           }
-        }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
       },
       "put": {
         "tags": [
@@ -923,7 +928,12 @@
           "500": {
             "$ref": "#/components/responses/ErroInterno"
           }
-        }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
       },
       "delete": {
         "tags": [
@@ -996,7 +1006,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
       }
     },
     "/api/setup-admin": {
@@ -1615,6 +1630,14 @@
             }
           }
         }
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Token JWT obtido via POST /api/auth/login. Obrigatório para endpoints /api/admin/*."
       }
     }
   }
