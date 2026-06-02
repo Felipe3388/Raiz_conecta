@@ -133,28 +133,66 @@ export async function DELETE(req: Request) {
   }
 }
 
-// 🚀 PUT: Admin edita um produto existente (SCRUM-138)
+// PUT: Admin edita produto (inclui troca de foto via FormData)
 export async function PUT(req: Request) {
   try {
-    const data = await req.json();
-    const { id, nome, tipo, preco, unidadePadrao, descricao } = data;
+    const contentType = req.headers.get("content-type") || "";
 
-    if (!id) {
-      return NextResponse.json({ error: "ID do produto é obrigatório" }, { status: 400 });
+    let id: string, nome: string, tipo: string, preco: string,
+        unidadePadrao: string, descricao: string | null, file: File | null = null;
+
+    if (contentType.includes("multipart/form-data")) {
+      const fd = await req.formData();
+      id           = fd.get("id") as string;
+      nome         = fd.get("nome") as string;
+      tipo         = fd.get("tipo") as string;
+      preco        = fd.get("preco") as string;
+      unidadePadrao = fd.get("unidadePadrao") as string;
+      descricao    = (fd.get("descricao") as string) || null;
+      file         = fd.get("file") as File | null;
+    } else {
+      const data = await req.json();
+      ({ id, nome, tipo, preco, unidadePadrao, descricao } = data);
     }
 
-    const precoFormatado = typeof preco === 'string'
-      ? parseFloat(preco.replace(',', '.'))
+    if (!id) return NextResponse.json({ error: "ID do produto é obrigatório" }, { status: 400 });
+
+    const precoFormatado = typeof preco === "string"
+      ? parseFloat(preco.replace(",", "."))
       : Number(preco);
+
+    let imagemUrl: string | undefined;
+
+    // Se veio nova foto, faz upload no Cloudinary e apaga a antiga
+    if (file && file.size > 0) {
+      const produtoAtual = await prisma.produto.findUnique({ where: { cdProduto: Number(id) } });
+      if (produtoAtual?.imagemUrl?.includes("cloudinary.com")) {
+        try {
+          const parts = produtoAtual.imagemUrl.split("/");
+          const publicId = `raiz-conecta/produtos/${parts[parts.length - 1].split(".")[0]}`;
+          await cloudinary.uploader.destroy(publicId);
+        } catch { /* ignora se não conseguir remover */ }
+      }
+
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          { folder: "raiz-conecta/produtos", resource_type: "image" },
+          (error, result) => { if (error || !result) return reject(error); resolve(result as { secure_url: string }); }
+        ).end(buffer);
+      });
+      imagemUrl = uploadResult.secure_url;
+    }
 
     const produtoAtualizado = await prisma.produto.update({
       where: { cdProduto: Number(id) },
       data: {
-        nome,
-        tipo,
+        nome, tipo,
         preco: precoFormatado,
         unidadePadrao,
         descricao: descricao || null,
+        ...(imagemUrl ? { imagemUrl } : {}),
       },
     });
 

@@ -12,9 +12,43 @@ import {
 
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Card } from "@/components/ui/Card";
 import { TermosModal } from "@/components/ui/TermosModal";
 import { PrivacidadeModal } from "@/components/ui/PrivacidadeModal";
+
+// Componente separado para evitar IIFE no JSX (incompatível com Turbopack)
+function SenhaForcaIndicador({ senha }: { senha: string }) {
+  const pontos = [
+    senha.length >= 8,
+    /[A-Z]/.test(senha),
+    /[0-9]/.test(senha),
+    /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(senha),
+    senha.length >= 12,
+  ].filter(Boolean).length;
+
+  const info = [
+    { label: "Muito fraca", color: "bg-red-500",     text: "text-red-600"    },
+    { label: "Fraca",       color: "bg-orange-400",  text: "text-orange-600" },
+    { label: "Razoável",    color: "bg-yellow-400",  text: "text-yellow-600" },
+    { label: "Forte",       color: "bg-green-500",   text: "text-green-600"  },
+    { label: "Muito forte", color: "bg-emerald-600", text: "text-emerald-700"},
+  ][Math.max(0, pontos - 1)] ?? { label: "Muito fraca", color: "bg-red-500", text: "text-red-600" };
+
+  return (
+    <div className="mt-2">
+      <div className="flex gap-1 mb-1">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${i <= pontos ? info.color : "bg-gray-200"}`} />
+        ))}
+      </div>
+      <p className={`text-xs font-bold ${info.text}`}>{info.label}</p>
+      {pontos < 4 && (
+        <p className="text-xs text-gray-400 mt-0.5">Use maiúsculas, números e símbolos (!@#$%)</p>
+      )}
+    </div>
+  );
+}
 
 function LoginContent() {
   const router = useRouter();
@@ -48,7 +82,7 @@ function LoginContent() {
     setView(novaView);
     setErro("");
     if (novaView === "cadastro") {
-      setFormCadastro({ tipoUsuario: "produtor", nome: "", email: "", senha: "", confirmarSenha: "", telefone: "" });
+      setFormCadastro((prev) => ({ tipoUsuario: prev.tipoUsuario || "produtor", nome: "", email: "", senha: "", confirmarSenha: "", telefone: "" }));
     }
   }, []);
 
@@ -103,14 +137,24 @@ function LoginContent() {
     }
   };
 
+  // ── Validações ────────────────────────────────────────────────
+  const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  const REGEX_SENHA = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+
   const handleCadastroPasso1 = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formCadastro.senha !== formCadastro.confirmarSenha) {
-      setErro("As senhas não coincidem. Verifique e tente novamente.");
+    setErro("");
+
+    if (!REGEX_EMAIL.test(formCadastro.email)) {
+      setErro("E-mail inválido. Use o formato nome@dominio.com.");
       return;
     }
-    if (formCadastro.senha.length < 6) {
-      setErro("A senha deve ter pelo menos 6 caracteres.");
+    if (!REGEX_SENHA.test(formCadastro.senha)) {
+      setErro("A senha deve ter mínimo 8 caracteres, letra maiúscula, minúscula, número e caractere especial (!@#$%...).");
+      return;
+    }
+    if (formCadastro.senha !== formCadastro.confirmarSenha) {
+      setErro("As senhas não coincidem. Verifique e tente novamente.");
       return;
     }
     sessionStorage.setItem("cadastro_temporario", JSON.stringify(formCadastro));
@@ -125,7 +169,7 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 flex flex-col items-center justify-center p-4 md:p-8 overflow-hidden">
+    <div className="min-h-screen bg-linear-to-br from-green-50 via-white to-emerald-50 flex flex-col items-center justify-center p-4 md:p-8 overflow-hidden">
 
       {/* LOGO */}
       <motion.div
@@ -164,7 +208,7 @@ function LoginContent() {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.35, delay: 0.1 }}
-        className="w-full max-w-[480px]"
+        className="w-full max-w-120"
       >
         {/* Sem hover lift no card de login — é um form, não um item de lista */}
         <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
@@ -198,7 +242,7 @@ function LoginContent() {
             </div>
           )}
 
-          <div className="p-8 md:p-10 relative min-h-[400px] flex flex-col justify-center">
+          <div className="p-8 md:p-10 relative min-h-100 flex flex-col justify-center">
             <AnimatePresence mode="wait">
 
               {/* ── LOGIN ── */}
@@ -298,14 +342,26 @@ function LoginContent() {
                       <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                         <Building2 size={16} /> Tipo de Perfil
                       </label>
-                      <select
-                        value={formCadastro.tipoUsuario}
-                        onChange={(e) => setFormCadastro({ ...formCadastro, tipoUsuario: e.target.value })}
-                        className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 bg-white text-sm outline-none"
-                      >
-                        <option value="produtor">Sou Produtor Rural</option>
-                        <option value="mercado">Sou Mercado / Supermercado</option>
-                      </select>
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { value: "produtor", label: "Produtor Rural",        icon: "🌱" },
+                          { value: "mercado",  label: "Mercado / Supermercado", icon: "🏪" },
+                        ].map((opt) => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => setFormCadastro({ ...formCadastro, tipoUsuario: opt.value })}
+                            className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 font-bold text-sm transition-all cursor-pointer ${
+                              formCadastro.tipoUsuario === opt.value
+                                ? "border-green-500 bg-green-50 text-green-800"
+                                : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                            }`}
+                          >
+                            <span className="text-xl">{opt.icon}</span>
+                            <span>{opt.label}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
                     <Input
@@ -326,6 +382,7 @@ function LoginContent() {
                       placeholder="seu@email.com"
                       value={formCadastro.email}
                       onChange={(e) => setFormCadastro({ ...formCadastro, email: e.target.value })}
+                      error={formCadastro.email && !REGEX_EMAIL.test(formCadastro.email) ? "E-mail inválido" : undefined}
                       required
                     />
 
@@ -358,12 +415,15 @@ function LoginContent() {
                         <button
                           type="button"
                           onClick={() => setMostrarSenhaCadastro(!mostrarSenhaCadastro)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          className="rc-password-toggle absolute right-3 top-1/2 -translate-y-1/2"
                           tabIndex={-1}
                         >
                           {mostrarSenhaCadastro ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                       </div>
+                      {formCadastro.senha && (
+                        <SenhaForcaIndicador senha={formCadastro.senha} />
+                      )}
                     </div>
 
                     {/* SCRUM-146: Confirmação de Senha */}
@@ -390,7 +450,7 @@ function LoginContent() {
                         <button
                           type="button"
                           onClick={() => setMostrarConfirmarSenha(!mostrarConfirmarSenha)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          className="rc-password-toggle absolute right-3 top-1/2 -translate-y-1/2"
                           tabIndex={-1}
                         >
                           {mostrarConfirmarSenha ? <EyeOff size={18} /> : <Eye size={18} />}

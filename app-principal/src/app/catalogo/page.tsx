@@ -28,6 +28,7 @@ export default function CatalogoMercado() {
   const [inputQtd, setInputQtd] = useState<{ [key: number]: string }>({});
   const [filtroBusca, setFiltroBusca] = useState("");
   const [filtroCategoria, setFiltroCategoria] = useState("Todas");
+  const [filtroOrdem, setFiltroOrdem] = useState("nome"); // nome | preco_asc | preco_desc
 
   // Estados da Avaliação do Produtor após entrega
   const [avaliandoOfertaId, setAvaliandoOfertaId] = useState<string | null>(null);
@@ -196,14 +197,18 @@ export default function CatalogoMercado() {
     }
   };
 
-  const categoriasUnicas = ["Todas", ...Array.from(new Set(produtosDb.map((p) => p.categoria).filter(Boolean)))];
+  const categoriasUnicas = ["Todas", ...Array.from(new Set(produtosDb.map((p) => p.tipo || p.categoria).filter(Boolean)))];
 
-  const produtosFiltrados = produtosDb.filter((prod) => {
-    return (
+  const produtosFiltrados = produtosDb
+    .filter((prod) =>
       prod.nome.toLowerCase().includes(filtroBusca.toLowerCase()) &&
-      (filtroCategoria === "Todas" || prod.categoria === filtroCategoria)
-    );
-  });
+      (filtroCategoria === "Todas" || (prod.tipo || prod.categoria) === filtroCategoria)
+    )
+    .sort((a, b) => {
+      if (filtroOrdem === "preco_asc")  return Number(a.preco) - Number(b.preco);
+      if (filtroOrdem === "preco_desc") return Number(b.preco) - Number(a.preco);
+      return a.nome.localeCompare(b.nome);
+    });
 
   const totalEstimado = carrinho.reduce((acc, item) => acc + item.precoEstimado * item.qtd, 0);
 
@@ -244,17 +249,27 @@ export default function CatalogoMercado() {
           <div className="flex flex-col lg:flex-row gap-8 transition-all duration-500">
             <div className={`w-full transition-all duration-500 ${isCarrinhoVazio ? "lg:w-full" : "lg:w-2/3"} space-y-6`}>
 
-              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-3 text-gray-400" size={18} />
-                  <input type="text" placeholder="Buscar por nome..." value={filtroBusca} onChange={(e) => setFiltroBusca(e.target.value)} className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Filter size={18} className="text-gray-400" />
-                  <select value={filtroCategoria} onChange={(e) => setFiltroCategoria(e.target.value)} className="py-2.5 px-3 rounded-lg border border-gray-300 outline-none bg-white font-semibold">
-                    {categoriasUnicas.map((cat) => (<option key={cat} value={cat}>{cat}</option>))}
+              <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 space-y-3">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={17} />
+                    <input type="text" placeholder="Buscar por nome..." value={filtroBusca} onChange={(e) => setFiltroBusca(e.target.value)} className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none text-sm bg-white" />
+                  </div>
+                  <select value={filtroCategoria} onChange={(e) => setFiltroCategoria(e.target.value)} className="rc-select w-full sm:w-44 text-sm">
+                    {categoriasUnicas.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
+                  </select>
+                  <select value={filtroOrdem} onChange={(e) => setFiltroOrdem(e.target.value)} className="rc-select w-full sm:w-48 text-sm">
+                    <option value="nome">Ordenar: A–Z</option>
+                    <option value="preco_asc">Preço: menor primeiro</option>
+                    <option value="preco_desc">Preço: maior primeiro</option>
                   </select>
                 </div>
+                {(filtroBusca || filtroCategoria !== "Todas") && (
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-gray-500">{produtosFiltrados.length} produto(s) encontrado(s)</span>
+                    <button onClick={() => { setFiltroBusca(""); setFiltroCategoria("Todas"); setFiltroOrdem("nome"); }} className="text-green-600 hover:underline font-bold cursor-pointer">Limpar</button>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -443,4 +458,75 @@ export default function CatalogoMercado() {
                                     </Button>
                                   </div>
                                 )}
-                              </div>\n                            ))}\n                          </div>\n                        )}\n                      </div>\n\n                      {/* CANCELAMENTO DO PEDIDO */}\n                      {demanda.status !== "CANCELADA" && demanda.status !== "CONCLUIDA" && (\n                        <div className="mt-4 pt-4 border-t border-gray-100">\n                          {cancelandoDemandaId === demanda.id ? (\n                            <div className="bg-red-50 border border-red-200 rounded-xl p-4 space-y-3">\n                              <div className="flex items-center gap-2 text-red-700">\n                                <AlertTriangle size={18} />\n                                <p className="text-sm font-bold">Confirmar cancelamento?</p>\n                              </div>\n                              <p className="text-xs text-red-600">\n                                O cancelamento só é permitido em até <strong>7 dias úteis</strong> após o pedido. Esta ação não pode ser desfeita.\n                              </p>\n                              <div>\n                                <label className="text-xs font-semibold text-gray-600 block mb-1">Motivo (opcional)</label>\n                                <textarea\n                                  rows={2}\n                                  value={motivoCancelamento}\n                                  onChange={e => setMotivoCancelamento(e.target.value)}\n                                  placeholder="Ex: Estoque já abastecido, produto não necessário..."\n                                  className="w-full px-3 py-2 rounded-lg border border-red-200 text-sm outline-none focus:ring-2 focus:ring-red-300 resize-none"\n                                />\n                              </div>\n                              <div className="flex gap-2">\n                                <Button\n                                  variant="outline"\n                                  onClick={() => { setCelandoDemandaId(null); setMotivoCancelamento(""); }}\n                                  className="flex-1 text-xs h-9 border-gray-300"\n                                >\n                                  Voltar\n                                </Button>\n                                <Button\n                                  isLoading={processandoCancelamento}\n                                  onClick={() => cancelarPedido(demanda.id)}\n                                  className="flex-1 text-xs h-9 bg-red-600 hover:bg-red-700"\n                                >\n                                  <XCircle size={14} className="mr-1" /> Cancelar Pedido\n                                </Button>\n                              </div>\n                            </div>\n                          ) : (\n                            <button\n                              onClick={() => setCelandoDemandaId(demanda.id)}\n                              className="w-full text-xs text-gray-400 hover:text-red-600 font-medium flex items-center justify-center gap-1.5 py-2 rounded-lg hover:bg-red-50 transition-colors border border-dashed border-transparent hover:border-red-200"\n                            >\n                              <XCircle size={14} /> Cancelar este pedido\n                            </button>\n                          )}\n                        </div>\n                      )}\n\n                      {demanda.status === "CANCELADA" && (\n                        <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2 text-red-500 text-sm font-bold">\n                          <XCircle size={16} /> Pedido cancelado\n                        </div>\n                      )}\n                    </Card>\n                  );\n                })}\n              </div>\n            )}\n          </div>\n        )}\n      </div>\n    </div>\n  );\n}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* CANCELAMENTO DO PEDIDO */}
+                      {demanda.status !== "CANCELADA" && demanda.status !== "CONCLUIDA" && (
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                          {cancelandoDemandaId === demanda.id ? (
+                            <div className="bg-red-50 border border-red-200 rounded-xl p-4 space-y-3">
+                              <div className="flex items-center gap-2 text-red-700">
+                                <AlertTriangle size={18} />
+                                <p className="text-sm font-bold">Confirmar cancelamento?</p>
+                              </div>
+                              <p className="text-xs text-red-600">
+                                O cancelamento só é permitido em até <strong>7 dias úteis</strong> após o pedido. Esta ação não pode ser desfeita.
+                              </p>
+                              <div>
+                                <label className="text-xs font-semibold text-gray-600 block mb-1">Motivo (opcional)</label>
+                                <textarea
+                                  rows={2}
+                                  value={motivoCancelamento}
+                                  onChange={e => setMotivoCancelamento(e.target.value)}
+                                  placeholder="Ex: Estoque já abastecido, produto não necessário..."
+                                  className="w-full px-3 py-2 rounded-lg border border-red-200 text-sm outline-none focus:ring-2 focus:ring-red-300 resize-none"
+                                />
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  onClick={() => { setCelandoDemandaId(null); setMotivoCancelamento(""); }}
+                                  className="flex-1 text-xs h-9 border-gray-300"
+                                >
+                                  Voltar
+                                </Button>
+                                <Button
+                                  isLoading={processandoCancelamento}
+                                  onClick={() => cancelarPedido(demanda.id)}
+                                  className="flex-1 text-xs h-9 bg-red-600 hover:bg-red-700"
+                                >
+                                  <XCircle size={14} className="mr-1" /> Cancelar Pedido
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setCelandoDemandaId(demanda.id)}
+                              className="rc-danger-btn-ghost w-full"
+                            >
+                              <XCircle size={14} /> Cancelar este pedido
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {demanda.status === "CANCELADA" && (
+                        <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2 text-red-500 text-sm font-bold">
+                          <XCircle size={16} /> Pedido cancelado
+                        </div>
+                      )}
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

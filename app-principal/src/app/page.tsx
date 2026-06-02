@@ -68,7 +68,7 @@ export default function HomePage() {
                 {roleLogado ? (
                   <Link
                     href={getLinkDoPainel()}
-                    className="px-8 py-4 bg-green-600 text-white rounded-xl font-bold shadow-lg hover:bg-green-700 hover:shadow-green-200 hover:-translate-y-1 transition-all text-center flex items-center justify-center gap-2 text-lg"
+                    className="px-8 py-4 bg-green-600 text-white rounded-xl font-bold shadow-lg hover:bg-green-700 hover:-translate-y-1 transition-all text-center flex items-center justify-center gap-2 text-lg cursor-pointer"
                   >
                     Acessar meu Painel <ArrowRight size={20} />
                   </Link>
@@ -76,13 +76,13 @@ export default function HomePage() {
                   <>
                     <Link
                       href="/login"
-                      className="px-8 py-4 bg-green-600 text-white rounded-xl font-bold shadow-lg hover:bg-green-700 hover:shadow-green-200 hover:-translate-y-1 transition-all text-center flex items-center justify-center gap-2"
+                      className="px-8 py-4 bg-green-600 text-white rounded-xl font-bold shadow-lg hover:bg-green-700 hover:-translate-y-1 transition-all text-center flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <Store size={20} /> Sou um Mercado
                     </Link>
                     <Link
                       href="/login"
-                      className="px-8 py-4 bg-white text-green-700 border-2 border-green-200 rounded-xl font-bold shadow-sm hover:border-green-600 hover:bg-green-50 hover:-translate-y-1 transition-all text-center flex items-center justify-center gap-2"
+                      className="px-8 py-4 bg-white text-green-700 border-2 border-green-200 rounded-xl font-bold shadow-sm hover:border-green-600 hover:bg-green-50 hover:-translate-y-1 transition-all text-center flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <Tractor size={20} /> Sou Produtor Rural
                     </Link>
@@ -110,10 +110,10 @@ export default function HomePage() {
       <section className="py-24 bg-gray-900 text-white" id="como-funciona">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-black mb-4">
+            <h2 className="text-3xl md:text-4xl font-black mb-4 text-white">
               Como o Raiz Conecta funciona?
             </h2>
-            <p className="text-gray-400 text-lg">
+            <p className="text-gray-300 text-lg">
               Um ecossistema desenhado para agilidade e lucro de ambos os lados.
             </p>
           </div>

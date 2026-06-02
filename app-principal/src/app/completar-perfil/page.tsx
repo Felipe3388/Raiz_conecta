@@ -22,15 +22,16 @@ export default function CompletarPerfilPage() {
   const [buscandoCep, setBuscandoCep] = useState(false);
   const [arquivo, setArquivo] = useState<File | null>(null);
 
-  // Os dados do Passo 1 (que vieram da tela de Login)
-  const [dadosPasso1, setDadosPasso1] = useState({
-    tipoUsuario: "",
-    nome: "",
-    email: "",
-    senha: "",
-    confirmarSenha: "",
-    telefone: "",
-  });
+  // Lê o sessionStorage na inicialização, sem depender de useEffect assíncrono
+  const dadosIniciais = (() => {
+    if (typeof window === "undefined") return { tipoUsuario: "", nome: "", email: "", senha: "", confirmarSenha: "", telefone: "" };
+    try {
+      const temp = sessionStorage.getItem("cadastro_temporario");
+      return temp ? JSON.parse(temp) : { tipoUsuario: "", nome: "", email: "", senha: "", confirmarSenha: "", telefone: "" };
+    } catch { return { tipoUsuario: "", nome: "", email: "", senha: "", confirmarSenha: "", telefone: "" }; }
+  })();
+
+  const [dadosPasso1, setDadosPasso1] = useState(dadosIniciais);
 
   const [formDados, setFormDados] = useState({
     tipoDoc: "CPF",
@@ -203,6 +204,12 @@ export default function CompletarPerfilPage() {
             Precisamos apenas dos seus dados logísticos e documento para validar
             sua conta.
           </p>
+          {dadosPasso1.tipoUsuario && (
+            <div className="mt-3 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold border-2
+              bg-green-50 border-green-300 text-green-800">
+              {dadosPasso1.tipoUsuario === "produtor" ? "🌱 Cadastrando como Produtor Rural" : "🏪 Cadastrando como Mercado"}
+            </div>
+          )}
         </div>
 
         <Card className="p-2 sm:p-4">

@@ -36,6 +36,13 @@ export async function POST(req: Request) {
       );
     }
 
+    if (tipoUsuario !== "produtor" && tipoUsuario !== "mercado") {
+      return NextResponse.json(
+        { error: "Tipo de perfil inválido. Selecione Produtor Rural ou Mercado." },
+        { status: 400 }
+      );
+    }
+
     const usuarioExistente = await prisma.acesso.findFirst({
       where: { login: email },
     });
