@@ -276,7 +276,7 @@ export default function CompletarPerfilPage() {
                     name="rua"
                     value={formDados.rua}
                     onChange={handleInputChange}
-                    placeholder="Nome da Rua"
+                    placeholder="Ex: Estrada Rural Km 12"
                     required
                   />
                 </div>

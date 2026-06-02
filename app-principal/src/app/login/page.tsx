@@ -13,6 +13,8 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card } from "@/components/ui/Card";
+import { TermosModal } from "@/components/ui/TermosModal";
+import { PrivacidadeModal } from "@/components/ui/PrivacidadeModal";
 
 function LoginContent() {
   const router = useRouter();
@@ -23,6 +25,8 @@ function LoginContent() {
   const [erro, setErro] = useState("");
   const [mostrarSenhaLogin, setMostrarSenhaLogin] = useState(false);
   const [mostrarSenhaCadastro, setMostrarSenhaCadastro] = useState(false);
+  const [isTermosOpen, setIsTermosOpen] = useState(false);
+  const [isPrivacidadeOpen, setIsPrivacidadeOpen] = useState(false);
 
   const [formLogin, setFormLogin] = useState({ email: "", senha: "" });
   const [formCadastro, setFormCadastro] = useState({
@@ -288,7 +292,7 @@ function LoginContent() {
                       name="nome"
                       type="text"
                       icon={User}
-                      placeholder="Fazenda Imaginária"
+                      placeholder="Fazenda São João"
                       value={formCadastro.nome}
                       onChange={(e) => setFormCadastro({ ...formCadastro, nome: e.target.value })}
                       required
@@ -333,9 +337,9 @@ function LoginContent() {
                       <input type="checkbox" className="mt-0.5 accent-green-600 rounded" required />
                       <span>
                         Li e concordo com os{" "}
-                        <a href="#" className="text-green-600 font-bold hover:underline">Termos de Uso</a>{" "}
+                        <button type="button" onClick={() => setIsTermosOpen(true)} className="text-green-600 font-bold hover:underline">Termos de Uso</button>{" "}
                         e{" "}
-                        <a href="#" className="text-green-600 font-bold hover:underline">Política de Privacidade</a>.
+                        <button type="button" onClick={() => setIsPrivacidadeOpen(true)} className="text-green-600 font-bold hover:underline">Política de Privacidade</button>.
                       </span>
                     </label>
 
@@ -404,8 +408,12 @@ function LoginContent() {
         transition={{ delay: 0.5 }}
         className="text-center text-xs text-gray-400 mt-6"
       >
-        Ao acessar, você concorda com nossos termos de uso.
+        Ao acessar, você concorda com nossos{" "}
+        <button onClick={() => setIsTermosOpen(true)} className="text-green-600 font-bold hover:underline">termos de uso</button>.
       </motion.p>
+
+      <TermosModal isOpen={isTermosOpen} onClose={() => setIsTermosOpen(false)} />
+      <PrivacidadeModal isOpen={isPrivacidadeOpen} onClose={() => setIsPrivacidadeOpen(false)} />
     </div>
   );
 }

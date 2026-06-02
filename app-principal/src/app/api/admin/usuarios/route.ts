@@ -34,7 +34,7 @@ export async function GET() {
 // PUT: Atualiza o status (Aprovar, Rejeitar, Suspender, Reativar)
 export async function PUT(req: Request) {
   try {
-    const { email, tipo, novoStatus } = await req.json();
+    const { email, tipo, novoStatus, motivo } = await req.json();
 
     if (!email || !tipo || !novoStatus) {
       return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
@@ -62,26 +62,28 @@ export async function PUT(req: Request) {
 
     // Microsserviço de e-mail — só chama se a URL estiver configurada
     if (process.env.MICROSERVICE_URL) {
-      if (novoStatus === "APROVADO") {
-        try {
+      try {
+        if (novoStatus === "APROVADO") {
           await fetch(`${process.env.MICROSERVICE_URL}/api/email/aprovacao`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, status: "aprovado" }),
+            body: JSON.stringify({ email }),
           });
-        } catch (e) {
-          console.log("Aviso: Microsserviço de e-mail indisponível.");
-        }
-      } else if (novoStatus === "REJEITADO") {
-        try {
+        } else if (novoStatus === "REJEITADO") {
           await fetch(`${process.env.MICROSERVICE_URL}/api/email/rejeicao`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, status: "rejeitado" }),
+            body: JSON.stringify({ email }),
           });
-        } catch (e) {
-          console.log("Aviso: Microsserviço de e-mail indisponível.");
+        } else if (novoStatus === "SUSPENSO") {
+          await fetch(`${process.env.MICROSERVICE_URL}/api/email/suspensao`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, motivo: motivo || "" }),
+          });
         }
+      } catch (e) {
+        console.log("Aviso: Microsserviço de e-mail indisponível.");
       }
     }
 
@@ -101,9 +103,23 @@ export async function DELETE(req: Request) {
     const { searchParams } = new URL(req.url);
     const email = searchParams.get("email");
     const tipo  = searchParams.get("tipo");
+    const motivo = searchParams.get("motivo") || "";
 
     if (!email || !tipo)
       return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
+
+    // Envia e-mail de exclusão antes de apagar do banco
+    if (process.env.MICROSERVICE_URL) {
+      try {
+        await fetch(`${process.env.MICROSERVICE_URL}/api/email/exclusao`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, motivo }),
+        });
+      } catch (e) {
+        console.log("Aviso: Microsserviço de e-mail indisponível.");
+      }
+    }
 
     if (tipo === "produtor") {
       await prisma.vendedor.delete({ where: { email } });
@@ -119,5 +135,34 @@ export async function DELETE(req: Request) {
       { error: "Erro ao excluir. Pode haver pedidos vinculados." },
       { status: 500 }
     );
+  }
+}
+
+// PATCH: Admin edita dados básicos de um usuário
+export async function PATCH(req: Request) {
+  try {
+    const { email, tipo, nomeFantasia, telefone, cidade, estado } = await req.json();
+
+    if (!email || !tipo) {
+      return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
+    }
+
+    const data = {
+      ...(nomeFantasia && { nomeFantasia }),
+      ...(telefone  !== undefined && { telefone }),
+      ...(cidade    !== undefined && { cidade }),
+      ...(estado    !== undefined && { estado }),
+    };
+
+    if (tipo === "produtor") {
+      await prisma.vendedor.update({ where: { email }, data });
+    } else if (tipo === "mercado") {
+      await prisma.cliente.update({ where: { email }, data });
+    }
+
+    return NextResponse.json({ message: "Usuário atualizado com sucesso" }, { status: 200 });
+  } catch (error) {
+    console.error("Erro no PATCH /api/admin/usuarios:", error);
+    return NextResponse.json({ error: "Erro ao atualizar usuário" }, { status: 500 });
   }
 }

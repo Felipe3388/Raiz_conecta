@@ -65,7 +65,13 @@ export async function POST(req: Request) {
         await fetch(`${process.env.MICROSERVICE_URL}/api/email/sugestao`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ emailProdutor, nomeProduto, descricao }),
+          body: JSON.stringify({
+            emailProdutor,
+            nomeProduto,
+            descricao,
+            imagemUrl,
+            precoSugerido: precoSugerido || null,
+          }),
         });
       } catch (e) {
         console.error("Microsserviço de e-mail indisponível.");

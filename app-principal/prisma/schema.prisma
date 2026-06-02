@@ -120,6 +120,7 @@ model Produto {
   
   imagemUrl     String? 
   unidadePadrao String?
+  descricao     String?
 
   ItensPedido ItemPedido[]
   Estoques    Prod_Vendedor_Possui[]

@@ -32,6 +32,7 @@ export async function POST(req: Request) {
     const tipo = formData.get("tipo") as string;
     const preco = formData.get("preco") as string;
     const unidadePadrao = formData.get("unidadePadrao") as string;
+    const descricao = (formData.get("descricao") as string) || null;
     const file = formData.get("file") as File;
 
     let imagemUrl = "";
@@ -65,6 +66,7 @@ export async function POST(req: Request) {
         preco: parseFloat(preco),
         imagemUrl,
         unidadePadrao,
+        descricao,
         status: "ATIVO",
       },
     });
@@ -135,18 +137,16 @@ export async function DELETE(req: Request) {
 export async function PUT(req: Request) {
   try {
     const data = await req.json();
-    const { id, nome, tipo, preco, unidadePadrao } = data;
+    const { id, nome, tipo, preco, unidadePadrao, descricao } = data;
 
     if (!id) {
       return NextResponse.json({ error: "ID do produto é obrigatório" }, { status: 400 });
     }
 
-    // Tratamento de segurança para o preço (garante que vírgulas virem pontos para o banco)
     const precoFormatado = typeof preco === 'string'
       ? parseFloat(preco.replace(',', '.'))
       : Number(preco);
 
-    // Atualiza o produto direto no banco
     const produtoAtualizado = await prisma.produto.update({
       where: { cdProduto: Number(id) },
       data: {
@@ -154,6 +154,7 @@ export async function PUT(req: Request) {
         tipo,
         preco: precoFormatado,
         unidadePadrao,
+        descricao: descricao || null,
       },
     });
 
