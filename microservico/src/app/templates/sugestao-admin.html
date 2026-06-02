@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Nova Sugestão de Produto</title></head>
+<body style="margin:0;padding:0;background-color:#f3f4f6;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#1e3a5f 0%,#1d4ed8 100%);padding:36px 32px;text-align:center;">
+            <div style="font-size:40px;margin-bottom:8px;">📋</div>
+            <h1 style="color:#ffffff;margin:0;font-size:24px;font-weight:800;">Nova Sugestão de Produto</h1>
+            <p style="color:#bfdbfe;margin:8px 0 0;font-size:13px;">Painel Administrativo — Raiz Conecta</p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:36px 32px;">
+            <p style="color:#374151;line-height:1.7;margin:0 0 24px;">
+              Um produtor enviou uma nova sugestão de produto para análise. Confira os detalhes abaixo e acesse o painel para aprovar ou descartar.
+            </p>
+
+            <!-- Produtor -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;margin-bottom:20px;">
+              <tr>
+                <td style="padding:18px 20px;">
+                  <p style="color:#1e40af;margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">📧 Produtor Responsável</p>
+                  <p style="color:#1f2937;font-size:16px;font-weight:700;margin:0;">{{emailProdutor}}</p>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Produto -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#fffbeb;border:1px solid #fcd34d;border-radius:12px;margin-bottom:20px;overflow:hidden;">
+              <tr>
+                <td style="padding:20px;text-align:center;">
+                  <p style="color:#92400e;margin:0 0 16px;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;">🌾 Dados do Produto</p>
+                  {{imagemHtml}}
+                  <p style="font-size:22px;margin:8px 0 4px;color:#1f2937;font-weight:800;">{{nomeProduto}}</p>
+                  <p style="color:#78350f;font-size:14px;margin:0 0 12px;font-style:italic;">"{{descricao}}"</p>
+                  <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                    <tr>
+                      <td style="background-color:#d97706;color:#fff;padding:6px 20px;border-radius:20px;font-size:13px;font-weight:700;">
+                        💰 Preço Sugerido: {{precoFormatado}}
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+
+            <!-- CTA -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;">
+              <tr>
+                <td align="center" style="padding:8px 0 24px;">
+                  <a href="#" style="display:inline-block;background:linear-gradient(135deg,#15803d,#16a34a);color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px;">
+                    Acessar Painel de Sugestões →
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="color:#6b7280;font-size:13px;margin:0 0 4px;">Atenciosamente,</p>
+            <p style="color:#1f2937;font-size:15px;font-weight:700;margin:0;">Sistema Raiz Conecta</p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background-color:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 32px;text-align:center;">
+            <p style="color:#9ca3af;font-size:12px;margin:0;">E-mail automático gerado pelo sistema. Acesse o painel para gerenciar.</p>
+            <p style="color:#9ca3af;font-size:12px;margin:4px 0 0;">© Raiz Conecta — Conectando o campo à cidade.</p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
