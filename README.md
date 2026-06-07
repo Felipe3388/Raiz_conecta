@@ -25,13 +25,13 @@
 
 **Projeto Interdisciplinar** · Engenharia de Software II · Desenvolvimento Web III · Gestão Ágil de Projetos de Software
 
-| Integrante | GitHub |
+| Integrante
 |---|---|
-| Daniel Henrique Domingues Nogueira | — |
-| Felipe Gomes Felix | — |
-| Guilherme Vinícius Baeza de Oliveira | [@IneGuilherme](https://github.com/IneGuilherme) |
-| Gustavo Henrique Bauch | — |
-| Jhonatan Melo de Oliveira | — |
+| Daniel Henrique Domingues Nogueira 
+| Felipe Gomes Felix 
+| Guilherme Vinícius Baeza de Oliveira 
+| Gustavo Henrique Bauch 
+| Jhonatan Melo de Oliveira 
 
 **Votorantim — Junho, 2026**
 
