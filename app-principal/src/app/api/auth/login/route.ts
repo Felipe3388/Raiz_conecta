@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET =
-  process.env.JWT_SECRET || "chave-secreta-super-segura-raiz-conecta";
+  process.env.JWT_SECRET || "chave-secreta-super-segura-raiz-conecta"; // top descriçoes
 
 export async function POST(req: Request) {
   try {
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
         status: usuario.status,
       },
       JWT_SECRET,
-      { expiresIn: "24h" },
+      { expiresIn: "2h" },
     );
 
     // 6. Monta a resposta
