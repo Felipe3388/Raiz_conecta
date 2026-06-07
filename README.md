@@ -175,24 +175,6 @@ O projeto contribui diretamente para os ODS da ONU, especialmente:
 
 ---
 
-## Requisitos do Projeto
-
-### Requisitos Atendidos — Disciplina Desenvolvimento Web III
-
-| # | Requisito | Status | Evidência |
-|---|-----------|--------|-----------|
-| 1 | Hospedagem GitHub com README e nome dos integrantes | ✅ | Este arquivo |
-| 2 | API RESTful completa com GET, POST, PUT e DELETE | ✅ | `src/app/api/**` — 26 endpoints |
-| 3 | Arquitetura MVC | ✅ | Prisma (Model) + `page.tsx` (View) + `route.ts` (Controller) |
-| 4 | Microsserviço obrigatório | ✅ | `/microservico` — Express.js + Nodemailer |
-| 5 | Aplicação hospedada em nuvem | ✅ | Vercel + Neon (PostgreSQL serverless) |
-| 6 | API documentada (Swagger/Postman) | ✅ | Swagger UI em `/api-docs` |
-| 7 | Sistema de login com autenticação | ✅ | JWT + bcryptjs, cadastro em 2 passos com aprovação admin |
-| 8 | Proteção de rotas com token | ✅ | `src/middleware.ts` — intercepta 5 grupos de rotas |
-| 9 | SPA com framework moderno | ✅ | React 19 + Next.js 16 App Router |
-
----
-
 ## Projeto do Software
 
 ### Tecnologias Utilizadas
