@@ -111,7 +111,7 @@ A conta é criada com status `EM_ANALISE` e aguarda aprovação do Admin.
 ### Entrar — Login
 
 - Autenticação com e-mail e senha via hash bcrypt
-- Geração de token JWT com expiração de 24 horas
+- Geração de token JWT com expiração de 2 horas
 - Redirecionamento automático para o painel correto (Admin / Produtor / Mercado)
 
 ### Tela do Mercado — Catálogo e Cotações
