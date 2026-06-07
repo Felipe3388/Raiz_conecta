@@ -33,8 +33,6 @@
 | Gustavo Henrique Bauch | — |
 | Jhonatan Melo de Oliveira | — |
 
-**Orientadores:** Profa. Cristiane Palomar Mercado · Prof. Tiago Vanderlei de Arruda · Prof. Jones Artur Gonçalves
-
 **Votorantim — Junho, 2026**
 
 ---
@@ -53,7 +51,7 @@ O presente documento descreve o desenvolvimento do **Raiz Conecta**, uma platafo
 | 📖 **API Docs (Swagger)** | https://raiz-conecta-qa94.vercel.app/api-docs |
 | 📋 **Confluence** | https://raizconectado.atlassian.net/wiki/spaces/GGP |
 | 🗂️ **Jira** | https://raizconectado.atlassian.net/jira/software/projects/SCRUM/boards/1 |
-| 📦 **Repositório GitHub** | *(link do repositório do grupo)* |
+| 📦 **Repositório GitHub** | https://github.com/Felipe3388/Raiz_conecta |
 | 📸 **Instagram** | [@raizconecta_dsm](https://www.instagram.com/raizconecta_dsm) |
 
 ---
