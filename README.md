@@ -25,8 +25,8 @@
 
 **Projeto Interdisciplinar** · Engenharia de Software II · Desenvolvimento Web III · Gestão Ágil de Projetos de Software
 
-| Integrante
-|---|---|
+| Integrantes |
+|---|
 | Daniel Henrique Domingues Nogueira 
 | Felipe Gomes Felix 
 | Guilherme Vinícius Baeza de Oliveira 
