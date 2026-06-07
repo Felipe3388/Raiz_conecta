@@ -351,7 +351,7 @@ app-principal/
 │   │   └── shared/                # PageLoader, StatusBanner
 │   ├── lib/
 │   │   └── prisma.ts              # Instância singleton do Prisma
-│   ├── middleware.ts               # Proteção JWT de rotas
+│   ├── middleware.ts              # Proteção JWT de rotas
 │   └── swagger.json               # Especificação OpenAPI
 └── public/                        # Assets estáticos
 ```
@@ -363,9 +363,9 @@ app-principal/
 | Sprint | Objetivo | Início | Fim |
 |---|---|---|---|
 | **Sprint 1** | Autenticação, cadastro, painel admin, catálogo, carrinho, checkout, painel produtor, landing page, avaliações, microsserviço de e-mail | 08/04/2026 | 29/04/2026 |
-| **Sprint 2** | Melhorias pós-banca: componentização, design system `.rc-*`, filtros avançados, validação regex, cancelamento de pedido, API docs JWT, correções SCRUM-144 a 147 | 29/04/2026 | 20/06/2026 |
+| **Sprint 2** | Melhorias pós-banca: componentização, design system `.rc-*`, filtros avançados, validação regex, cancelamento de pedido, API docs JWT, correções SCRUM-144 a 147 | 29/04/2026 | 02/06/2026 |
 
-**Total:** 14+ histórias entregues · 49+ story points · 2 sprints · 0 bugs críticos em produção
+**Total:** 14+ histórias entregues · 49+ story points · 2 sprints ·
 
 ### Principais entregas da Sprint 2
 
@@ -412,7 +412,7 @@ cd raiz-conecta
 ### Passo 2 — Rodar a Aplicação Principal (Next.js)
 
 ```bash
-cd app-principal
+cd \app-principal\
 npm install
 ```
 
@@ -430,10 +430,10 @@ ADMIN_SENHA_INICIAL="senha_do_primeiro_admin"
 
 ```bash
 npx prisma generate
-npx prisma db push        # cria as tabelas no banco
+npx prisma db push        # cria as tabelas no banco caso não possua
 npm run dev               # http://localhost:3000
 
-npx prisma studio         # interface visual do banco — http://localhost:5555
+npx prisma studio         # interface visual do banco de dados — http://localhost:5555
 ```
 
 ### Passo 3 — Rodar o Microsserviço de E-mail (Express.js)
@@ -441,6 +441,7 @@ npx prisma studio         # interface visual do banco — http://localhost:5555
 ```bash
 cd microservico
 npm install
+cd \src\app\
 node server.js            # http://localhost:3001
 ```
 
