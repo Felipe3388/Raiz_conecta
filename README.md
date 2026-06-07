@@ -1,191 +1,400 @@
-# Projeto Integrador: Raiz Conecta
+<div align="center">
 
-> Solução de Software end-to-end para conectar mercados a produtores rurais de forma direta,  e otimizando a venda de hortifruti.
+# 🌱 Raiz Conecta
 
----
+**Plataforma B2B que conecta produtores rurais diretamente a mercados e hortifrutis, eliminando intermediários.**
 
-## Integrantes do Projeto Integrador - Fatec Votorantim DSM
+![Next.js](https://img.shields.io/badge/Next.js-16.2-black?logo=nextdotjs)
+![React](https://img.shields.io/badge/React-19.2-61DAFB?logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)
+![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?logo=prisma)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-336791?logo=postgresql)
+![Tailwind](https://img.shields.io/badge/Tailwind-v4-38BDF8?logo=tailwindcss)
+![JWT](https://img.shields.io/badge/JWT-Auth-F7B93E?logo=jsonwebtokens)
+![Vercel](https://img.shields.io/badge/Deploy-Vercel-000?logo=vercel)
 
-Guilherme Vinícius Baeza de Oliveira 
-
-Felipe Gomes Félix  
-
-Jhonatan Melo  
-
-Gustavo Henrique Bauch 
-
-Daniel Henrique Nogueira 
-
-## Visão Geral
-
-Este projeto tem como objetivo desenvolver uma solução completa de software, abrangendo todo o ciclo de vida de desenvolvimento: desde o levantamento de requisitos até a implementação, testes e disponibilização da aplicação.
-
-A solução foi projetada para resolver um problema real de negócio na cadeia de suprimentos de alimentos, utilizando boas práticas de engenharia de software, arquitetura escalável de microsserviços e tecnologias modernas de desenvolvimento.
+</div>
 
 ---
 
-## Problema de Negócio
+## 👥 Integrantes — Fatec Votorantim · DSM
 
-Atualmente, a cadeia de distribuição de alimentos frescos sofre com ineficiências que prejudicam ambas as pontas do comércio.
-
-- **Qual é o contexto?** Mercados locais enfrentam dificuldades para encontrar fornecedores confiáveis e com preços competitivos, enquanto produtores rurais dependem de intermediários para escoar sua produção.
-
-- **Quem é impactado?** Pequenos e médios produtores rurais, que têm sua margem de lucro reduzida, e pequenos e médios mercados/hortifrutis, que arcam com custos elevados de aquisição.
-
-- **Qual processo ou necessidade precisa ser atendida?** A necessidade de um canal direto de comunicação e vendas que facilite o escoamento da produção, reduza o desperdício de alimentos e garanta produtos frescos ao consumidor final.
-
----
-
-## Solução Proposta
-
-O **Raiz Conecta** é uma plataforma que atua como a ponte digital entre quem planta e quem vende para o consumidor final.
-
-- **Tipo de sistema:** Plataforma Web B2B (Business-to-Business)
-
-- **Principais funcionalidades:** Catálogo inteligente de produtos, carrinho de cotações, gestão de pedidos fracionados, painel administrativo para moderação e sistema de avaliações de entrega.
-
-- **Tecnologias e arquitetura adotadas:** Aplicação Fullstack com Next.js conectada a um banco de dados relacional em nuvem (PostgreSQL via Neon), e uma arquitetura baseada em microsserviço isolado em Node.js/Express para envio de notificações por e-mail.
-
-- **Diferenciais da solução:** Esteira de validação de usuários (segurança contra fraudes via aprovação manual do Admin) e arquitetura distribuída, garantindo que o sistema principal não perca performance durante o disparo de e-mails.
+| Nome | GitHub |
+|------|--------|
+| Guilherme Vinícius Baeza de Oliveira | [@IneGuilherme](https://github.com/IneGuilherme) |
+| Felipe Gomes Félix | — |
+| Jhonatan Melo | — |
+| Gustavo Henrique Bauch | — |
+| Daniel Henrique Nogueira | — |
 
 ---
 
-## Arquitetura da Solução
+## 🔗 Links do Projeto
 
-O projeto está dividido em duas frentes de execução (Monorepo), permitindo separação clara de responsabilidades:
+| Recurso | Link |
+|---------|------|
+| 📋 Confluence (documentação) | https://raizconectado.atlassian.net/wiki/x/AYBF |
+| 🗂️ Jira (gestão ágil / roadmap) | https://raizconectado.atlassian.net/jira/software/projects/SCRUM/boards/1 |
+| 🌐 Aplicação em produção | *(link Vercel do grupo)* |
+| 📖 API Docs (Swagger) | `<URL_PRODUCAO>/api-docs` |
 
-**Fluxo Principal (Web):**
+---
+
+## 🧩 Sobre o Projeto
+
+O **Raiz Conecta** resolve um problema real na cadeia de distribuição de alimentos: produtores rurais dependem de intermediários para escoar produção, enquanto mercados locais arcam com custos elevados de aquisição. A plataforma cria um canal direto entre quem planta e quem vende ao consumidor final.
+
+### Problema de Negócio
+- Produtores têm margem reduzida por intermediários
+- Mercados pagam mais por não ter acesso direto a fornecedores
+- Desperdício de alimentos por ineficiência logística
+
+### Solução
+Plataforma **B2B fullstack** com fluxo de **demanda reversa**: o mercado publica o que precisa e os produtores ofertam sua produção diretamente.
+
+---
+
+## 🏗️ Arquitetura
+
+O projeto é um **monorepo** com dois serviços independentes:
+
 ```
-Usuário (Frontend Next.js) → Rotas de API (Next.js) → Prisma ORM → Banco de Dados (PostgreSQL / Neon)
+raiz-conecta/
+├── app-principal/     # Next.js 16 — Frontend + API RESTful
+└── microservico/      # Node.js + Express — Microsserviço de e-mail
 ```
 
-**Fluxo de Notificações (Microsserviço):**
+### Fluxo Principal (Web)
 ```
-Administrador aprova usuário → API Principal → Microsserviço (Express.js) → Nodemailer → Mailtrap
+Navegador (React/Next.js)
+    → Route Handlers Next.js (/api/*)
+        → Prisma ORM
+            → PostgreSQL (Neon Serverless)
+```
+
+### Fluxo de Notificações (Microsserviço)
+```
+Evento (cadastro / aprovação / rejeição)
+    → app-principal chama MICROSERVICE_URL
+        → Express.js (app-node)
+            → Nodemailer + Mailtrap
+                → E-mail entregue
+```
+
+### Padrão MVC no Next.js App Router
+| Camada | Onde está |
+|--------|-----------|
+| **Model** | `prisma/schema.prisma` + queries Prisma nos route handlers |
+| **View** | `src/app/*/page.tsx` — componentes React (SSR + CSR) |
+| **Controller** | `src/app/api/*/route.ts` — Route Handlers REST |
+
+---
+
+## ✅ Requisitos Atendidos
+
+| Requisito | Status | Onde |
+|-----------|--------|------|
+| Hospedagem GitHub com README | ✅ | Este repositório |
+| API RESTful com GET, POST, PUT, DELETE | ✅ | `src/app/api/**` |
+| Arquitetura MVC | ✅ | Prisma + Route Handlers + Pages |
+| Microsserviço | ✅ | `/microservico` (Express + Nodemailer) |
+| Hospedagem em nuvem | ✅ | Vercel (app) + Neon (DB) |
+| Documentação de API | ✅ | Swagger em `/api-docs` |
+| Sistema de login com autenticação | ✅ | JWT + bcryptjs |
+| Proteção de rotas com token | ✅ | `src/middleware.ts` |
+| SPA com framework moderno | ✅ | React 19 + Next.js 16 |
+
+---
+
+## 🔐 Segurança e Autenticação JWT
+
+O sistema usa **JSON Web Tokens (JWT)** para autenticação stateless:
+
+1. **Login** → API valida e-mail/senha (bcryptjs) → gera JWT com payload `{ email, tipoUser, nome }` → token salvo no `localStorage`
+2. **Requisições** → frontend envia `Authorization: Bearer <token>` em rotas protegidas
+3. **Middleware** → `src/middleware.ts` intercepta e valida o JWT antes de servir `/admin`, `/produtor`, `/mercado`, `/perfil` e `/checkout`
+4. **Expiração** → token expira em 24 horas
+
+```
+Senhas: bcryptjs (salt rounds 10) — nunca salvas em texto puro
+JWT_SECRET: variável de ambiente (.env) — nunca no código-fonte
+Documentos e fotos: Cloudinary via stream — nunca no servidor
+HTTPS: obrigatório em produção (Vercel)
 ```
 
 ---
 
-## Documentação do Projeto
+## 🚀 Funcionalidades Implementadas
 
-- **Confluence (Base de Conhecimento):** [Acessar Workspace](https://raizconectado.atlassian.net/wiki/x/AYBF)
+### 🌐 Landing Page
+- Apresentação da plataforma com fluxo de 3 passos
+- Redirecionamento dinâmico para o painel do usuário logado
+- Link para Instagram [@raizconecta_dsm](https://www.instagram.com/raizconecta_dsm)
 
-- **Jira (Gestão Ágil / Roadmap):** [Acessar Timeline](https://raizconectado.atlassian.net/jira/software/projects/SCRUM/boards/1?atlOrigin=eyJpIjoiOTY3Njg2NWQ0NTlhNGFhYWIwNDBiYTUwNDAyMDEwNTIiLCJwIjoiaiJ9)
+### 🔑 Autenticação
+- Cadastro em 2 passos com seleção de perfil (Produtor / Mercado)
+- Validação de e-mail e senha forte por regex (mínimo 8 chars, maiúscula, minúscula, número e símbolo)
+- Indicador de força de senha em tempo real
+- Campo de telefone com máscara automática
+- Confirmação de senha com feedback visual
+- Login com JWT + redirecionamento por perfil
 
-- **Documento de Requisitos:** Disponível na raiz do repositório (`Doc Projeto Integrador - Raiz Conecta.docx`)
+### 🛡️ Painel Administrativo
+- Aprovação / rejeição de cadastros com visualização de documento
+- Gestão de usuários com filtros por tipo, status e busca
+- Catálogo oficial: cadastro, edição (com troca de foto) e remoção de produtos
+- Avaliação e promoção de sugestões de produtores a produtos oficiais
+- Criação de novas contas de administrador
+- Dashboard com estatísticas em tempo real
 
----
+### 🌱 Painel do Produtor
+- Mural de Oportunidades — demandas abertas compatíveis com o catálogo do produtor
+- Meu Catálogo — seleção dos produtos que produz (com busca e filtro)
+- Envio de oferta parcial ou total com controle de quantidade
+- Sugestão de novos produtos ao catálogo oficial
+- Histórico de Ofertas Fechadas
 
-## Sprints
+### 🏪 Painel do Mercado (Catálogo)
+- Vitrine com busca por nome, filtro por categoria e ordenação por preço
+- Carrinho lateral persistente (localStorage)
+- Checkout com endereço preenchido automaticamente
+- Acompanhamento de cotações com barra de progresso
+- Cancelamento de pedido com prazo de 7 dias úteis e cálculo de dias úteis real
+- Avaliação do produtor após entrega (1–5 estrelas)
 
-| Nº Sprint | Objetivo | Data Início | Data Término |
-| :---: | :--- | :---: | :---: |
-| **Sprint 1** | Autenticação, cadastro de usuários, painel do produtor, vitrine, carrinho, checkout, painel admin, landing page e avaliações | 2026-04-08 | 2026-04-29 |
-| **Sprint 2** | Melhorias e correções apontadas pela banca avaliadora | 2026-04-29 | - |
+### 👤 Perfil
+- Edição de dados pessoais (nome, telefone, endereço, senha)
+- E-mail e documento bloqueados para edição
+- Exclusão de conta com dupla confirmação (LGPD)
 
-> Datas precisas e status de cada task disponíveis diretamente no [painel do Jira](https://raizconectado.atlassian.net).
-
----
-
-## Tecnologias Utilizadas
-
-- **Linguagem:** TypeScript / JavaScript
-- **Frontend:** Next.js 16, React 19, Tailwind CSS v4, Lucide Icons
-- **Backend:** Node.js, Express.js 5, Prisma ORM
-- **Banco de Dados:** PostgreSQL (hospedagem serverless via [Neon](https://neon.tech))
-- **Notificações:** Nodemailer + Mailtrap
-- **Versionamento:** Git / GitHub
-- **Gestão:** Jira / Confluence
-
----
-
-## Funcionalidades
-
-- **Landing Page Pública:** Página de apresentação da plataforma com proposta de valor, fluxo de funcionamento em 3 passos e redirecionamento dinâmico para o painel correto conforme o perfil do usuário logado.
-
-- **Login de Usuário:** Autenticação com e-mail e senha via hash bcrypt, com redirecionamento automático para o painel de Produtor, Mercado ou Administrador.
-
-- **Cadastro de Usuário (Passo 1):** Registro inicial com seleção de perfil (Produtor Rural ou Mercado), criando a conta com status `EM_ANALISE` e disparando e-mail de boas-vindas automaticamente.
-
-- **Completar Perfil / Onboarding (Passo 2):** Segunda etapa obrigatória com preenchimento de CPF/CNPJ, endereço com autocompletar via ViaCEP e upload de documento para validação manual pelo Administrador.
-
-- **Painel Admin — Aprovação de Cadastros:** Interface exclusiva para revisar cadastros pendentes, visualizar documentos enviados e aprovar ou recusar usuários, com disparo automático de e-mail de notificação.
-
-- **Painel Admin — Gestão de Usuários:** Ferramenta de moderação com busca em tempo real, e ações de suspender, reativar ou excluir usuários ativos na plataforma.
-
-- **Catálogo de Produtos (Mercado):** Vitrine com grid de produtos, filtro por categoria (Frutas, Verduras, Legumes), busca em tempo real e controle de quantidade para montar a cotação.
-
-- **Carrinho de Cotação (Mercado):** Painel lateral deslizante para revisar itens selecionados, ajustar quantidades, visualizar total estimado e avançar para o checkout, com persistência via localStorage.
-
-- **Checkout e Disparo de Cotação:** Tela de revisão final com endereço de entrega preenchido automaticamente; ao confirmar, cria uma demanda `ABERTA` no banco para cada item e limpa o carrinho.
-
-- **Acompanhamento de Cotações (Mercado):** Aba com cards por demanda exibindo barra de progresso de preenchimento da carga, lista de produtores que ofertaram e status de cada entrega.
-
-- **Avaliação de Produtor e Entrega:** Após receber um pedido, o mercado confirma o recebimento e avalia o produtor de 1 a 5 estrelas, atualizando o status da entrega para `ENTREGUE`.
-
-- **Mural de Oportunidades (Produtor):** Painel principal do produtor com todas as demandas abertas da região, barra de progresso de preenchimento e campo para registrar uma oferta parcial ou total.
-
-- **Minhas Ofertas Fechadas (Produtor):** Aba histórica com todas as demandas nas quais o produtor já se comprometeu, destacando a quantidade garantida por ele.
-
-- **Meu Perfil — Edição de Dados:** Tela para atualizar nome, telefone, endereço e senha, com e-mail e documento bloqueados para edição.
-
-- **Meu Perfil — Exclusão de Conta:** Autoexclusão permanente com dupla confirmação, limpeza de sessão e redirecionamento para o login, em conformidade com a LGPD.
-
-- **Microsserviço de E-mail:** Serviço Node.js/Express independente que envia e-mails transacionais de boas-vindas, aprovação e rejeição de cadastro, com falha silenciosa para não interromper o fluxo principal.
+### 📖 API Docs
+- Swagger UI público em `/api-docs`
+- Endpoints admin protegidos por token JWT inserido manualmente na interface
+- `swagger.json` com securitySchemes BearerAuth
 
 ---
 
-## Resultados Esperados
+## 📡 API RESTful — Endpoints
 
-- **Resolução do problema de negócio:** Democratização do acesso a mercados para o pequeno produtor e vice-versa, eliminando intermediários.
-
-- **Melhoria na eficiência do processo:** Redução do desperdício de alimentos por meio de uma logística direta entre produtor e mercado.
-
-- **Fomento econômico sustentável:** Geração de renda justa para produtores rurais, contribuindo para os Objetivos de Desenvolvimento Sustentável (ODS).
-
-- **Experiência do usuário aprimorada:** Interface SaaS minimalista projetada para usuários com pouca vivência tecnológica.
-
-- **Base escalável para evolução futura:** Arquitetura preparada para a futura inserção de entregadores terceirizados no ecossistema.
+| Método | Endpoint | Descrição | Auth |
+|--------|----------|-----------|------|
+| POST | `/api/auth/cadastro` | Criar usuário | Pública |
+| POST | `/api/auth/login` | Login → retorna JWT | Pública |
+| GET | `/api/produtos` | Listar catálogo | Pública |
+| POST | `/api/produtos` | Admin: criar produto | Admin JWT |
+| PUT | `/api/produtos` | Admin: editar produto + foto | Admin JWT |
+| DELETE | `/api/produtos` | Admin: remover produto | Admin JWT |
+| GET | `/api/admin/usuarios` | Listar usuários | Admin JWT |
+| PUT | `/api/admin/usuarios` | Aprovar/rejeitar/suspender | Admin JWT |
+| PATCH | `/api/admin/usuarios` | Editar dados de usuário | Admin JWT |
+| DELETE | `/api/admin/usuarios` | Excluir usuário | Admin JWT |
+| POST | `/api/admin/novo-admin` | Criar administrador | Admin JWT |
+| POST | `/api/admin/promover-sugestao` | Promover sugestão a produto | Admin JWT |
+| GET | `/api/mercado/demandas` | Listar demandas abertas | Autenticado |
+| POST | `/api/mercado/demandas` | Criar demanda (checkout) | Mercado JWT |
+| PATCH | `/api/mercado/cancelar` | Cancelar pedido | Mercado JWT |
+| PATCH | `/api/mercado/avaliar` | Avaliar entrega | Mercado JWT |
+| GET | `/api/mercado/perfil` | Dados do mercado logado | Mercado JWT |
+| GET | `/api/produtor/meus-produtos` | Catálogo do produtor | Produtor JWT |
+| POST | `/api/produtor/meus-produtos` | Salvar catálogo | Produtor JWT |
+| POST | `/api/produtor/ofertas` | Enviar oferta | Produtor JWT |
+| GET | `/api/produtor/sugestao` | Listar sugestões | Admin JWT |
+| POST | `/api/produtor/sugestao` | Enviar sugestão | Produtor JWT |
+| DELETE | `/api/produtor/sugestao` | Descartar sugestão | Admin JWT |
+| GET | `/api/vendedor/perfil` | Dados do produtor logado | Produtor JWT |
+| GET | `/api/perfil/meus-dados` | Dados do usuário logado | Autenticado |
+| PATCH | `/api/perfil/completar` | Atualizar perfil | Autenticado |
 
 ---
 
-## Como Executar o Projeto
+## 🗄️ Banco de Dados — Modelos Prisma
 
-O projeto possui dois ambientes que devem ser iniciados simultaneamente.
+| Modelo | Descrição |
+|--------|-----------|
+| `Cliente` | Mercados cadastrados |
+| `Vendedor` | Produtores rurais cadastrados |
+| `Acesso` | Credenciais de login (hash bcrypt + JWT info) |
+| `Produto` | Catálogo oficial de produtos com foto (Cloudinary) |
+| `Demanda` | Cotações criadas pelo mercado no checkout |
+| `Oferta` | Respostas dos produtores a uma demanda |
+| `Sugestao` | Sugestões de novos produtos enviadas por produtores |
+| `Pedido` | Pedidos consolidados |
+| `ItemPedido` | Itens individuais de um pedido |
+| `Entregador` | Estrutura para entregadores (v. futura) |
+| `Rota` | Rotas de entrega (v. futura) |
+
+---
+
+## 🧱 Stack Tecnológica
+
+| Camada | Tecnologia | Versão |
+|--------|-----------|--------|
+| Frontend | React | 19.2 |
+| Framework | Next.js | 16.2 |
+| Linguagem | TypeScript | 5 |
+| Estilização | Tailwind CSS | v4 |
+| Ícones | Lucide React | — |
+| Animações | Framer Motion | 12 |
+| ORM | Prisma | 6 |
+| Banco | PostgreSQL (Neon) | serverless |
+| Autenticação | jsonwebtoken + bcryptjs | 9 / 3 |
+| Upload | Cloudinary | 2 |
+| Notificações UI | Sonner | — |
+| Microsserviço | Node.js + Express | 5 |
+| E-mail | Nodemailer + Mailtrap | — |
+| API Docs | Swagger UI React | — |
+| Analytics | Microsoft Clarity | — |
+| Deploy | Vercel + Neon | — |
+
+---
+
+## ⚙️ Como Executar Localmente
 
 ### Pré-requisitos
+- Node.js 18+
+- npm
+- Conta no [Neon](https://neon.tech) (PostgreSQL gratuito) ou SQLite para dev
+- Conta no [Cloudinary](https://cloudinary.com) (gratuito)
+- Conta no [Mailtrap](https://mailtrap.io) (para e-mails de teste)
 
-- Node.js (versão 18+)
-- Gerenciador de pacotes npm
-- Arquivo `.env` configurado em cada pasta com as credenciais do Neon (Prisma) e do Mailtrap
-
-### Instalação e Execução
-
-**Passo 1 — Clonar o repositório**
-
+### Passo 1 — Clonar o repositório
 ```bash
-git clone [URL_DO_REPOSITORIO]
+git clone <URL_DO_REPOSITORIO>
 cd raiz-conecta
 ```
 
-**Passo 2 — Rodar a Aplicação Principal (Next.js)**
-
+### Passo 2 — Configurar o app-principal
 ```bash
 cd app-principal
 npm install
-npx prisma generate
-npm run dev
-# Disponível em http://localhost:3000
-
-npx prisma studio
-# Disponivel em http://localhost:5555
 ```
 
-**Passo 3 — Rodar o Microsserviço de E-mail (Express.js)**
+Crie o arquivo `.env` na raiz de `app-principal/`:
+```env
+DATABASE_URL="postgresql://usuario:senha@host/banco"
+JWT_SECRET="sua_chave_secreta_minimo_32_caracteres"
+CLOUDINARY_CLOUD_NAME="seu_cloud_name"
+CLOUDINARY_API_KEY="sua_api_key"
+CLOUDINARY_API_SECRET="seu_api_secret"
+MICROSERVICE_URL="http://localhost:3001"
+ADMIN_SENHA_INICIAL="senha_do_primeiro_admin"
+```
 
 ```bash
-cd microservico
-npm install
-node server.js
-# Disponível em http://localhost:3001
+npx prisma generate
+npx prisma db push        # cria as tabelas
+npm run dev               # http://localhost:3000
 ```
+
+### Passo 3 — Configurar o microsserviço
+```bash
+cd ../microservico
+npm install
+```
+
+Crie o arquivo `.env` em `microservico/`:
+```env
+MAILTRAP_USER="seu_usuario_mailtrap"
+MAILTRAP_PASS="sua_senha_mailtrap"
+PORT=3001
+```
+
+```bash
+node server.js            # http://localhost:3001
+```
+
+### Passo 4 — Criar o primeiro Admin
+Após rodar o app-principal, acesse uma vez:
+```
+http://localhost:3000/api/setup-admin
+```
+> ⚠️ Esse endpoint usa `ADMIN_SENHA_INICIAL` do `.env`. Remova ou proteja após o primeiro uso.
+
+### Passo 5 — Explorar
+```bash
+npx prisma studio         # Interface visual do banco — http://localhost:5555
+```
+
+---
+
+## ☁️ Deploy em Produção (Vercel)
+
+### Variáveis de ambiente obrigatórias no Vercel
+| Variável | Descrição |
+|----------|-----------|
+| `DATABASE_URL` | String de conexão PostgreSQL (Neon) |
+| `JWT_SECRET` | Chave secreta JWT (mín. 32 caracteres) |
+| `CLOUDINARY_CLOUD_NAME` | Nome do cloud Cloudinary |
+| `CLOUDINARY_API_KEY` | API Key Cloudinary |
+| `CLOUDINARY_API_SECRET` | API Secret Cloudinary |
+| `MICROSERVICE_URL` | URL do microsserviço (Railway, Render etc.) |
+| `ADMIN_SENHA_INICIAL` | Senha para criar o primeiro admin |
+
+### Comando de build
+```bash
+npx prisma generate && next build
+```
+
+---
+
+## 📁 Estrutura de Pastas
+
+```
+app-principal/
+├── prisma/
+│   └── schema.prisma          # Modelos do banco de dados
+├── src/
+│   ├── app/
+│   │   ├── api/               # Route Handlers (Controller)
+│   │   │   ├── auth/          # cadastro, login
+│   │   │   ├── admin/         # usuarios, produtos, sugestoes
+│   │   │   ├── mercado/       # demandas, cancelar, avaliar
+│   │   │   ├── produtor/      # ofertas, meus-produtos, sugestao
+│   │   │   ├── perfil/        # meus-dados, completar
+│   │   │   └── produtos/      # catálogo público
+│   │   ├── admin/             # Painel administrativo (View)
+│   │   ├── catalogo/          # Painel do mercado (View)
+│   │   ├── produtor/          # Painel do produtor (View)
+│   │   ├── perfil/            # Edição de perfil (View)
+│   │   ├── login/             # Autenticação (View)
+│   │   ├── completar-perfil/  # Onboarding passo 2 (View)
+│   │   ├── api-docs/          # Swagger UI
+│   │   ├── page.tsx           # Landing page
+│   │   ├── layout.tsx         # Layout global
+│   │   └── globals.css        # Design system (.rc-*)
+│   ├── components/
+│   │   ├── ui/                # Componentes reutilizáveis
+│   │   │   ├── Button.tsx     StatCard.tsx   TabNav.tsx
+│   │   │   ├── Card.tsx       SearchBar.tsx  EmptyState.tsx
+│   │   │   ├── Input.tsx      Select.tsx     Badge.tsx
+│   │   │   ├── Modal.tsx      ConfirmModal.tsx
+│   │   │   ├── QuantityInput.tsx  ProgressBar.tsx
+│   │   │   ├── InfoRow.tsx    SectionHeader.tsx
+│   │   │   ├── PageLoader.tsx StatusBanner.tsx
+│   │   │   └── TabNav.tsx
+│   │   ├── layout/            # SiteHeader, SiteFooter
+│   │   └── shared/            # PageLoader, StatusBanner
+│   ├── lib/
+│   │   └── prisma.ts          # Instância singleton do Prisma
+│   ├── middleware.ts           # Proteção JWT de rotas
+│   └── swagger.json           # Especificação OpenAPI
+└── public/                    # Assets estáticos
+```
+
+---
+
+## 🔮 Limitações Atuais e Evoluções Futuras
+
+| Limitação atual | Evolução planejada |
+|-----------------|-------------------|
+| Entregador existe no banco mas não tem painel | Módulo completo de logística com rastreamento |
+| JWT não tem blacklist server-side | Implementar Redis para token revocation |
+| Sem notificação em tempo real | WebSockets ou SSE para alertas de novas demandas |
+| Sem pagamento integrado | Gateway de pagamento (Stripe, PagSeguro) |
+| E-mail via Mailtrap (sandbox) | Provedor de produção (SendGrid, Amazon SES) |
+
+---
+
+## 📄 Licença
+
+Projeto acadêmico desenvolvido para o Projeto Integrador — Fatec Votorantim, curso de Desenvolvimento de Software Multiplataforma (DSM), 2026.
