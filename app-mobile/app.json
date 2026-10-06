@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "app-mobile",
-    "scheme": "app-mobile",
+    "name": "Raiz Conecta",
+    "scheme": "raizconecta",
     "slug": "app-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -24,7 +24,14 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O Raiz Conecta precisa acessar suas fotos para anexar o comprovante e as fotos de saída dos pedidos.",
+          "cameraPermission": "O Raiz Conecta precisa da câmera para fotografar seu documento e a saída dos pedidos."
+        }
+      ]
     ]
   }
 }
