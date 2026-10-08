@@ -2,11 +2,11 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { BrandHeader } from "@/components/motion/BrandHeader";
+import { Collapse } from "@/components/motion/Collapse";
 import { Reveal } from "@/components/motion/Reveal";
 import { staggerDelay } from "@/components/motion/timing";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
-import { ChoiceGroup, type ChoiceOption } from "@/components/ui/ChoiceGroup";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { FormScreen } from "@/components/ui/FormScreen";
 import { Input } from "@/components/ui/Input";
@@ -15,28 +15,15 @@ import { PasswordChecklist } from "@/components/ui/PasswordChecklist";
 import { PasswordStrengthMeter } from "@/components/ui/PasswordStrengthMeter";
 import { StepProgress } from "@/components/ui/StepProgress";
 import { PRIVACY_POLICY, TERMS_OF_USE } from "@/content/legalDocuments";
-import { NAME_FIELD_COPY } from "@/content/registrationCopy";
 import { useAccountStep } from "@/hooks/useAccountStep";
 import { backToLogin } from "@/lib/navigation";
 import { colors, spacing, typography } from "@/theme";
-import type { RegistrationProfile } from "@/types/registration";
-
-const PROFILE_OPTIONS: ChoiceOption<RegistrationProfile>[] = [
-  { value: "produtor", label: "Produtor Rural", icon: "🌱", description: "Eu vendo o que planto" },
-  {
-    value: "mercado",
-    label: "Mercado / Supermercado",
-    icon: "🏪",
-    description: "Eu compro dos produtores",
-  },
-];
 
 type OpenDocument = "terms" | "privacy" | null;
 
 export default function CadastroScreen() {
   const { account, update, setPhone, error, submit } = useAccountStep();
   const [openDocument, setOpenDocument] = useState<OpenDocument>(null);
-  const nameCopy = NAME_FIELD_COPY[account.profile];
   const hasPasswordMismatch =
     account.confirmarSenha !== "" && account.senha !== account.confirmarSenha;
   const hasPasswordMatch = account.confirmarSenha !== "" && !hasPasswordMismatch;
@@ -59,20 +46,10 @@ export default function CadastroScreen() {
       {error && <ErrorBanner key={error} message={error} />}
 
       <Reveal delay={next()}>
-        <ChoiceGroup
-          label="Quem é você?"
-          layout="cards"
-          options={PROFILE_OPTIONS}
-          value={account.profile}
-          onChange={(profile) => update({ profile })}
-        />
-      </Reveal>
-      <Reveal delay={next()}>
         <Input
-          label={nameCopy.label}
-          hint={nameCopy.hint}
+          label="Nome da fazenda, sítio ou empresa"
           icon="person-outline"
-          placeholder={nameCopy.placeholder}
+          placeholder="Ex.: Sítio Boa Esperança"
           autoCapitalize="words"
           value={account.nome}
           onChangeText={(nome) => update({ nome })}
@@ -81,7 +58,6 @@ export default function CadastroScreen() {
       <Reveal delay={next()}>
         <Input
           label="Seu e-mail"
-          hint="Vamos avisar por aqui quando sua conta for aprovada."
           icon="mail-outline"
           placeholder="Ex.: maria@email.com"
           keyboardType="email-address"
@@ -93,7 +69,6 @@ export default function CadastroScreen() {
       <Reveal delay={next()}>
         <Input
           label="Celular com WhatsApp"
-          hint="Digite com o DDD. Os parênteses e o traço aparecem sozinhos."
           icon="logo-whatsapp"
           placeholder="Ex.: (12) 91234-5678"
           keyboardType="phone-pad"
@@ -103,10 +78,9 @@ export default function CadastroScreen() {
         />
       </Reveal>
 
-      <Reveal delay={next()} style={styles.group}>
+      <Reveal delay={next()}>
         <Input
           label="Crie uma senha"
-          hint="Anote a senha em um lugar seguro."
           icon="lock-closed-outline"
           placeholder="Digite sua senha"
           secure
@@ -114,10 +88,10 @@ export default function CadastroScreen() {
           onChangeText={(senha) => update({ senha })}
         />
         <PasswordChecklist password={account.senha} />
-        {account.senha !== "" && <PasswordStrengthMeter password={account.senha} />}
+        <PasswordStrengthMeter password={account.senha} />
       </Reveal>
 
-      <Reveal delay={next()} style={styles.group}>
+      <Reveal delay={next()}>
         <Input
           label="Repita a senha"
           icon="lock-closed-outline"
@@ -127,7 +101,9 @@ export default function CadastroScreen() {
           onChangeText={(confirmarSenha) => update({ confirmarSenha })}
           error={hasPasswordMismatch ? "As senhas não coincidem." : undefined}
         />
-        {hasPasswordMatch && <Text style={styles.match}>Senhas conferem!</Text>}
+        <Collapse visible={hasPasswordMatch}>
+          <Text style={styles.match}>Senhas conferem!</Text>
+        </Collapse>
       </Reveal>
 
       <Reveal delay={next()} style={styles.group}>
@@ -183,7 +159,7 @@ const styles = StyleSheet.create({
   title: { ...typography.title, color: colors.text, textAlign: "center" },
   subtitle: { ...typography.body, color: colors.textMuted, textAlign: "center" },
   group: { gap: spacing.sm },
-  match: { ...typography.hint, color: colors.primary, fontWeight: "700" },
+  match: { ...typography.hint, color: colors.primary, fontWeight: "700", paddingTop: spacing.sm },
   legalTitle: { ...typography.label, color: colors.text },
   terms: { ...typography.body, color: colors.textMuted, lineHeight: 22 },
   termsStrong: { color: colors.primaryText, fontWeight: "700" },

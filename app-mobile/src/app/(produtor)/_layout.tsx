@@ -1,55 +1,44 @@
-import { Ionicons } from "@expo/vector-icons";
-import { Redirect, Tabs } from "expo-router";
-import type { ColorValue } from "react-native";
-import { HeaderLogoutButton } from "@/components/HeaderLogoutButton";
+import { Redirect, Stack } from "expo-router";
+import { StyleSheet, View } from "react-native";
+import { AssistantHost } from "@/components/assistant/AssistantHost";
+import { AssistantProvider } from "@/hooks/useAssistant";
+import { ProducerIdentityProvider } from "@/hooks/useProducerIdentity";
+import { ProdutorDataProvider } from "@/hooks/useProdutorData";
 import { useSession } from "@/hooks/useSession";
 import { colors } from "@/theme";
 
-type IconName = keyof typeof Ionicons.glyphMap;
-
-function tabIcon(name: IconName) {
-  return function TabIcon({ color, size }: { color: ColorValue; size: number }) {
-    return <Ionicons name={name} size={size} color={color} />;
-  };
-}
-
+// Área do Produtor: as abas, mais Meu Perfil e Configurações que abrem por cima delas.
+// O botão de ajuda mora aqui, acima de todas, para estar visível em qualquer tela.
 export default function ProdutorLayout() {
   const { state } = useSession();
 
   if (state.status !== "authenticated") return <Redirect href="/login" />;
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSubtle,
-        headerTitleStyle: { fontWeight: "900", color: colors.text },
-        headerRight: () => <HeaderLogoutButton />,
-      }}
-    >
-      <Tabs.Screen
-        name="mural"
-        options={{
-          title: "Mural de Oportunidades",
-          tabBarLabel: "Mural",
-          tabBarIcon: tabIcon("grid-outline"),
-        }}
-      />
-      <Tabs.Screen
-        name="catalogo"
-        options={{
-          title: "Meu Catálogo",
-          tabBarIcon: tabIcon("leaf-outline"),
-        }}
-      />
-      <Tabs.Screen
-        name="ofertas"
-        options={{
-          title: "Ofertas Fechadas",
-          tabBarLabel: "Ofertas",
-          tabBarIcon: tabIcon("checkmark-done-outline"),
-        }}
-      />
-    </Tabs>
+    <ProdutorDataProvider email={state.user.email}>
+      <ProducerIdentityProvider email={state.user.email}>
+        <AssistantProvider>
+          <View style={styles.root}>
+            <Stack
+              screenOptions={{
+                headerStyle: { backgroundColor: colors.surface },
+                headerTitleStyle: { fontWeight: "900", color: colors.text },
+                headerTintColor: colors.text,
+                contentStyle: { backgroundColor: colors.background },
+              }}
+            >
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="perfil" options={{ title: "Meu Perfil" }} />
+              <Stack.Screen name="configuracoes" options={{ title: "Configurações" }} />
+            </Stack>
+            <AssistantHost />
+          </View>
+        </AssistantProvider>
+      </ProducerIdentityProvider>
+    </ProdutorDataProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+});

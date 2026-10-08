@@ -1,9 +1,8 @@
 import { emptyAccount, emptyProfile } from "./draft";
 
 describe("rascunho do cadastro", () => {
-  it("começa como produtor, sem dados e sem termos aceitos", () => {
+  it("começa sem dados e sem termos aceitos", () => {
     expect(emptyAccount()).toEqual({
-      profile: "produtor",
       nome: "",
       email: "",
       telefone: "",

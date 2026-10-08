@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ComponentProps } from "react";
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { colors, radius, spacing, typography } from "@/theme";
@@ -6,7 +6,13 @@ import { LEAF_PATHS } from "./LeafIcon";
 import { USE_NATIVE_DRIVER } from "./timing";
 import { useReducedMotion } from "./useReducedMotion";
 
-const AnimatedPath = Animated.createAnimatedComponent(Path);
+// No navegador, o Animated injeta `collapsable={false}` em todo componente animado e o Path do
+// react-native-svg o repassaria ao DOM (aviso do React em desenvolvimento). Este invólucro o descarta.
+function SvgPath({ collapsable: _collapsable, ...props }: ComponentProps<typeof Path> & { collapsable?: boolean }) {
+  return <Path {...props} />;
+}
+
+const AnimatedPath = Animated.createAnimatedComponent(SvgPath);
 const DASH_LENGTH = 70;
 
 interface BrandHeaderProps {

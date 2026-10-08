@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { AccessibilityInfo } from "react-native";
+import { useSettings } from "@/hooks/useSettings";
 
-// Quem ativou "reduzir movimento" no aparelho não vê animações.
+// Sem animações para quem pediu: "reduzir movimento" no aparelho ou "Reduzir animações" nas Configurações do app.
 export function useReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false);
+  const [deviceReduced, setReduced] = useState(false);
+  const { settings } = useSettings();
 
   useEffect(() => {
     let isMounted = true;
@@ -17,5 +19,5 @@ export function useReducedMotion(): boolean {
     };
   }, []);
 
-  return reduced;
+  return deviceReduced || settings.reduceMotion;
 }

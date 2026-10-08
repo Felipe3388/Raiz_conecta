@@ -2,7 +2,6 @@ import type { AccountFields, ProfileFields } from "@/types/registration";
 
 export function emptyAccount(): AccountFields {
   return {
-    profile: "produtor",
     nome: "",
     email: "",
     telefone: "",

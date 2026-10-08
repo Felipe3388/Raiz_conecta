@@ -1,10 +1,8 @@
-export type RegistrationProfile = "produtor" | "mercado";
 export type DocumentType = "CPF" | "CNPJ";
 export type ProofType = "RG" | "CNH" | "CONTRATO_SOCIAL" | "CARTAO_CNPJ";
 
 // Passo 1: dados da conta.
 export interface AccountFields {
-  profile: RegistrationProfile;
   nome: string;
   email: string;
   telefone: string;

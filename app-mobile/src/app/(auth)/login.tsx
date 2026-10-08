@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
+import { BrandHeader } from "@/components/motion/BrandHeader";
 import { Button } from "@/components/ui/Button";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { Input } from "@/components/ui/Input";
@@ -13,9 +14,7 @@ export default function LoginScreen() {
   return (
     <FormScreen>
       <View style={styles.header}>
-        <Text style={styles.logo}>
-          Raiz <Text style={styles.logoAccent}>Conecta</Text>
-        </Text>
+        <BrandHeader size="lg" />
         <Text style={styles.subtitle}>Acesse sua conta para continuar</Text>
       </View>
 
@@ -51,7 +50,5 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   header: { alignItems: "center", gap: spacing.xs, marginBottom: spacing.md },
-  logo: { ...typography.title, fontSize: 32, color: colors.text },
-  logoAccent: { color: colors.primary },
   subtitle: { ...typography.body, color: colors.textMuted },
 });

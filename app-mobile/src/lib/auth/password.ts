@@ -16,6 +16,33 @@ export function passwordRequirements(password: string): PasswordRequirement[] {
   ];
 }
 
+// Só o que ainda falta, para a pessoa não ler uma lista de coisas que já fez.
+export function unmetRequirements(password: string): PasswordRequirement[] {
+  return passwordRequirements(password).filter((requirement) => !requirement.met);
+}
+
+// O que passou de "falta" para "feito" entre duas digitações (apagar caracteres não conta).
+export function newlyMetLabels(
+  before: PasswordRequirement[],
+  after: PasswordRequirement[],
+): string[] {
+  const wasMet = new Set(before.filter((r) => r.met).map((r) => r.label));
+  return after.filter((r) => r.met && !wasMet.has(r.label)).map((r) => r.label);
+}
+
+export interface ChecklistItem extends PasswordRequirement {
+  shown: boolean;
+}
+
+// O que a lista mostra: o que falta e, por um instante, o que acabou de ser cumprido (`lingering`).
+// Sem senha digitada não há lista.
+export function checklistItems(password: string, lingering: string[]): ChecklistItem[] {
+  return passwordRequirements(password).map((requirement) => ({
+    ...requirement,
+    shown: password !== "" && (!requirement.met || lingering.includes(requirement.label)),
+  }));
+}
+
 export function isValidPassword(password: string): boolean {
   return passwordRequirements(password).every((requirement) => requirement.met);
 }

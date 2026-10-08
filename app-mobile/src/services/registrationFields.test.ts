@@ -3,7 +3,6 @@ import { buildRegistrationFields } from "./registrationFields";
 
 const data: RegistrationData = {
   account: {
-    profile: "produtor",
     nome: "Fazenda São João",
     email: "ana@sitio.com",
     telefone: "(11) 99999-9999",

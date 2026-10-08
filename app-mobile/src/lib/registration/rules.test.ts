@@ -1,12 +1,8 @@
-import { allowedDocumentTypes, allowedProofTypes, profileDefaults } from "./rules";
+import { DOCUMENT_TYPES, allowedProofTypes } from "./rules";
 
-describe("allowedDocumentTypes", () => {
-  it("produtor pode usar CPF ou CNPJ", () => {
-    expect(allowedDocumentTypes("produtor")).toEqual(["CPF", "CNPJ"]);
-  });
-
-  it("mercado só pode usar CNPJ", () => {
-    expect(allowedDocumentTypes("mercado")).toEqual(["CNPJ"]);
+describe("DOCUMENT_TYPES", () => {
+  it("o produtor pode se cadastrar com CPF ou CNPJ", () => {
+    expect(DOCUMENT_TYPES).toEqual(["CPF", "CNPJ"]);
   });
 });
 
@@ -17,23 +13,5 @@ describe("allowedProofTypes", () => {
 
   it("CNPJ aceita Contrato Social ou Cartão CNPJ", () => {
     expect(allowedProofTypes("CNPJ")).toEqual(["CONTRATO_SOCIAL", "CARTAO_CNPJ"]);
-  });
-});
-
-describe("profileDefaults", () => {
-  it("produtor começa com CPF e RG", () => {
-    expect(profileDefaults("produtor")).toEqual({
-      documentType: "CPF",
-      proofType: "RG",
-      documento: "",
-    });
-  });
-
-  it("mercado começa com CNPJ e Contrato Social", () => {
-    expect(profileDefaults("mercado")).toEqual({
-      documentType: "CNPJ",
-      proofType: "CONTRATO_SOCIAL",
-      documento: "",
-    });
   });
 });

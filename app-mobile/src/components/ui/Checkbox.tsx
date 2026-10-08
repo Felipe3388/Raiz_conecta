@@ -27,7 +27,7 @@ export function Checkbox({ checked, onChange, children }: CheckboxProps) {
   return (
     <PressableScale
       accessibilityRole="checkbox"
-      accessibilityState={{ checked }}
+      aria-checked={checked}
       onPress={() => onChange(!checked)}
       pressedScale={0.98}
       style={styles.row}

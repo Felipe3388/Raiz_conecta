@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Redirect, router } from "expo-router";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { Reveal } from "@/components/motion/Reveal";
@@ -52,7 +51,6 @@ export default function CompletarPerfilScreen() {
   if (validateAccount(account) !== null) return <Redirect href="/cadastro" />;
 
   const firstName = account.nome.trim().split(" ")[0];
-  const isMarket = account.profile === "mercado";
   const documentName = profile.documentType;
 
   async function finish() {
@@ -72,33 +70,20 @@ export default function CompletarPerfilScreen() {
         <Text style={styles.subtitle}>
           Agora precisamos do seu documento e do endereço para confirmar que é você.
         </Text>
-        <Text style={styles.badge}>
-          {isMarket ? "🏪 Cadastrando como Mercado" : "🌱 Cadastrando como Produtor Rural"}
-        </Text>
       </Reveal>
 
       {step.error && <ErrorBanner key={step.error} message={step.error} />}
 
       <Reveal delay={next()}>
         <SectionCard title="Seu documento" icon="document-text-outline">
-          {step.documentTypes.length > 1 ? (
-            <ChoiceGroup
-              label="Qual documento você vai usar?"
-              options={toOptions(step.documentTypes, DOCUMENT_LABELS)}
-              value={profile.documentType}
-              onChange={step.setDocumentType}
-            />
-          ) : (
-            <View style={styles.notice}>
-              <Ionicons name="information-circle-outline" size={24} color={colors.info} />
-              <Text style={styles.noticeText}>
-                Mercados e supermercados se cadastram somente com CNPJ.
-              </Text>
-            </View>
-          )}
+          <ChoiceGroup
+            label="Qual documento você vai usar?"
+            options={toOptions(step.documentTypes, DOCUMENT_LABELS)}
+            value={profile.documentType}
+            onChange={step.setDocumentType}
+          />
           <Input
             label={`Número do ${documentName}`}
-            hint="Digite só os números. Os pontos e traços aparecem sozinhos."
             placeholder={DOCUMENT_EXAMPLES[profile.documentType]}
             keyboardType="number-pad"
             value={profile.documento}
@@ -112,7 +97,6 @@ export default function CompletarPerfilScreen() {
           <View>
             <Input
               label="CEP"
-              hint="Digite o CEP e o endereço aparece sozinho."
               placeholder="Ex.: 18110-000"
               keyboardType="number-pad"
               autoComplete="postal-code"
@@ -132,7 +116,6 @@ export default function CompletarPerfilScreen() {
           />
           <Input
             label="Número"
-            hint="Se não tiver número, escreva S/N."
             placeholder="Ex.: 120 ou S/N"
             autoCapitalize="characters"
             value={profile.numero}
@@ -201,26 +184,6 @@ const styles = StyleSheet.create({
   header: { alignItems: "center", gap: spacing.sm },
   title: { ...typography.title, color: colors.primaryText, textAlign: "center" },
   subtitle: { ...typography.body, color: colors.textMuted, textAlign: "center" },
-  badge: {
-    ...typography.button,
-    color: colors.primaryText,
-    backgroundColor: colors.primarySoft,
-    borderColor: colors.primaryBorder,
-    borderWidth: 2,
-    borderRadius: 999,
-    paddingVertical: spacing.xs + 2,
-    paddingHorizontal: spacing.md,
-    overflow: "hidden",
-  },
-  notice: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    padding: spacing.md,
-    backgroundColor: colors.infoSoft,
-    borderRadius: 12,
-  },
-  noticeText: { ...typography.body, flex: 1, color: colors.text },
   cepLoader: { position: "absolute", right: spacing.md, top: 62 },
   row: { flexDirection: "row", gap: spacing.sm },
   grow: { flex: 1 },

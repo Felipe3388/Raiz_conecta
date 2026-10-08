@@ -1,13 +1,16 @@
 import { digitsOnly } from "@/lib/format/masks";
 import type { RegistrationData } from "@/types/registration";
 
+// O app mobile cadastra apenas produtores.
+const PRODUCER_ROLE = "produtor";
+
 // Campos de texto no formato esperado por POST /api/auth/cadastro (o arquivo vai à parte).
 export function buildRegistrationFields({
   account,
   profile,
 }: RegistrationData): Record<string, string> {
   return {
-    tipoUsuario: account.profile,
+    tipoUsuario: PRODUCER_ROLE,
     nome: account.nome.trim(),
     email: account.email.trim(),
     senha: account.senha,

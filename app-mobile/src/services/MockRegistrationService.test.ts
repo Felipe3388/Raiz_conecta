@@ -5,7 +5,6 @@ import { MockRegistrationService } from "./MockRegistrationService";
 function dataWithEmail(email: string): RegistrationData {
   return {
     account: {
-      profile: "produtor",
       nome: "Fazenda",
       email,
       telefone: "(11) 99999-9999",

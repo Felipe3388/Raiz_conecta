@@ -2,7 +2,7 @@ import { ActivityIndicator, StyleSheet, Text, type ViewStyle } from "react-nativ
 import { PressableScale } from "@/components/motion/PressableScale";
 import { colors, radius, spacing, typography } from "@/theme";
 
-type Variant = "primary" | "outline" | "ghost" | "danger";
+type Variant = "primary" | "outline" | "ghost" | "danger" | "amber" | "amberOutline";
 type Size = "sm" | "md" | "lg";
 
 interface ButtonProps {
@@ -42,6 +42,18 @@ const variants: Record<Variant, VariantStyle> = {
     background: colors.danger,
     pressed: colors.dangerPressed,
     text: colors.primaryContrast,
+  },
+  // Tom âmbar do catálogo do produtor.
+  amber: {
+    background: colors.warningStrong,
+    pressed: colors.warningText,
+    text: colors.primaryContrast,
+  },
+  amberOutline: {
+    background: colors.surface,
+    pressed: colors.warningSoft,
+    text: colors.warningText,
+    border: colors.warningBorderStrong,
   },
 };
 

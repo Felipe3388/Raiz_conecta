@@ -5,6 +5,8 @@ import { colors, radius, spacing, typography } from "@/theme";
 
 interface SectionCardProps {
   title: string;
+  // Frase curta sob o título (usada na tela Meu Perfil).
+  description?: string;
   icon: ComponentProps<typeof Ionicons>["name"];
   iconColor?: string;
   children: ReactNode;
@@ -12,6 +14,7 @@ interface SectionCardProps {
 
 export function SectionCard({
   title,
+  description,
   icon,
   iconColor = colors.primary,
   children,
@@ -20,7 +23,10 @@ export function SectionCard({
     <View style={styles.card}>
       <View style={styles.header}>
         <Ionicons name={icon} size={18} color={iconColor} />
-        <Text style={styles.title}>{title}</Text>
+        <View style={styles.headerText}>
+          <Text style={styles.title}>{title}</Text>
+          {description && <Text style={styles.description}>{description}</Text>}
+        </View>
       </View>
       <View style={styles.body}>{children}</View>
     </View>
@@ -44,6 +50,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
+  headerText: { flex: 1, gap: 2 },
   title: { ...typography.button, fontSize: 16, color: colors.text },
+  description: { ...typography.hint, color: colors.textMuted },
   body: { gap: spacing.md },
 });

@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { digitsOnly, maskCep, maskDocument } from "@/lib/format/masks";
 import { pickImage, type ImageSource } from "@/lib/media/pickImage";
-import { allowedDocumentTypes, allowedProofTypes } from "@/lib/registration/rules";
+import { DOCUMENT_TYPES, allowedProofTypes } from "@/lib/registration/rules";
 import { validateProfile } from "@/lib/validation/registration";
 import { getCepService, getRegistrationService } from "@/services";
 import type { DocumentType, ProfileFields } from "@/types/registration";
@@ -65,7 +65,7 @@ export function useProfileStep() {
 
   // Devolve true quando o cadastro foi enviado e a tela pode seguir para "Conta em análise".
   async function submit(): Promise<boolean> {
-    const message = validateProfile(profile, account.profile);
+    const message = validateProfile(profile);
     setError(message);
     if (message) return false;
 
@@ -85,7 +85,7 @@ export function useProfileStep() {
   return {
     account,
     profile,
-    documentTypes: allowedDocumentTypes(account.profile),
+    documentTypes: DOCUMENT_TYPES,
     proofTypes: allowedProofTypes(profile.documentType),
     error,
     isSubmitting,

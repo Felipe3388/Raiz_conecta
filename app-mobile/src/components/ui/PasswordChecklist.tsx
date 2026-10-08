@@ -1,9 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
+import { Collapse } from "@/components/motion/Collapse";
 import { USE_NATIVE_DRIVER } from "@/components/motion/timing";
-import { passwordRequirements } from "@/lib/auth/password";
+import { usePasswordChecklist } from "@/hooks/usePasswordChecklist";
 import { colors, spacing, typography } from "@/theme";
+
+const ROW_STAGGER_MS = 50;
 
 function RequirementRow({ label, met }: { label: string; met: boolean }) {
   const pop = useRef(new Animated.Value(met ? 1 : 0)).current;
@@ -30,21 +33,30 @@ function RequirementRow({ label, met }: { label: string; met: boolean }) {
   );
 }
 
-// Lista do que a senha precisa ter; cada item "acende" quando é cumprido.
+// Lista só o que a senha ainda precisa ter. Antes de digitar não aparece nada; os itens entram em
+// sequência, ao cumprir um ele ganha o "feito" por um instante e sai deslizando; com tudo cumprido, a lista fecha.
 export function PasswordChecklist({ password }: { password: string }) {
+  const { items, anyShown } = usePasswordChecklist(password);
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Sua senha precisa ter:</Text>
-      {passwordRequirements(password).map((requirement) => (
-        <RequirementRow key={requirement.label} {...requirement} />
+    <View aria-live="polite">
+      <Collapse visible={anyShown}>
+        <Text style={styles.title}>Sua senha precisa ter:</Text>
+      </Collapse>
+      {items.map((item, index) => (
+        <Collapse key={item.label} visible={item.shown} delay={index * ROW_STAGGER_MS}>
+          <View style={styles.rowSpacing}>
+            <RequirementRow label={item.label} met={item.met} />
+          </View>
+        </Collapse>
       ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { gap: spacing.xs + 2 },
-  title: { ...typography.hint, color: colors.textMuted, fontWeight: "700" },
+  title: { ...typography.hint, color: colors.textMuted, fontWeight: "700", paddingTop: spacing.sm },
+  rowSpacing: { paddingTop: spacing.xs + 2 },
   row: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   iconSlot: { width: 20, height: 20 },
   checkIcon: { position: "absolute", top: 0, left: 0 },

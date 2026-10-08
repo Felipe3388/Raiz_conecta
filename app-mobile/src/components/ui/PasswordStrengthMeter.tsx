@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import { Collapse } from "@/components/motion/Collapse";
 import { passwordStrength } from "@/lib/auth/password";
 import { colors, radius, spacing, typography } from "@/theme";
 
@@ -10,25 +11,27 @@ export function PasswordStrengthMeter({ password }: { password: string }) {
   const color = colors.strength[Math.max(0, score - 1)];
 
   return (
-    <View style={styles.container}>
-      <View style={styles.bars}>
-        {BARS.map((bar) => (
-          <View
-            key={bar}
-            style={[styles.bar, { backgroundColor: bar <= score ? color : colors.border }]}
-          />
-        ))}
+    <Collapse visible={password !== ""}>
+      <View style={styles.container}>
+        <View style={styles.bars}>
+          {BARS.map((bar) => (
+            <View
+              key={bar}
+              style={[styles.bar, { backgroundColor: bar <= score ? color : colors.border }]}
+            />
+          ))}
+        </View>
+        <Text style={[styles.label, { color }]}>{label}</Text>
+        {score < STRONG_ENOUGH && (
+          <Text style={styles.hint}>Use maiúsculas, números e símbolos (!@#$%)</Text>
+        )}
       </View>
-      <Text style={[styles.label, { color }]}>{label}</Text>
-      {score < STRONG_ENOUGH && (
-        <Text style={styles.hint}>Use maiúsculas, números e símbolos (!@#$%)</Text>
-      )}
-    </View>
+    </Collapse>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { gap: spacing.xs },
+  container: { gap: spacing.xs, paddingTop: spacing.sm },
   bars: { flexDirection: "row", gap: spacing.xs },
   bar: { flex: 1, height: 6, borderRadius: radius.full },
   label: { ...typography.caption, fontWeight: "700" },

@@ -1,66 +1,41 @@
 import { digitsOnly } from "@/lib/format/masks";
 import { isValidPassword } from "@/lib/auth/password";
-import { allowedDocumentTypes, allowedProofTypes } from "@/lib/registration/rules";
-import type {
-  AccountFields,
-  DocumentType,
-  ProfileFields,
-  RegistrationProfile,
-} from "@/types/registration";
+import { allowedProofTypes } from "@/lib/registration/rules";
+import type { AccountFields, DocumentType, ProfileFields } from "@/types/registration";
 import { isValidEmail } from "./email";
+import {
+  PASSWORDS_DIFFER_MESSAGE,
+  firstError,
+  required,
+  validCep,
+  validPhone,
+  validUf,
+} from "./rules";
 
 const DOCUMENT_DIGITS: Record<DocumentType, number> = { CPF: 11, CNPJ: 14 };
-const MIN_PHONE_DIGITS = 10;
-const CEP_DIGITS = 8;
-
-type Rule = () => string | null;
-
-// Retorna a mensagem do primeiro problema encontrado, ou null se estiver tudo certo.
-function firstError(rules: Rule[]): string | null {
-  for (const rule of rules) {
-    const error = rule();
-    if (error) return error;
-  }
-  return null;
-}
-
-const required = (value: string, message: string): Rule => () => (value.trim() ? null : message);
 
 export function validateAccount(fields: AccountFields): string | null {
   return firstError([
     required(fields.nome, "Informe o nome fantasia ou razão social."),
     () => (isValidEmail(fields.email) ? null : "E-mail inválido. Use o formato nome@dominio.com."),
-    () =>
-      digitsOnly(fields.telefone).length >= MIN_PHONE_DIGITS
-        ? null
-        : "Informe um telefone válido com DDD.",
+    validPhone(fields.telefone),
     () =>
       isValidPassword(fields.senha)
         ? null
         : "A senha deve ter mínimo 8 caracteres, letra maiúscula, minúscula, número e caractere especial (!@#$%...).",
-    () =>
-      fields.senha === fields.confirmarSenha
-        ? null
-        : "As senhas não coincidem. Verifique e tente novamente.",
+    () => (fields.senha === fields.confirmarSenha ? null : PASSWORDS_DIFFER_MESSAGE),
     () =>
       fields.acceptedTerms ? null : "Aceite os Termos de Uso e a Política de Privacidade.",
   ]);
 }
 
-export function validateProfile(
-  fields: ProfileFields,
-  accountProfile: RegistrationProfile,
-): string | null {
+export function validateProfile(fields: ProfileFields): string | null {
   return firstError([
-    () =>
-      allowedDocumentTypes(accountProfile).includes(fields.documentType)
-        ? null
-        : "Mercado / Supermercado só pode se cadastrar com CNPJ.",
     () =>
       digitsOnly(fields.documento).length === DOCUMENT_DIGITS[fields.documentType]
         ? null
         : `${fields.documentType} deve ter ${DOCUMENT_DIGITS[fields.documentType]} dígitos.`,
-    () => (digitsOnly(fields.cep).length === CEP_DIGITS ? null : "Informe um CEP válido."),
+    validCep(fields.cep),
     () =>
       allowedProofTypes(fields.documentType).includes(fields.proofType)
         ? null
@@ -69,7 +44,7 @@ export function validateProfile(
     required(fields.numero, "Informe o número (ou S/N)."),
     required(fields.bairro, "Informe o bairro."),
     required(fields.cidade, "Informe a cidade."),
-    () => (fields.estado.trim().length === 2 ? null : "Informe a UF com 2 letras."),
+    validUf(fields.estado),
     () =>
       fields.attachment ? null : "Anexe a foto do seu documento para validação.",
   ]);

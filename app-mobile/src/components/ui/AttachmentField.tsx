@@ -8,10 +8,20 @@ import { Button } from "./Button";
 interface AttachmentFieldProps {
   attachment: Attachment | null;
   title: string;
+  // Instrução mostrada enquanto não há foto; o padrão é a de foto de documento.
+  hint?: string;
   onPick: (source: ImageSource) => void;
 }
 
-export function AttachmentField({ attachment, title, onPick }: AttachmentFieldProps) {
+const DOCUMENT_HINT =
+  "Coloque o documento sobre uma mesa, com boa luz, e tire a foto sem cortar as bordas. Tamanho máximo: 5 MB.";
+
+export function AttachmentField({
+  attachment,
+  title,
+  hint = DOCUMENT_HINT,
+  onPick,
+}: AttachmentFieldProps) {
   return (
     <View style={[styles.box, attachment && styles.boxFilled]}>
       {attachment ? (
@@ -26,10 +36,7 @@ export function AttachmentField({ attachment, title, onPick }: AttachmentFieldPr
         <>
           <Ionicons name="camera-outline" size={44} color={colors.textSubtle} />
           <Text style={styles.title}>{title}</Text>
-          <Text style={styles.hint}>
-            Coloque o documento sobre uma mesa, com boa luz, e tire a foto sem cortar as bordas.
-            Tamanho máximo: 5 MB.
-          </Text>
+          <Text style={styles.hint}>{hint}</Text>
         </>
       )}
       <View style={styles.actions}>
