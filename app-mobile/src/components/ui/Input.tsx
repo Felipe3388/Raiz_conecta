@@ -1,16 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState, type ComponentProps } from "react";
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  type KeyboardTypeOptions,
-} from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View, type KeyboardTypeOptions } from "react-native";
 import { colors, radius, spacing, typography } from "@/theme";
-
-type IconName = ComponentProps<typeof Ionicons>["name"];
+import type { IconName } from "@/types/icon";
 
 interface InputProps {
   label: string;
@@ -89,11 +81,7 @@ export function Input({
             hitSlop={10}
             onPress={() => setIsHidden((hidden) => !hidden)}
           >
-            <Ionicons
-              name={isHidden ? "eye-outline" : "eye-off-outline"}
-              size={24}
-              color={colors.textMuted}
-            />
+            <Ionicons name={isHidden ? "eye-outline" : "eye-off-outline"} size={24} color={colors.textMuted} />
           </Pressable>
         )}
       </View>

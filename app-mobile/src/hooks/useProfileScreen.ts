@@ -6,6 +6,7 @@ import type { EditableProfile, ProducerProfile } from "@/types/produtor";
 import { useContactSupport } from "./useContactSupport";
 import { useSession } from "./useSession";
 import { useToast } from "./useToast";
+import { useUndo } from "./useUndo";
 
 type LoadStatus = "loading" | "ready" | "error";
 
@@ -33,6 +34,7 @@ export function useProfileScreen(
 ) {
   const { signOut } = useSession();
   const toast = useToast();
+  const undo = useUndo();
   const contactSupport = useContactSupport();
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [profile, setProfile] = useState<ProducerProfile | null>(null);
@@ -62,7 +64,13 @@ export function useProfileScreen(
 
   function setField(field: keyof EditableProfile, text: string) {
     const formatted =
-      field === "telefone" ? maskPhone(text) : field === "cep" ? maskCep(text) : field === "estado" ? text.toUpperCase() : text;
+      field === "telefone"
+        ? maskPhone(text)
+        : field === "cep"
+          ? maskCep(text)
+          : field === "estado"
+            ? text.toUpperCase()
+            : text;
     setForm((current) => ({ ...current, [field]: formatted }));
   }
 
@@ -75,12 +83,28 @@ export function useProfileScreen(
   async function confirmSave() {
     setIsSaving(true);
     try {
+      const before = profile ? editableFrom(profile) : null;
+      const changedPassword = newPassword !== "";
       const updated = await gateway.updateProfile(email, form, newPassword || undefined);
       setProfile(updated);
       onNameChanged(updated.nomeFantasia);
       setNewPassword("");
       setConfirmPassword("");
-      toast.show("success", "Perfil atualizado com sucesso!");
+      // A senha antiga não é guardada, então só dá para desfazer quando a senha não mudou.
+      if (before && !changedPassword) {
+        undo.announce({
+          title: "Perfil atualizado com sucesso!",
+          label: "Dados do perfil",
+          revert: async () => {
+            const restored = await gateway.updateProfile(email, before);
+            setProfile(restored);
+            setForm(editableFrom(restored));
+            onNameChanged(restored.nomeFantasia);
+          },
+        });
+      } else {
+        toast.show("success", "Perfil atualizado com sucesso!");
+      }
     } catch {
       toast.show("error", "Erro ao atualizar os dados.");
     } finally {

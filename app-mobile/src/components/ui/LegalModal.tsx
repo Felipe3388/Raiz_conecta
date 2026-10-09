@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import type { ComponentProps } from "react";
 import { Modal, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { PressableScale } from "@/components/motion/PressableScale";
@@ -7,10 +6,11 @@ import type { LegalDocument } from "@/content/legalDocuments";
 import { colors, radius, spacing, typography } from "@/theme";
 import { Button } from "./Button";
 import { RichText } from "./RichText";
+import type { IconName } from "@/types/icon";
 
 interface LegalModalProps {
   document: LegalDocument;
-  icon: ComponentProps<typeof Ionicons>["name"];
+  icon: IconName;
   visible: boolean;
   onClose: () => void;
 }
@@ -18,12 +18,7 @@ interface LegalModalProps {
 // Documento legal em tela cheia, com letra grande e botão de fechar sempre à vista.
 export function LegalModal({ document, icon, visible, onClose }: LegalModalProps) {
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="fullScreen"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
         <View style={styles.page}>
           <View style={styles.header}>

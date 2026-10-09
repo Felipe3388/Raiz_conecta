@@ -12,6 +12,7 @@ interface MockCatalogOptions {
 }
 
 interface StoredSuggestion extends ProductSuggestion {
+  id: string;
   emailProdutor: string;
 }
 
@@ -61,19 +62,31 @@ export class MockCatalogService implements CatalogGateway {
     this.savedIds.set(email, [...ids]);
   }
 
-  async suggestProduct(email: string, suggestion: ProductSuggestion): Promise<void> {
+  async suggestProduct(email: string, suggestion: ProductSuggestion): Promise<string> {
     await wait(this.latencyMs);
-    this.suggestions.push({ emailProdutor: email, ...suggestion });
+    const id = `s-novo-${this.nextRecordId++}`;
+    this.suggestions.push({ id, emailProdutor: email, ...suggestion });
 
     const price = suggestion.precoSugerido.trim();
     this.recordsOf(email).push({
-      id: `s-novo-${this.nextRecordId++}`,
+      id,
       nomeProduto: suggestion.nomeProduto.trim(),
       descricao: suggestion.descricao.trim(),
       precoSugerido: price === "" ? null : Number(price),
       status: "EM_ANALISE",
       criadoEm: new Date().toISOString(),
     });
+    return id;
+  }
+
+  async withdrawSuggestion(email: string, id: string): Promise<void> {
+    await wait(this.latencyMs);
+    const records = this.recordsOf(email);
+    const index = records.findIndex((record) => record.id === id);
+    if (index < 0) throw new Error("Sugestão não encontrada.");
+    records.splice(index, 1);
+    const stored = this.suggestions.findIndex((item) => item.id === id);
+    if (stored >= 0) this.suggestions.splice(stored, 1);
   }
 
   async listSuggestions(email: string): Promise<SuggestionRecord[]> {

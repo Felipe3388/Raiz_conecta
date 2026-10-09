@@ -36,11 +36,15 @@ const EMOJI_BY_NAME: [string, string][] = [
   ["mandioca", "🌿"],
 ];
 
+// O emoji do alimento pelo nome; um broto se não houver um parecido.
+export function productEmoji(name: string): string {
+  const normalized = normalizeText(name);
+  const match = EMOJI_BY_NAME.find(([keyword]) => normalized.includes(keyword));
+  return match ? match[1] : FALLBACK_EMOJI;
+}
+
 export function productVisual(product: CatalogProduct): ProductVisual {
   const uri = product.imagemUrl?.trim();
   if (uri) return { kind: "image", uri };
-
-  const name = normalizeText(product.nome);
-  const match = EMOJI_BY_NAME.find(([keyword]) => name.includes(keyword));
-  return { kind: "emoji", emoji: match ? match[1] : FALLBACK_EMOJI };
+  return { kind: "emoji", emoji: productEmoji(product.nome) };
 }

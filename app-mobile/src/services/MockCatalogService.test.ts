@@ -56,7 +56,7 @@ describe("MockCatalogService", () => {
 
     await service.suggestProduct(ME, suggestion);
 
-    expect(service.getSuggestions()).toEqual([{ emailProdutor: ME, ...suggestion }]);
+    expect(service.getSuggestions()).toEqual([{ id: expect.any(String), emailProdutor: ME, ...suggestion }]);
   });
 
   describe("sugestões enviadas", () => {
@@ -123,5 +123,28 @@ describe("MockCatalogService", () => {
 
       expect(await service.listSuggestions("outro@sitio.com")).toEqual([]);
     });
+  });
+
+  it("devolve o código da sugestão enviada", async () => {
+    const service = createService();
+
+    const id = await service.suggestProduct(ME, suggestion);
+
+    const records = await service.listSuggestions(ME);
+    expect(records.map((record) => record.id)).toContain(id);
+  });
+
+  it("retirar uma sugestão a tira da lista e do que foi enviado", async () => {
+    const service = createService();
+    const id = await service.suggestProduct(ME, suggestion);
+
+    await service.withdrawSuggestion(ME, id);
+
+    expect((await service.listSuggestions(ME)).map((record) => record.id)).not.toContain(id);
+    expect(service.getSuggestions()).toEqual([]);
+  });
+
+  it("não deixa retirar uma sugestão que não existe", async () => {
+    await expect(createService().withdrawSuggestion(ME, "nao-existe")).rejects.toThrow("Sugestão não encontrada.");
   });
 });

@@ -4,16 +4,13 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { QuantityInput } from "@/components/ui/QuantityInput";
+import { FIT_ABOVE_TEXT, FIT_NONE_TEXT, FIT_WITHIN_TEXT } from "@/content/priceTexts";
 import { formatBRL } from "@/lib/format/currency";
-import {
-  canOffer,
-  findOffer,
-  fulfilledQuantity,
-  progressPercent,
-  remainingQuantity,
-} from "@/lib/produtor/demands";
+import { priceFit } from "@/lib/pricing/fit";
+import { canOffer, findOffer, fulfilledQuantity, progressPercent, remainingQuantity } from "@/lib/produtor/demands";
 import { colors, radius, spacing, typography } from "@/theme";
 import type { Demand } from "@/types/produtor";
+import { PriceTag } from "./PriceTag";
 
 interface DemandCardProps {
   demand: Demand;
@@ -22,6 +19,8 @@ interface DemandCardProps {
   onQuantityChange: (quantity: number) => void;
   onOffer: () => void;
   isSending: boolean;
+  // No Mural: o preço que o produtor pede por este produto e como mudá-lo. Sem isto (Ofertas) não há confronto de preços.
+  pricing?: { myPrice: number | null; onEditPrice: () => void };
 }
 
 // Pedido de um mercado: quanto precisa, quanto já foi prometido e onde você faz a sua oferta.
@@ -32,6 +31,7 @@ export function DemandCard({
   onQuantityChange,
   onOffer,
   isSending,
+  pricing,
 }: DemandCardProps) {
   const myOffer = findOffer(demand, producerEmail);
   const remaining = remainingQuantity(demand);
@@ -86,9 +86,16 @@ export function DemandCard({
             <Text style={styles.confirmedText}>
               Você garantiu {myOffer.quantidade} {demand.unidade}!
             </Text>
+            {myOffer.preco !== undefined && (
+              <Text style={styles.confirmedPrice}>
+                {formatBRL(myOffer.preco)} / {demand.unidade.toLowerCase()} · total{" "}
+                {formatBRL(myOffer.preco * myOffer.quantidade)}
+              </Text>
+            )}
           </View>
         ) : (
           <View style={styles.offerForm}>
+            {pricing && <PriceConfront demand={demand} {...pricing} />}
             <Text style={styles.offerLabel}>Quanto você enviará?</Text>
             <QuantityInput
               label={`Quantidade de ${demand.produto}`}
@@ -110,7 +117,43 @@ export function DemandCard({
   );
 }
 
+// Confronta o preço do pedido (x) com o que o produtor pede (y) e deixa ele mudar o seu.
+function PriceConfront({ demand, myPrice, onEditPrice }: { demand: Demand } & NonNullable<DemandCardProps["pricing"]>) {
+  const { fit } = priceFit(myPrice, demand.precoMedio);
+  const message = fit === "none" ? FIT_NONE_TEXT : fit === "within" ? FIT_WITHIN_TEXT : FIT_ABOVE_TEXT;
+
+  return (
+    <View style={[styles.confront, fit === "above" && styles.confrontAbove]}>
+      <View style={styles.confrontTop}>
+        <Text style={styles.confrontLabel}>Seu preço</Text>
+        <PriceTag productName={demand.produto} price={myPrice} onPress={onEditPrice} />
+      </View>
+      <View style={styles.confrontMessage}>
+        <Ionicons
+          name={fit === "above" ? "swap-vertical" : fit === "within" ? "checkmark-circle" : "information-circle"}
+          size={18}
+          color={fit === "above" ? colors.warningStrong : fit === "within" ? colors.primary : colors.textMuted}
+        />
+        <Text style={styles.confrontText}>{message}</Text>
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  confront: {
+    gap: spacing.sm,
+    padding: spacing.sm + 4,
+    backgroundColor: colors.surfaceMuted,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+  },
+  confrontAbove: { backgroundColor: colors.warningTint, borderColor: colors.warningBorder },
+  confrontTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.sm },
+  confrontLabel: { ...typography.label, color: colors.textStrong },
+  confrontMessage: { flexDirection: "row", alignItems: "flex-start", gap: 6 },
+  confrontText: { ...typography.hint, flex: 1, color: colors.textStrong },
   card: {
     gap: spacing.md,
     padding: spacing.md + 4,
@@ -122,7 +165,13 @@ const styles = StyleSheet.create({
   cardMine: { borderColor: colors.infoBorder, backgroundColor: colors.infoSoft },
   top: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: spacing.sm },
   titleBlock: { flex: 1, gap: 2 },
-  overline: { fontSize: 12, fontWeight: "800", letterSpacing: 0.8, textTransform: "uppercase", color: colors.textSubtle },
+  overline: {
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    color: colors.textSubtle,
+  },
   product: { fontSize: 26, fontWeight: "900", color: colors.text },
   figures: {
     flexDirection: "row",
@@ -135,7 +184,13 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
   },
   figureRight: { alignItems: "flex-end" },
-  figureLabel: { fontSize: 12, fontWeight: "800", letterSpacing: 0.5, textTransform: "uppercase", color: colors.textMuted },
+  figureLabel: {
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    color: colors.textMuted,
+  },
   price: { fontSize: 20, fontWeight: "900", color: colors.primaryPressed },
   ordered: { fontSize: 20, fontWeight: "900", color: colors.textStrong },
   unit: { fontSize: 14, fontWeight: "400", color: colors.textSubtle },
@@ -157,4 +212,5 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
   },
   confirmedText: { ...typography.label, color: colors.infoDark, textAlign: "center" },
+  confirmedPrice: { ...typography.hint, fontWeight: "700", color: colors.infoDark, textAlign: "center" },
 });

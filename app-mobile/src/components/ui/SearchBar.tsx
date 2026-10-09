@@ -16,12 +16,7 @@ const ACCENTS = {
   amber: { focus: colors.warning, rest: colors.warningBorder },
 };
 
-export function SearchBar({
-  value,
-  onChangeText,
-  placeholder = "Buscar...",
-  accent = "green",
-}: SearchBarProps) {
+export function SearchBar({ value, onChangeText, placeholder = "Buscar...", accent = "green" }: SearchBarProps) {
   const [isFocused, setIsFocused] = useState(false);
   const tone = ACCENTS[accent];
 
@@ -44,7 +39,7 @@ export function SearchBar({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Limpar busca"
-          hitSlop={10}
+          hitSlop={12}
           onPress={() => onChangeText("")}
         >
           <Ionicons name="close-circle" size={22} color={colors.textSubtle} />

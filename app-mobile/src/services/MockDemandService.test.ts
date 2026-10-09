@@ -36,9 +36,7 @@ describe("MockDemandService.listDemands", () => {
   });
 
   it("recomeça a base de exemplo quando entra outra pessoa", async () => {
-    const seed = jest.fn((email: string) => [
-      demand({ ofertas: [{ quantidade: 5, emailProdutor: email }] }),
-    ]);
+    const seed = jest.fn((email: string) => [demand({ ofertas: [{ quantidade: 5, emailProdutor: email }] })]);
     const service = new MockDemandService({ seed, latencyMs: 0 });
 
     await service.listDemands(ME);
@@ -90,28 +88,83 @@ describe("MockDemandService.sendOffer", () => {
 
   it.each([
     ["demanda que não existe", { demandaId: "nao-existe", quantidade: 5 }, "Demanda não encontrada."],
-    ["quantidade maior do que falta", { demandaId: "d1", quantidade: 101 }, "A quantidade é maior do que falta para completar o pedido."],
+    [
+      "quantidade maior do que falta",
+      { demandaId: "d1", quantidade: 101 },
+      "A quantidade é maior do que falta para completar o pedido.",
+    ],
     ["quantidade zero", { demandaId: "d1", quantidade: 0 }, "Informe uma quantidade válida."],
   ])("recusa %s", async (_name, request, message) => {
-    await expect(
-      createService().sendOffer({ ...request, emailProdutor: ME }),
-    ).rejects.toThrow(message);
+    await expect(createService().sendOffer({ ...request, emailProdutor: ME })).rejects.toThrow(message);
   });
 
   it("recusa demanda que já foi fechada", async () => {
     const service = createService([demand({ status: "CONCLUIDA" })]);
 
-    await expect(
-      service.sendOffer({ demandaId: "d1", quantidade: 5, emailProdutor: ME }),
-    ).rejects.toThrow("Esta demanda não está mais aberta.");
+    await expect(service.sendOffer({ demandaId: "d1", quantidade: 5, emailProdutor: ME })).rejects.toThrow(
+      "Esta demanda não está mais aberta.",
+    );
   });
 
   it("recusa uma segunda oferta do mesmo produtor", async () => {
     const service = createService();
     await service.sendOffer({ demandaId: "d1", quantidade: 10, emailProdutor: ME });
 
-    await expect(
-      service.sendOffer({ demandaId: "d1", quantidade: 10, emailProdutor: ME }),
-    ).rejects.toThrow("Você já fez uma oferta para esta demanda.");
+    await expect(service.sendOffer({ demandaId: "d1", quantidade: 10, emailProdutor: ME })).rejects.toThrow(
+      "Você já fez uma oferta para esta demanda.",
+    );
+  });
+});
+
+describe("MockDemandService: preço e desfazer", () => {
+  it("guarda o preço combinado na oferta", async () => {
+    const service = createService();
+
+    await service.sendOffer({ demandaId: "d1", quantidade: 10, emailProdutor: ME, preco: 44.5 });
+
+    const [list] = await service.listDemands(ME);
+    expect(list.ofertas[0]).toEqual({ quantidade: 10, emailProdutor: ME, preco: 44.5 });
+  });
+
+  it("cancelar a oferta devolve a quantidade ao pedido", async () => {
+    const service = createService();
+    await service.sendOffer({ demandaId: "d1", quantidade: 10, emailProdutor: ME });
+
+    await service.cancelOffer({ demandaId: "d1", emailProdutor: ME });
+
+    const [list] = await service.listDemands(ME);
+    expect(list.ofertas).toEqual([]);
+  });
+
+  it("cancelar a oferta que completava o pedido o reabre", async () => {
+    const service = createService([demand({ quantidade: 10 })]);
+    await service.sendOffer({ demandaId: "d1", quantidade: 10, emailProdutor: ME });
+    expect((await service.listDemands(ME))[0].status).toBe("CONCLUIDA");
+
+    await service.cancelOffer({ demandaId: "d1", emailProdutor: ME });
+
+    expect((await service.listDemands(ME))[0].status).toBe("ABERTA");
+  });
+
+  it("só cancela a oferta de quem pediu, sem mexer nas dos outros", async () => {
+    const service = createService([demand({ ofertas: [{ quantidade: 20, emailProdutor: "joao@fazenda.com" }] })]);
+    await service.sendOffer({ demandaId: "d1", quantidade: 10, emailProdutor: ME });
+
+    await service.cancelOffer({ demandaId: "d1", emailProdutor: ME });
+
+    const [list] = await service.listDemands(ME);
+    expect(list.ofertas).toEqual([{ quantidade: 20, emailProdutor: "joao@fazenda.com" }]);
+  });
+
+  it("avisa quando não há oferta para cancelar", async () => {
+    await expect(createService().cancelOffer({ demandaId: "d1", emailProdutor: ME })).rejects.toThrow(
+      "Você não tem oferta nesta demanda.",
+    );
+  });
+
+  it("avisa quando a demanda não existe", async () => {
+    await expect(createService().cancelOffer({ demandaId: "zzz", emailProdutor: ME })).rejects.toThrow(
+      "Demanda não encontrada.",
+    );
   });
 });

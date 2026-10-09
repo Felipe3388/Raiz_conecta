@@ -1,11 +1,23 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useRef, type ComponentProps, type ReactNode } from "react";
-import { Animated, Easing, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useRef, type ReactNode } from "react";
+import {
+  Animated,
+  Easing,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PressableScale } from "@/components/motion/PressableScale";
 import { USE_NATIVE_DRIVER } from "@/components/motion/timing";
 import { useReducedMotion } from "@/components/motion/useReducedMotion";
+import { useKeyboardVisible } from "@/hooks/useKeyboardVisible";
 import { colors, radius, spacing, typography } from "@/theme";
+import type { IconName } from "@/types/icon";
 
 const MAX_WIDTH = 560;
 
@@ -14,7 +26,7 @@ interface BottomSheetProps {
   onClose: () => void;
   title: string;
   subtitle?: string;
-  icon?: ComponentProps<typeof Ionicons>["name"];
+  icon?: IconName;
   // Botão extra no cabeçalho, ao lado do "Fechar" (ex.: recomeçar a conversa).
   headerAction?: ReactNode;
   children: ReactNode;
@@ -36,6 +48,7 @@ function SheetBody({
 }: Omit<BottomSheetProps, "visible">) {
   const reduced = useReducedMotion();
   const insets = useSafeAreaInsets();
+  const keyboardVisible = useKeyboardVisible();
   const rise = useRef(new Animated.Value(reduced ? 1 : 0)).current;
 
   useEffect(() => {
@@ -54,7 +67,9 @@ function SheetBody({
   }, [reduced, rise]);
 
   return (
-    <View style={styles.overlay}>
+    // No iPhone o teclado cobre a base da tela: o `padding` sobe a folha junto com ele para o campo ficar à vista.
+    // No Android a janela já se ajusta ao teclado (mesmo cuidado dos formulários do app).
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.overlay}>
       <Pressable accessibilityLabel="Fechar" style={StyleSheet.absoluteFill} onPress={onClose} />
       <Animated.View
         accessibilityViewIsModal
@@ -62,7 +77,8 @@ function SheetBody({
           styles.sheet,
           tall && styles.tall,
           {
-            paddingBottom: Math.max(insets.bottom, spacing.md),
+            // Com o teclado aberto ele já cobre a área do gesto de início, então não sobra margem a mais.
+            paddingBottom: keyboardVisible ? spacing.md : Math.max(insets.bottom, spacing.md),
             opacity: rise,
             transform: [{ translateY: rise.interpolate({ inputRange: [0, 1], outputRange: [48, 0] }) }],
           },
@@ -88,7 +104,7 @@ function SheetBody({
         <View style={styles.content}>{children}</View>
         {footer && <View style={styles.footer}>{footer}</View>}
       </Animated.View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -135,5 +151,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
   },
   content: { flexShrink: 1, flexGrow: 1 },
-  footer: { borderTopWidth: 1, borderTopColor: colors.border, padding: spacing.md, backgroundColor: colors.surfaceMuted },
+  footer: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    padding: spacing.md,
+    backgroundColor: colors.surfaceMuted,
+  },
 });

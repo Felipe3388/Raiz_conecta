@@ -1,7 +1,7 @@
 import type { ScreenId } from "@/lib/assistant/fabActions";
 import { HELP_TOPICS, suggestionsFor, topicById } from "./helpTopics";
 
-const SCREENS: ScreenId[] = ["mural", "catalogo", "ofertas", "painel", "perfil", "configuracoes"];
+const SCREENS: ScreenId[] = ["mural", "catalogo", "ofertas", "entregas", "painel", "perfil", "configuracoes"];
 
 describe("HELP_TOPICS", () => {
   it("cada pergunta tem identificador único, pergunta e resposta", () => {
@@ -14,7 +14,9 @@ describe("HELP_TOPICS", () => {
   });
 
   it("ensina o essencial: catálogo, mural, oferta, ofertas e suporte", () => {
-    const text = HELP_TOPICS.map((t) => t.answer).join(" ").toLowerCase();
+    const text = HELP_TOPICS.map((t) => t.answer)
+      .join(" ")
+      .toLowerCase();
     for (const term of ["catálogo", "mural", "ofertar", "salvar escolhas", "suporte@raizconecta.com.br"]) {
       expect(text).toContain(term);
     }
@@ -22,6 +24,15 @@ describe("HELP_TOPICS", () => {
 
   it.each(SCREENS)("%s tem perguntas pensadas para ela", (screen) => {
     expect(HELP_TOPICS.filter((t) => t.screens.includes(screen)).length).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe("negociação do preço", () => {
+  it("explica que a proposta vem uma de cada vez, com pausa e a opção de mudar de ideia", () => {
+    const answer = topicById("negociar-preco")?.answer ?? "";
+    expect(answer).toContain("uma proposta de cada vez");
+    expect(answer).toContain("pausa");
+    expect(answer).toContain("Mudei de ideia");
   });
 });
 
@@ -41,7 +52,11 @@ describe("suggestionsFor", () => {
 
   it("não repete o que já foi perguntado", () => {
     const first = suggestionsFor("mural", [], 3);
-    const next = suggestionsFor("mural", first.map((t) => t.id), 3);
+    const next = suggestionsFor(
+      "mural",
+      first.map((t) => t.id),
+      3,
+    );
     expect(next.some((t) => first.some((f) => f.id === t.id))).toBe(false);
   });
 
@@ -53,6 +68,11 @@ describe("suggestionsFor", () => {
   });
 
   it("sem limite explícito devolve todas as que sobraram", () => {
-    expect(suggestionsFor("mural", HELP_TOPICS.map((t) => t.id))).toEqual([]);
+    expect(
+      suggestionsFor(
+        "mural",
+        HELP_TOPICS.map((t) => t.id),
+      ),
+    ).toEqual([]);
   });
 });

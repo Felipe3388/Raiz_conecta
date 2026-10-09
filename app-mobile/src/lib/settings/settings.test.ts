@@ -26,7 +26,11 @@ describe("parseSettings", () => {
   });
 
   it("lê o que foi salvo", () => {
-    const saved = { reduceMotion: true, avatars: { "ana@sitio.com": "🍅" } };
+    const saved = {
+      reduceMotion: true,
+      avatars: { "ana@sitio.com": "🍅" },
+      fabPlacement: { side: "left" as const, y: 0.4 },
+    };
     expect(parseSettings(serializeSettings(saved))).toEqual(saved);
   });
 
@@ -38,7 +42,11 @@ describe("parseSettings", () => {
   );
 
   it("settings antigas, sem ícones, continuam valendo", () => {
-    expect(parseSettings('{"reduceMotion":true}')).toEqual({ reduceMotion: true, avatars: {} });
+    expect(parseSettings('{"reduceMotion":true}')).toEqual({
+      reduceMotion: true,
+      avatars: {},
+      fabPlacement: DEFAULT_SETTINGS.fabPlacement,
+    });
   });
 
   it("ignora ícones estragados e guarda só os válidos", () => {
@@ -46,6 +54,18 @@ describe("parseSettings", () => {
     expect(parseSettings(raw).avatars).toEqual({ "a@a.com": "🌱" });
     expect(parseSettings('{"avatars":[1,2]}').avatars).toEqual({});
     expect(parseSettings('{"avatars":"x"}').avatars).toEqual({});
+  });
+});
+
+describe("lugar do botão de ajuda", () => {
+  it("sem nada salvo, fica no canto de baixo, na direita", () => {
+    expect(DEFAULT_SETTINGS.fabPlacement).toEqual({ side: "right", y: 1 });
+  });
+
+  it("valor estragado volta ao padrão sem perder o resto", () => {
+    const parsed = parseSettings('{"reduceMotion":true,"fabPlacement":{"side":"meio","y":0.2}}');
+    expect(parsed.reduceMotion).toBe(true);
+    expect(parsed.fabPlacement).toEqual(DEFAULT_SETTINGS.fabPlacement);
   });
 });
 

@@ -1,25 +1,10 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { hasSelectionChanged, selectedProductNames, toggleProductId } from "@/lib/produtor/catalog";
 import { muralDemands, offerDemands } from "@/lib/produtor/demands";
-import {
-  getCatalogService,
-  getDemandService,
-  type CatalogGateway,
-  type DemandGateway,
-} from "@/services";
+import { getCatalogService, getDemandService, type CatalogGateway, type DemandGateway } from "@/services";
 import type { CatalogProduct, Demand, ProductSuggestion } from "@/types/produtor";
 
 type LoadStatus = "loading" | "ready" | "error";
-
-const LOAD_ERROR = "Não foi possível carregar os dados. Verifique a conexão e tente de novo.";
 
 interface ProdutorData {
   status: LoadStatus;
@@ -33,9 +18,16 @@ interface ProdutorData {
   offers: Demand[];
   reload: () => Promise<void>;
   toggleProduct: (id: number) => void;
-  saveSelection: () => Promise<void>;
-  sendOffer: (demandId: string, quantity: number) => Promise<void>;
-  suggestProduct: (suggestion: ProductSuggestion) => Promise<void>;
+  // Devolve as escolhas que valiam antes de salvar, para quem quiser desfazer.
+  saveSelection: () => Promise<number[]>;
+  // Volta o catálogo salvo para uma lista de produtos (usado no "Desfazer").
+  restoreSavedIds: (ids: number[]) => Promise<void>;
+  // `preco` é o valor por unidade combinado na negociação; sem ele vale a estimativa do pedido.
+  sendOffer: (demandId: string, quantity: number, preco?: number) => Promise<void>;
+  cancelOffer: (demandId: string) => Promise<void>;
+  // Devolve o código da sugestão, para ela poder ser retirada.
+  suggestProduct: (suggestion: ProductSuggestion) => Promise<string>;
+  withdrawSuggestion: (id: string) => Promise<void>;
 }
 
 const ProdutorDataContext = createContext<ProdutorData | null>(null);
@@ -87,13 +79,32 @@ export function ProdutorDataProvider({
   }, []);
 
   const saveSelection = useCallback(async () => {
+    const previous = savedIds;
     await catalog.saveMyProductIds(email, selectedIds);
     setSavedIds(selectedIds);
-  }, [catalog, email, selectedIds]);
+    return previous;
+  }, [catalog, email, selectedIds, savedIds]);
+
+  const restoreSavedIds = useCallback(
+    async (ids: number[]) => {
+      await catalog.saveMyProductIds(email, ids);
+      setSavedIds(ids);
+      setSelectedIds(ids);
+    },
+    [catalog, email],
+  );
 
   const sendOffer = useCallback(
-    async (demandId: string, quantity: number) => {
-      await demands.sendOffer({ demandaId: demandId, quantidade: quantity, emailProdutor: email });
+    async (demandId: string, quantity: number, preco?: number) => {
+      await demands.sendOffer({ demandaId: demandId, quantidade: quantity, emailProdutor: email, preco });
+      setAllDemands(await demands.listDemands(email));
+    },
+    [demands, email],
+  );
+
+  const cancelOffer = useCallback(
+    async (demandId: string) => {
+      await demands.cancelOffer({ demandaId: demandId, emailProdutor: email });
       setAllDemands(await demands.listDemands(email));
     },
     [demands, email],
@@ -103,6 +114,8 @@ export function ProdutorDataProvider({
     (suggestion: ProductSuggestion) => catalog.suggestProduct(email, suggestion),
     [catalog, email],
   );
+
+  const withdrawSuggestion = useCallback((id: string) => catalog.withdrawSuggestion(email, id), [catalog, email]);
 
   const value = useMemo<ProdutorData>(() => {
     // O Mural usa as escolhas já salvas, não as que ainda estão sendo marcadas.
@@ -119,10 +132,28 @@ export function ProdutorDataProvider({
       reload,
       toggleProduct,
       saveSelection,
+      restoreSavedIds,
       sendOffer,
+      cancelOffer,
       suggestProduct,
+      withdrawSuggestion,
     };
-  }, [status, email, products, selectedIds, savedIds, allDemands, reload, toggleProduct, saveSelection, sendOffer, suggestProduct]);
+  }, [
+    status,
+    email,
+    products,
+    selectedIds,
+    savedIds,
+    allDemands,
+    reload,
+    toggleProduct,
+    saveSelection,
+    restoreSavedIds,
+    sendOffer,
+    cancelOffer,
+    suggestProduct,
+    withdrawSuggestion,
+  ]);
 
   return <ProdutorDataContext.Provider value={value}>{children}</ProdutorDataContext.Provider>;
 }

@@ -7,13 +7,18 @@ import {
   type CatalogLayout,
   type CatalogSort,
 } from "@/lib/produtor/catalogView";
+import type { CatalogProduct } from "@/types/produtor";
+import { usePriceEditing } from "./usePriceEditing";
 import { useProdutorData } from "./useProdutorData";
 import { useToast } from "./useToast";
+import { useUndo } from "./useUndo";
 
-// Controller do Meu Catálogo: busca, filtros, ordem, forma de ver, marcar produtos e salvar.
+// Controller do Meu Catálogo: busca, filtros, ordem, forma de ver, marcar produtos, preço de cada um e salvar.
 export function useCatalogScreen() {
   const data = useProdutorData();
   const toast = useToast();
+  const undo = useUndo();
+  const prices = usePriceEditing();
   const [query, setQuery] = useState(DEFAULT_CATALOG_VIEW.query);
   const [filter, setFilter] = useState<CatalogFilter>(DEFAULT_CATALOG_VIEW.filter);
   const [sort, setSort] = useState<CatalogSort>(DEFAULT_CATALOG_VIEW.sort);
@@ -32,8 +37,13 @@ export function useCatalogScreen() {
   async function save() {
     setIsSaving(true);
     try {
-      await data.saveSelection();
-      toast.show("success", "Catálogo salvo!", "O Mural de Oportunidades foi atualizado.");
+      const previous = await data.saveSelection();
+      undo.announce({
+        title: "Catálogo salvo!",
+        description: "O Mural de Oportunidades foi atualizado.",
+        label: "Catálogo salvo",
+        revert: () => data.restoreSavedIds(previous),
+      });
     } catch {
       toast.show("error", "Erro ao salvar catálogo.");
     } finally {
@@ -57,6 +67,10 @@ export function useCatalogScreen() {
     layout,
     setLayout,
     toggleProduct: data.toggleProduct,
+    // Preço que o produtor pede por um produto, e a folha para editá-lo.
+    priceOf: (product: CatalogProduct) => prices.priceOf(product.nome),
+    editPrice: (product: CatalogProduct) => prices.edit({ produto: product.nome, unidade: product.unidadePadrao }),
+    priceEditor: prices,
     hasUnsavedSelection: data.hasUnsavedSelection,
     isSaving,
     save,

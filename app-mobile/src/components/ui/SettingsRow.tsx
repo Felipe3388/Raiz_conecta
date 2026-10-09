@@ -1,11 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
-import type { ComponentProps, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/motion/PressableScale";
 import { colors, spacing, typography } from "@/theme";
+import type { IconName } from "@/types/icon";
 
 interface SettingsRowProps {
-  icon: ComponentProps<typeof Ionicons>["name"];
+  icon: IconName;
   label: string;
   description?: string;
   // Elemento à direita (ex.: um interruptor). Sem ele e com onPress, aparece a setinha.
@@ -31,7 +32,13 @@ export function SettingsRow({ icon, label, description, right, onPress, tone }: 
   if (!onPress) return <View style={styles.row}>{content}</View>;
 
   return (
-    <PressableScale accessibilityRole="button" accessibilityLabel={label} onPress={onPress} pressedScale={0.985} style={styles.row}>
+    <PressableScale
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      pressedScale={0.985}
+      style={styles.row}
+    >
       {content}
     </PressableScale>
   );

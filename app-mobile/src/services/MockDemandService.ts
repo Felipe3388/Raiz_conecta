@@ -1,5 +1,5 @@
 import { canOffer, findOffer, remainingQuantity } from "@/lib/produtor/demands";
-import type { Demand, OfferRequest } from "@/types/produtor";
+import type { CancelOfferRequest, Demand, OfferRequest } from "@/types/produtor";
 import type { DemandGateway } from "./DemandGateway";
 import { DEFAULT_MOCK_LATENCY_MS, wait } from "./mockLatency";
 
@@ -28,7 +28,7 @@ export class MockDemandService implements DemandGateway {
     return clone(this.store(viewerEmail));
   }
 
-  async sendOffer({ demandaId, quantidade, emailProdutor }: OfferRequest): Promise<void> {
+  async sendOffer({ demandaId, quantidade, emailProdutor, preco }: OfferRequest): Promise<void> {
     await wait(this.latencyMs);
 
     const demand = this.store(emailProdutor).find((item) => item.id === demandaId);
@@ -44,8 +44,21 @@ export class MockDemandService implements DemandGateway {
       throw new Error("A quantidade é maior do que falta para completar o pedido.");
     }
 
-    demand.ofertas.push({ quantidade, emailProdutor });
+    demand.ofertas.push(preco === undefined ? { quantidade, emailProdutor } : { quantidade, emailProdutor, preco });
     if (remainingQuantity(demand) === 0) demand.status = "CONCLUIDA";
+  }
+
+  async cancelOffer({ demandaId, emailProdutor }: CancelOfferRequest): Promise<void> {
+    await wait(this.latencyMs);
+
+    const demand = this.store(emailProdutor).find((item) => item.id === demandaId);
+    if (!demand) throw new Error("Demanda não encontrada.");
+    const mine = findOffer(demand, emailProdutor);
+    if (!mine) throw new Error("Você não tem oferta nesta demanda.");
+
+    demand.ofertas.splice(demand.ofertas.indexOf(mine), 1);
+    // Sem a oferta, o pedido volta a ter o que falta e reabre.
+    if (demand.status === "CONCLUIDA" && remainingQuantity(demand) > 0) demand.status = "ABERTA";
   }
 
   // A base é criada no primeiro contato com alguém conhecido (ao listar ou ao ofertar)

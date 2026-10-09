@@ -14,6 +14,7 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { useProducerIdentity } from "@/hooks/useProducerIdentity";
 import { useProdutorData } from "@/hooks/useProdutorData";
 import { useProfileScreen } from "@/hooks/useProfileScreen";
+import { useUndo } from "@/hooks/useUndo";
 import { maskDocument } from "@/lib/format/masks";
 import { colors, radius, spacing, typography } from "@/theme";
 
@@ -25,6 +26,18 @@ export default function PerfilScreen() {
   const { email } = useProdutorData();
   const identity = useProducerIdentity();
   const perfil = useProfileScreen(email, identity.setName);
+  const undo = useUndo();
+
+  function changeIcon(next: string | null) {
+    const previous = identity.emoji;
+    if (next === previous) return;
+    identity.setEmoji(next);
+    undo.announce({
+      title: "Ícone alterado!",
+      label: "Ícone da conta",
+      revert: async () => identity.setEmoji(previous),
+    });
+  }
 
   if (perfil.status === "loading") return <PageLoader />;
   if (perfil.status === "error" || !perfil.profile) return <LoadError onRetry={perfil.reload} />;
@@ -44,7 +57,7 @@ export default function PerfilScreen() {
         icon="happy-outline"
         description="Escolha como você aparece no canto da tela. Você pode trocar quando quiser."
       >
-        <AvatarPicker initials={identity.initials} value={identity.emoji} onChange={identity.setEmoji} />
+        <AvatarPicker initials={identity.initials} value={identity.emoji} onChange={changeIcon} />
       </SectionCard>
 
       <SectionCard title="Dados Principais" icon="person-outline" description="Como você aparece para os mercados.">

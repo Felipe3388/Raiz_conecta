@@ -9,15 +9,14 @@ export interface HelpTopic {
   screens: ScreenId[];
 }
 
-
 // Perguntas e respostas fixas do assistente. Linguagem simples, respostas curtas.
 export const HELP_TOPICS: HelpTopic[] = [
   {
     id: "visao-geral",
     question: "O que eu posso fazer no Raiz Conecta?",
     answer:
-      "O Raiz Conecta liga você a mercados da sua região. Aqui você escolhe o que produz (Catálogo), vê os pedidos dos mercados (Mural), diz quanto vai enviar (Ofertar), acompanha seus negócios (Ofertas) e vê o resumo no Painel.",
-    screens: ["painel", "ofertas", "perfil", "configuracoes"],
+      "O Raiz Conecta liga você a mercados da sua região. Aqui você escolhe o que produz (Catálogo), vê os pedidos dos mercados (Mural), diz quanto vai enviar (Ofertar), acompanha seus negócios (Ofertas), separa e pesa o que vai entregar (Entregas) e vê o resumo no Painel, pelo botão Início.",
+    screens: ["painel", "ofertas", "entregas", "perfil", "configuracoes"],
   },
   {
     id: "como-comecar",
@@ -113,7 +112,70 @@ export const HELP_TOPICS: HelpTopic[] = [
     question: "Como escondo ou mostro este botão?",
     answer:
       "Abra o botão e toque em Esconder botão: ele fica na lateral da tela. Para ele voltar, toque na abinha que ficou na lateral.",
-    screens: ["mural", "catalogo", "ofertas", "painel", "perfil", "configuracoes"],
+    screens: ["mural", "catalogo", "ofertas", "entregas", "painel", "perfil", "configuracoes", "simulador"],
+  },
+  {
+    id: "mover-botao",
+    question: "Posso mudar o botão de lugar?",
+    answer:
+      "Pode. Segure o botão verde e arraste para onde quiser; ao soltar, ele gruda na lateral mais próxima. Se você o esconder, ele fica só com uma abinha na lateral, e ainda dá para arrastar a abinha para outro ponto.",
+    screens: ["mural", "catalogo", "ofertas", "entregas", "painel", "perfil", "configuracoes", "simulador"],
+  },
+  {
+    id: "desfazer",
+    question: "Fiz algo sem querer. Como desfaço?",
+    answer:
+      "Logo depois de salvar o catálogo, definir um preço, ofertar, sugerir um produto ou mudar o perfil, aparece um aviso com o botão Desfazer. Se ele já sumiu, abra o botão verde e toque em Desfazer ação recente: você tem um minuto para voltar atrás.",
+    screens: ["mural", "catalogo", "ofertas", "entregas", "painel", "perfil", "configuracoes"],
+  },
+  {
+    id: "preco-ofertado",
+    question: "Como defino o preço dos meus produtos?",
+    answer:
+      "No Catálogo, marque o produto e toque no lápis com o preço (ou em Definir preço). Esse é o preço que você pede. A média sugerida que aparece ali é só uma referência da plataforma, não muda o seu preço.",
+    screens: ["catalogo", "mural"],
+  },
+  {
+    id: "negociar-preco",
+    question: "Como funciona a negociação do preço?",
+    answer:
+      "O mercado faz uma proposta de cada vez, começando baixo, e você só aceita ou recusa. Ao recusar, há uma pausa curta e a próxima chega mais alta, até o seu preço ou o máximo do pedido. Na pausa, toque em Mudei de ideia para aceitar a que recusou. Cada resposta ajuda a média sugerida.",
+    screens: ["mural", "catalogo", "painel"],
+  },
+  {
+    id: "preco-vendas-painel",
+    question: "O que é Preços e vendas no Painel?",
+    answer:
+      "É a média do mercado para cada produto seu: quanto os produtores pedem, a que preço vendeu e se as vendas subiram ou caíram. Serve para você ver se o seu preço está acima ou abaixo da média.",
+    screens: ["painel"],
+  },
+  {
+    id: "como-entregar",
+    question: "Como funcionam as entregas?",
+    answer:
+      "Cada oferta vira uma entrega, com um dia marcado. Na aba Entregas você vê o que separar no dia e, pedido por pedido, pesa o produto. Com o peso certo, toque em Entregar à logística. Quando o mercado recebe, ele pesa de novo para conferir.",
+    screens: ["entregas", "ofertas", "painel"],
+  },
+  {
+    id: "faixa-de-peso",
+    question: "Quanto o peso pode variar?",
+    answer:
+      "O peso do pedido aceita uma pequena variação: até 2% a menos e até 10% a mais. Para 10 kg, vale de 9,8 a 11 kg. Dentro da faixa a entrega segue; fora dela o app avisa quanto falta ou passou, e o mercado é avisado da diferença.",
+    screens: ["entregas"],
+  },
+  {
+    id: "usar-balanca",
+    question: "Como uso a balança?",
+    answer:
+      "Em Pesar, deixe a opção Usar balança e ponha o produto nela. Quando o peso parar de oscilar, toque em Registrar. Se o pedido for grande, pese em vários lotes: eles se somam. Sem balança, escolha Digitar peso.",
+    screens: ["entregas"],
+  },
+  {
+    id: "botao-inicio",
+    question: "Para que serve o botão Início?",
+    answer:
+      "O botão redondo no meio da barra leva ao Painel, o resumo da sua atividade. Ele é a primeira tela de toda vez que você entra no app.",
+    screens: ["painel", "mural", "catalogo", "ofertas", "entregas"],
   },
 ];
 
@@ -122,11 +184,7 @@ export function topicById(id: string): HelpTopic | undefined {
 }
 
 // Perguntas ainda não feitas: primeiro as da tela atual, depois as outras.
-export function suggestionsFor(
-  screen: ScreenId,
-  askedIds: string[],
-  limit: number = HELP_TOPICS.length,
-): HelpTopic[] {
+export function suggestionsFor(screen: ScreenId, askedIds: string[], limit: number = HELP_TOPICS.length): HelpTopic[] {
   const pending = HELP_TOPICS.filter((topic) => !askedIds.includes(topic.id));
   const relevant = pending.filter((topic) => topic.screens.includes(screen));
   const others = pending.filter((topic) => !topic.screens.includes(screen));

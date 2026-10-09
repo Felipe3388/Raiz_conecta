@@ -1,15 +1,26 @@
 import { fabActionsFor, hasTabBar, screenFromPath, type ScreenId } from "./fabActions";
 
-const SCREENS: ScreenId[] = ["mural", "catalogo", "ofertas", "painel", "perfil", "configuracoes"];
+const SCREENS: ScreenId[] = [
+  "mural",
+  "catalogo",
+  "ofertas",
+  "entregas",
+  "painel",
+  "perfil",
+  "configuracoes",
+  "simulador",
+];
 
 describe("screenFromPath", () => {
   it.each([
     ["/mural", "mural"],
     ["/catalogo", "catalogo"],
     ["/ofertas", "ofertas"],
+    ["/entregas", "entregas"],
     ["/painel", "painel"],
     ["/perfil", "perfil"],
     ["/configuracoes", "configuracoes"],
+    ["/simulador-preco", "simulador"],
     ["/catalogo/", "catalogo"],
     ["/", "mural"],
     ["/qualquer-coisa", "mural"],
@@ -19,8 +30,8 @@ describe("screenFromPath", () => {
 });
 
 describe("hasTabBar", () => {
-  it("só as quatro abas têm barra inferior", () => {
-    expect(SCREENS.filter(hasTabBar)).toEqual(["mural", "catalogo", "ofertas", "painel"]);
+  it("as quatro abas e o Painel (botão Início) têm barra inferior", () => {
+    expect(SCREENS.filter(hasTabBar)).toEqual(["mural", "catalogo", "ofertas", "entregas", "painel"]);
   });
 });
 
@@ -50,5 +61,18 @@ describe("fabActionsFor", () => {
     const actions = fabActionsFor(screen);
     expect(new Set(actions.map((a) => a.id)).size).toBe(actions.length);
     expect(actions.every((a) => a.label.length > 0 && a.icon.length > 0)).toBe(true);
+  });
+
+  it("com ações para desfazer, oferece Desfazer logo antes da Ajuda", () => {
+    for (const screen of SCREENS) {
+      const ids = fabActionsFor(screen, true).map((a) => a.id);
+      expect(ids).toContain("undo");
+      expect(ids[ids.length - 1]).toBe("help");
+      expect(ids[ids.length - 2]).toBe("undo");
+    }
+  });
+
+  it("sem ações para desfazer, não oferece Desfazer", () => {
+    for (const screen of SCREENS) expect(fabActionsFor(screen).map((a) => a.id)).not.toContain("undo");
   });
 });

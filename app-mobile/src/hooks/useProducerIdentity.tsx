@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { avatarFor, withAvatar } from "@/lib/settings";
+import { avatarFor, getSettingsStore, withAvatar } from "@/lib/settings";
 import { initialsOf } from "@/lib/produtor/avatar";
 import { getProfileService, type ProfileGateway } from "@/services";
 import { useSettings } from "./useSettings";
@@ -26,7 +26,7 @@ interface ProviderProps {
 
 // Quem é o produtor na tela: nome, iniciais e o ícone que ele escolheu (guardado no aparelho, por conta).
 export function ProducerIdentityProvider({ email, children, gateway = getProfileService() }: ProviderProps) {
-  const { settings, update } = useSettings();
+  const { settings } = useSettings();
   const [profileName, setProfileName] = useState<string | null>(null);
 
   useEffect(() => {
@@ -44,11 +44,14 @@ export function ProducerIdentityProvider({ email, children, gateway = getProfile
     };
   }, [gateway, email]);
 
+  // Lê as configurações no momento da troca (e não as da última tela desenhada), para o "Desfazer" não
+  // sobrescrever o que mudou nesse meio-tempo.
   const setEmoji = useCallback(
     (emoji: string | null) => {
-      void update({ avatars: withAvatar(settings, email, emoji).avatars });
+      const store = getSettingsStore();
+      void store.update({ avatars: withAvatar(store.get(), email, emoji).avatars });
     },
-    [settings, email, update],
+    [email],
   );
 
   const value = useMemo<ProducerIdentity>(() => {

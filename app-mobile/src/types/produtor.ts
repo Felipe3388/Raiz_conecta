@@ -12,6 +12,8 @@ export interface CatalogProduct {
 export interface Offer {
   quantidade: number;
   emailProdutor: string;
+  // Preço por unidade combinado nesta oferta. Ofertas antigas não têm.
+  preco?: number;
 }
 
 export type DemandStatus = "ABERTA" | "CONCLUIDA" | "CANCELADA";
@@ -31,6 +33,13 @@ export interface Demand {
 export interface OfferRequest {
   demandaId: string;
   quantidade: number;
+  emailProdutor: string;
+  preco?: number;
+}
+
+// Cancelar a oferta que o próprio produtor acabou de fazer (usado no "Desfazer").
+export interface CancelOfferRequest {
+  demandaId: string;
   emailProdutor: string;
 }
 

@@ -1,5 +1,5 @@
 import type { CatalogProduct } from "@/types/produtor";
-import { productVisual } from "./productVisual";
+import { productEmoji, productVisual } from "./productVisual";
 
 function product(nome: string, imagemUrl: string | null = null): CatalogProduct {
   return { cdProduto: 1, nome, tipo: "Fruta", imagemUrl, unidadePadrao: "Kg" };
@@ -25,5 +25,16 @@ describe("productVisual", () => {
 
   it("foto vazia conta como sem foto", () => {
     expect(productVisual(product("Alface", "  "))).toEqual({ kind: "emoji", emoji: "🥬" });
+  });
+});
+
+describe("productEmoji", () => {
+  it("acha o emoji pelo nome, sem se importar com acento ou maiúscula", () => {
+    expect(productEmoji("Maçã")).toBe("🍎");
+    expect(productEmoji("  TOMATE cereja ")).toBe("🍅");
+  });
+
+  it("nome desconhecido ganha um broto", () => {
+    expect(productEmoji("Jabuticaba")).toBe("🌱");
   });
 });

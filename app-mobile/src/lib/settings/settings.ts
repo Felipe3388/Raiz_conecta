@@ -1,11 +1,15 @@
+import { DEFAULT_PLACEMENT, parsePlacement, type FabPlacement } from "@/lib/assistant/fabPlacement";
+
 export interface Settings {
   // Desliga deslizes e movimentos, além do que o aparelho já pede.
   reduceMotion: boolean;
   // Ícone que cada conta escolheu no lugar das iniciais (chave: e-mail em minúsculas).
   avatars: Record<string, string>;
+  // Onde o botão flutuante de ajuda ficou depois de ser arrastado.
+  fabPlacement: FabPlacement;
 }
 
-export const DEFAULT_SETTINGS: Settings = { reduceMotion: false, avatars: {} };
+export const DEFAULT_SETTINGS: Settings = { reduceMotion: false, avatars: {}, fabPlacement: DEFAULT_PLACEMENT };
 
 const MAX_AVATAR_LENGTH = 16;
 
@@ -40,10 +44,11 @@ export function parseSettings(raw: string | null): Settings {
   try {
     const data: unknown = JSON.parse(raw);
     if (typeof data !== "object" || data === null || Array.isArray(data)) return DEFAULT_SETTINGS;
-    const { reduceMotion, avatars } = data as Record<string, unknown>;
+    const { reduceMotion, avatars, fabPlacement } = data as Record<string, unknown>;
     return {
       reduceMotion: typeof reduceMotion === "boolean" ? reduceMotion : DEFAULT_SETTINGS.reduceMotion,
       avatars: parseAvatars(avatars),
+      fabPlacement: parsePlacement(fabPlacement),
     };
   } catch {
     return DEFAULT_SETTINGS;

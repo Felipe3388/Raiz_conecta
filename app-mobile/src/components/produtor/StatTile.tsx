@@ -1,11 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
-import type { ComponentProps } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/motion/PressableScale";
 import { colors, radius, spacing, typography } from "@/theme";
+import type { IconName } from "@/types/icon";
 
 interface StatTileProps {
-  icon: ComponentProps<typeof Ionicons>["name"];
+  icon: IconName;
   value: number;
   label: string;
   onPress: () => void;

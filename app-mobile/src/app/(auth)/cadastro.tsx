@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text } from "react-native";
 import { BrandHeader } from "@/components/motion/BrandHeader";
 import { Collapse } from "@/components/motion/Collapse";
 import { Reveal } from "@/components/motion/Reveal";
@@ -24,8 +24,7 @@ type OpenDocument = "terms" | "privacy" | null;
 export default function CadastroScreen() {
   const { account, update, setPhone, error, submit } = useAccountStep();
   const [openDocument, setOpenDocument] = useState<OpenDocument>(null);
-  const hasPasswordMismatch =
-    account.confirmarSenha !== "" && account.senha !== account.confirmarSenha;
+  const hasPasswordMismatch = account.confirmarSenha !== "" && account.senha !== account.confirmarSenha;
   const hasPasswordMatch = account.confirmarSenha !== "" && !hasPasswordMismatch;
 
   // Cada bloco entra um pouco depois do anterior.
@@ -108,20 +107,9 @@ export default function CadastroScreen() {
 
       <Reveal delay={next()} style={styles.group}>
         <Text style={styles.legalTitle}>Antes de continuar, leia com calma:</Text>
-        <Button
-          label="Ler os Termos de Uso"
-          variant="outline"
-          onPress={() => setOpenDocument("terms")}
-        />
-        <Button
-          label="Ler a Política de Privacidade"
-          variant="outline"
-          onPress={() => setOpenDocument("privacy")}
-        />
-        <Checkbox
-          checked={account.acceptedTerms}
-          onChange={(acceptedTerms) => update({ acceptedTerms })}
-        >
+        <Button label="Ler os Termos de Uso" variant="outline" onPress={() => setOpenDocument("terms")} />
+        <Button label="Ler a Política de Privacidade" variant="outline" onPress={() => setOpenDocument("privacy")} />
+        <Checkbox checked={account.acceptedTerms} onChange={(acceptedTerms) => update({ acceptedTerms })}>
           <Text style={styles.terms}>
             Li e concordo com os <Text style={styles.termsStrong}>Termos de Uso</Text> e com a{" "}
             <Text style={styles.termsStrong}>Política de Privacidade</Text>.
@@ -130,11 +118,7 @@ export default function CadastroScreen() {
       </Reveal>
 
       <Reveal delay={next()} style={styles.group}>
-        <Button
-          label="Avançar para o Passo 2"
-          size="lg"
-          onPress={() => submit() && router.push("/completar-perfil")}
-        />
+        <Button label="Avançar para o Passo 2" size="lg" onPress={() => submit() && router.push("/completar-perfil")} />
         <Button label="Já tenho conta" variant="ghost" onPress={backToLogin} />
       </Reveal>
 

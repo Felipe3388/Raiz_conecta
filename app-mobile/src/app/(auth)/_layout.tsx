@@ -8,7 +8,7 @@ import { colors } from "@/theme";
 export default function AuthLayout() {
   const { state } = useSession();
 
-  if (state.status === "authenticated") return <Redirect href="/mural" />;
+  if (state.status === "authenticated") return <Redirect href="/painel" />;
 
   return (
     <RegistrationProvider>

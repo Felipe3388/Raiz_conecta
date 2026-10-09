@@ -3,14 +3,14 @@ import { pickImage, type ImageSource } from "@/lib/media/pickImage";
 import { normalizePrice, validateSuggestion } from "@/lib/produtor/suggestion";
 import type { ProductSuggestion } from "@/types/produtor";
 import { useProdutorData } from "./useProdutorData";
-import { useToast } from "./useToast";
+import { useUndo } from "./useUndo";
 
 const EMPTY: ProductSuggestion = { nomeProduto: "", descricao: "", precoSugerido: "", attachment: null };
 
 // Controller do formulário "Sugerir Novo Produto".
 export function useSuggestionForm(onSent: () => void) {
-  const { suggestProduct } = useProdutorData();
-  const toast = useToast();
+  const { suggestProduct, withdrawSuggestion } = useProdutorData();
+  const undo = useUndo();
   const [form, setForm] = useState<ProductSuggestion>(EMPTY);
   const [error, setError] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
@@ -36,8 +36,13 @@ export function useSuggestionForm(onSent: () => void) {
 
     setIsSending(true);
     try {
-      await suggestProduct({ ...form, precoSugerido: normalizePrice(form.precoSugerido) });
-      toast.show("success", "Sugestão enviada!", "Nossa equipe vai avaliar. Acompanhe em Minhas sugestões.");
+      const id = await suggestProduct({ ...form, precoSugerido: normalizePrice(form.precoSugerido) });
+      undo.announce({
+        title: "Sugestão enviada!",
+        description: "Nossa equipe vai avaliar. Acompanhe em Minhas sugestões.",
+        label: `Sugestão de ${form.nomeProduto.trim()}`,
+        revert: () => withdrawSuggestion(id),
+      });
       setForm(EMPTY);
       onSent();
     } catch {

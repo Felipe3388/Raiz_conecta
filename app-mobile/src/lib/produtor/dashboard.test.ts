@@ -53,6 +53,30 @@ describe("buildDashboard", () => {
     expect(summary.estimatedRevenue).toBeCloseTo(40 * 45 + 30 * 3.2, 5);
   });
 
+  it("usa o preço combinado na negociação no lugar da estimativa do pedido", () => {
+    const summary = buildDashboard({
+      mural: [],
+      offers: [
+        demand("o1", { precoMedio: 45, ofertas: [{ emailProdutor: ME, quantidade: 40, preco: 38 }] }),
+        demand("o2", { produto: "Alface", precoMedio: 3.2, ofertas: [mine(30)] }),
+      ],
+      email: ME,
+      savedProductCount: 0,
+    });
+    expect(summary.estimatedRevenue).toBeCloseTo(40 * 38 + 30 * 3.2, 5);
+    expect(summary.revenueByProduct[0]).toEqual({ produto: "Tomate", revenue: 40 * 38 });
+  });
+
+  it("oferta com preço combinado conta mesmo se o pedido não tem estimativa", () => {
+    const summary = buildDashboard({
+      mural: [],
+      offers: [demand("o1", { precoMedio: null, ofertas: [{ emailProdutor: ME, quantidade: 10, preco: 5 }] })],
+      email: ME,
+      savedProductCount: 0,
+    });
+    expect(summary.estimatedRevenue).toBe(50);
+  });
+
   it("pedido sem preço não entra na receita", () => {
     const summary = buildDashboard({
       mural: [],

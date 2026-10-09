@@ -1,14 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import type { ColorValue } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HeaderBrand } from "@/components/produtor/HeaderBrand";
-import { TAB_BAR_CONTENT_HEIGHT } from "@/components/produtor/tabBar";
+import { ProducerTabBar } from "@/components/produtor/ProducerTabBar";
 import { UserMenuButton } from "@/components/produtor/UserMenuButton";
+import { useDeliveries } from "@/hooks/useDeliveries";
 import { useProdutorData } from "@/hooks/useProdutorData";
+import { HOME_ROUTE } from "@/lib/produtor/tabs";
 import { colors } from "@/theme";
-
-type IconName = keyof typeof Ionicons.glyphMap;
+import type { IconName } from "@/types/icon";
 
 function tabIcon(name: IconName) {
   return function TabIcon({ color, size }: { color: ColorValue; size: number }) {
@@ -16,24 +16,20 @@ function tabIcon(name: IconName) {
   };
 }
 
-// As quatro abas do Produtor. O ícone da conta, no canto do cabeçalho, leva ao perfil e às configurações.
+// As quatro abas do Produtor (Mural, Catálogo, Ofertas, Entregas) e, no meio da barra, o botão redondo Início, que
+// leva ao Painel: a tela em que o app abre depois do login. O ícone da conta, no canto do cabeçalho, leva ao perfil
+// e às configurações.
 export default function TabsLayout() {
   const { status, mural } = useProdutorData();
-  const { bottom } = useSafeAreaInsets();
+  const { pending } = useDeliveries();
 
   return (
     <Tabs
+      initialRouteName={HOME_ROUTE}
+      // Voltar de qualquer aba leva ao Painel, a tela inicial.
+      backBehavior="initialRoute"
+      tabBar={(props) => <ProducerTabBar {...props} />}
       screenOptions={{
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSubtle,
-        tabBarLabelStyle: { fontSize: 13, fontWeight: "700" },
-        // A altura inclui a área segura do aparelho.
-        tabBarStyle: {
-          height: TAB_BAR_CONTENT_HEIGHT + bottom,
-          paddingTop: 6,
-          paddingBottom: bottom + 6,
-          backgroundColor: colors.surface,
-        },
         headerTitle: () => <HeaderBrand />,
         headerTitleAlign: "left",
         headerRight: () => <UserMenuButton />,
@@ -48,11 +44,24 @@ export default function TabsLayout() {
           tabBarIcon: tabIcon("grid-outline"),
           // Quantos pedidos esperam resposta; some enquanto carrega ou quando não há nenhum.
           tabBarBadge: status === "ready" && mural.length > 0 ? mural.length : undefined,
+          tabBarAccessibilityLabel:
+            status === "ready" && mural.length > 0 ? `Mural, ${mural.length} pedidos abertos` : "Mural",
         }}
       />
-      <Tabs.Screen name="catalogo" options={{ title: "Catálogo", tabBarIcon: tabIcon("leaf-outline") }} />
+      <Tabs.Screen name="catalogo" options={{ title: "Catálogo", tabBarIcon: tabIcon("nutrition-outline") }} />
+      {/* O Painel fica no meio da ordem: a barra põe o botão Início entre a 2ª e a 3ª aba. */}
+      <Tabs.Screen name="painel" options={{ title: "Início", tabBarIcon: tabIcon("stats-chart-outline") }} />
       <Tabs.Screen name="ofertas" options={{ title: "Ofertas", tabBarIcon: tabIcon("checkmark-done-outline") }} />
-      <Tabs.Screen name="painel" options={{ title: "Painel", tabBarIcon: tabIcon("stats-chart-outline") }} />
+      <Tabs.Screen
+        name="entregas"
+        options={{
+          title: "Entregas",
+          tabBarIcon: tabIcon("cube-outline"),
+          // Quantas entregas pedem ação hoje; some quando não há nenhuma.
+          tabBarBadge: pending > 0 ? pending : undefined,
+          tabBarAccessibilityLabel: pending > 0 ? `Entregas, ${pending} para fazer hoje` : "Entregas",
+        }}
+      />
     </Tabs>
   );
 }

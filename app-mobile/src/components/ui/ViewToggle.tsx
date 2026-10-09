@@ -1,10 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import type { ComponentProps } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/motion/PressableScale";
 import { colors, radius, spacing, typography } from "@/theme";
-
-type IconName = ComponentProps<typeof Ionicons>["name"];
+import type { IconName } from "@/types/icon";
 
 export interface ViewOption<T extends string> {
   value: T;
@@ -51,7 +49,13 @@ export function ViewToggle<T extends string>({ options, value, onChange, accent 
 }
 
 const styles = StyleSheet.create({
-  group: { flexDirection: "row", padding: 2, backgroundColor: colors.surface, borderWidth: 1.5, borderRadius: radius.md },
+  group: {
+    flexDirection: "row",
+    padding: 2,
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderRadius: radius.md,
+  },
   option: {
     flexDirection: "row",
     alignItems: "center",

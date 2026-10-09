@@ -2,6 +2,10 @@ import { muralDemands, offerDemands } from "@/lib/produtor/demands";
 import { selectedProductNames } from "@/lib/produtor/catalog";
 import { DEFAULT_MY_PRODUCT_IDS, MOCK_PRODUCTS } from "./catalogData";
 import { seedDemands } from "./demandData";
+import { MOCK_MARKET, MOCK_PRICE_SIGNALS, seedMyPrices } from "./priceData";
+import { priceFit } from "@/lib/pricing/fit";
+import { priceKey } from "@/lib/pricing/price";
+import { suggestPrice } from "@/lib/pricing/suggestion";
 
 const ME = "maria@sitio.com";
 
@@ -43,5 +47,38 @@ describe("dados de exemplo", () => {
       const total = demand.ofertas.reduce((sum, o) => sum + o.quantidade, 0);
       expect(total).toBeLessThanOrEqual(demand.quantidade);
     }
+  });
+
+  describe("preços de exemplo", () => {
+    const keys = new Set(MOCK_PRODUCTS.map((p) => priceKey(p.nome)));
+
+    it("só falam de produtos do catálogo", () => {
+      for (const key of Object.keys(MOCK_PRICE_SIGNALS)) expect(keys.has(key)).toBe(true);
+      for (const item of MOCK_MARKET) expect(keys.has(priceKey(item.produto))).toBe(true);
+    });
+
+    it("todo produto escolhido por padrão tem preço sugerido e dados de venda", () => {
+      for (const name of myNames) {
+        expect(suggestPrice(MOCK_PRICE_SIGNALS[priceKey(name)] ?? [])).not.toBeNull();
+        expect(MOCK_MARKET.some((item) => priceKey(item.produto) === priceKey(name))).toBe(true);
+      }
+    });
+
+    it("os preços de exemplo do produtor são válidos e de produtos do catálogo", () => {
+      for (const [key, price] of Object.entries(seedMyPrices("a@b.com"))) {
+        expect(keys.has(key)).toBe(true);
+        expect(price).toBeGreaterThan(0);
+      }
+    });
+
+    it("há um preço que cabe no pedido do Mural e outro que passa dele", () => {
+      const mine = seedMyPrices(ME);
+      const fits = (produto: string) => {
+        const demand = demands.find((d) => d.produto === produto && d.status === "ABERTA")!;
+        return priceFit(mine[priceKey(produto)] ?? null, demand.precoMedio).fit;
+      };
+      expect(fits("Alface")).toBe("within");
+      expect(fits("Tomate")).toBe("above");
+    });
   });
 });

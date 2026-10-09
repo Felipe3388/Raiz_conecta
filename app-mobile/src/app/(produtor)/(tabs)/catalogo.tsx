@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, View } from "react-native";
+import { PriceSheet } from "@/components/produtor/PriceSheet";
 import { ProductCard } from "@/components/produtor/ProductCard";
 import { ProductRow } from "@/components/produtor/ProductRow";
 import { SaveBar } from "@/components/produtor/SaveBar";
@@ -47,7 +48,8 @@ export default function CatalogoScreen() {
       <ScreenHeading title="Meu Catálogo" />
       {!isDetails && (
         <Banner tone="amber" icon="leaf-outline" title="Selecione o que você produz">
-          Marque os produtos que você tem capacidade de vender. O Mural só mostrará demandas dos produtos que você marcar aqui.
+          Marque os produtos que você tem capacidade de vender. O Mural só mostrará demandas dos produtos que você
+          marcar aqui.
         </Banner>
       )}
       <SearchBar
@@ -83,30 +85,45 @@ export default function CatalogoScreen() {
     </View>
   );
 
+  const editor = catalog.priceEditor;
+
   return (
-    <ListScreen
-      data={catalog.products}
-      numColumns={isDetails ? 1 : 2}
-      gap={isDetails ? spacing.sm : spacing.md}
-      bottomSpace={catalog.hasUnsavedSelection ? BOTTOM_SPACE_WITH_SAVE_BAR : BOTTOM_SPACE}
-      keyExtractor={(product) => String(product.cdProduto)}
-      header={header}
-      empty={emptyState(catalog.filter, catalog.query)}
-      renderItem={(product) => {
-        const selected = catalog.selectedIds.includes(product.cdProduto);
-        const toggle = () => catalog.toggleProduct(product.cdProduto);
-        return isDetails ? (
-          <ProductRow product={product} selected={selected} onToggle={toggle} />
-        ) : (
-          <ProductCard product={product} selected={selected} onToggle={toggle} />
-        );
-      }}
-      overlay={
-        catalog.hasUnsavedSelection ? (
-          <SaveBar selectedCount={catalog.selectedCount} isSaving={catalog.isSaving} onSave={catalog.save} />
-        ) : undefined
-      }
-    />
+    <>
+      <ListScreen
+        data={catalog.products}
+        numColumns={isDetails ? 1 : 2}
+        gap={isDetails ? spacing.sm : spacing.md}
+        bottomSpace={catalog.hasUnsavedSelection ? BOTTOM_SPACE_WITH_SAVE_BAR : BOTTOM_SPACE}
+        keyExtractor={(product) => String(product.cdProduto)}
+        header={header}
+        empty={emptyState(catalog.filter, catalog.query)}
+        renderItem={(product) => {
+          const selected = catalog.selectedIds.includes(product.cdProduto);
+          const toggle = () => catalog.toggleProduct(product.cdProduto);
+          const price = catalog.priceOf(product);
+          const edit = () => catalog.editPrice(product);
+          return isDetails ? (
+            <ProductRow product={product} selected={selected} onToggle={toggle} price={price} onEditPrice={edit} />
+          ) : (
+            <ProductCard product={product} selected={selected} onToggle={toggle} price={price} onEditPrice={edit} />
+          );
+        }}
+        overlay={
+          catalog.hasUnsavedSelection ? (
+            <SaveBar selectedCount={catalog.selectedCount} isSaving={catalog.isSaving} onSave={catalog.save} />
+          ) : undefined
+        }
+      />
+      <PriceSheet
+        visible={editor.target !== null}
+        produto={editor.target?.produto ?? ""}
+        unidade={editor.target?.unidade}
+        currentPrice={editor.currentPrice}
+        suggested={editor.suggested}
+        onSave={editor.save}
+        onClose={editor.close}
+      />
+    </>
   );
 }
 
@@ -141,6 +158,12 @@ function emptyState(filter: CatalogFilter, query: string) {
 
 const styles = StyleSheet.create({
   header: { gap: spacing.md },
-  toolbar: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: spacing.sm },
+  toolbar: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
   counter: { ...typography.hint, fontWeight: "700", color: colors.warningText },
 });

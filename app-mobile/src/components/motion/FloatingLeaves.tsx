@@ -60,7 +60,7 @@ export function FloatingLeaves() {
   if (reduced) return null;
 
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+    <View style={styles.layer}>
       {LEAVES.map((leaf) => (
         <FallingLeaf key={leaf.left} {...leaf} height={height} />
       ))}
@@ -69,5 +69,6 @@ export function FloatingLeaves() {
 }
 
 const styles = StyleSheet.create({
+  layer: { ...StyleSheet.absoluteFill, pointerEvents: "none" },
   leaf: { position: "absolute", top: 0 },
 });

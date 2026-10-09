@@ -34,7 +34,9 @@ export function buildDashboard({ mural, offers, email, savedProductCount }: Dash
   let estimatedRevenue = 0;
 
   for (const demand of offers) {
-    const revenue = (findOffer(demand, email)?.quantidade ?? 0) * price(demand);
+    const mine = findOffer(demand, email);
+    // O preço combinado na negociação vale mais que a estimativa do pedido.
+    const revenue = (mine?.quantidade ?? 0) * (mine?.preco ?? price(demand));
     estimatedRevenue += revenue;
 
     const key = normalizeText(demand.produto);

@@ -1,12 +1,11 @@
-import type { Ionicons } from "@expo/vector-icons";
-import type { ComponentProps } from "react";
+import type { IconName } from "@/types/icon";
 
 export type UserMenuItemId = "profile" | "settings" | "help" | "signOut";
 
 export interface UserMenuItem {
   id: UserMenuItemId;
   label: string;
-  icon: ComponentProps<typeof Ionicons>["name"];
+  icon: IconName;
   // "danger" separa a saída das outras opções, para ninguém tocar nela sem querer.
   tone?: "danger";
 }

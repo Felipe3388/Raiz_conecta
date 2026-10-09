@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import type { ComponentProps, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { colors, radius, spacing, typography } from "@/theme";
+import type { IconName } from "@/types/icon";
 
 type BannerTone = "green" | "amber" | "blue" | "red";
 
@@ -14,7 +15,7 @@ const TONES: Record<BannerTone, { background: string; border: string; text: stri
 
 interface BannerProps {
   tone: BannerTone;
-  icon: ComponentProps<typeof Ionicons>["name"];
+  icon: IconName;
   title: string;
   children?: ReactNode;
   // Botões ou outros itens abaixo do texto.

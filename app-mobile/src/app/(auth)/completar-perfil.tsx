@@ -4,40 +4,16 @@ import { Reveal } from "@/components/motion/Reveal";
 import { staggerDelay } from "@/components/motion/timing";
 import { AttachmentField } from "@/components/ui/AttachmentField";
 import { Button } from "@/components/ui/Button";
-import { ChoiceGroup, type ChoiceOption } from "@/components/ui/ChoiceGroup";
+import { ChoiceList, type ChoiceOption } from "@/components/ui/ChoiceList";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { FormScreen } from "@/components/ui/FormScreen";
 import { Input } from "@/components/ui/Input";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { StepProgress } from "@/components/ui/StepProgress";
+import { DOCUMENT_EXAMPLES, DOCUMENT_LABELS, PROOF_LABELS, PROOF_PHOTO_TITLES } from "@/content/registrationLabels";
 import { useProfileStep } from "@/hooks/useProfileStep";
 import { validateAccount } from "@/lib/validation/registration";
 import { colors, spacing, typography } from "@/theme";
-import type { DocumentType, ProofType } from "@/types/registration";
-
-const DOCUMENT_LABELS: Record<DocumentType, string> = {
-  CPF: "Pessoa Física (CPF)",
-  CNPJ: "Empresa (CNPJ)",
-};
-
-const DOCUMENT_EXAMPLES: Record<DocumentType, string> = {
-  CPF: "Ex.: 123.456.789-01",
-  CNPJ: "Ex.: 12.345.678/0001-90",
-};
-
-const PROOF_LABELS: Record<ProofType, string> = {
-  RG: "RG (Identidade)",
-  CNH: "CNH (Carteira de motorista)",
-  CONTRATO_SOCIAL: "Contrato Social",
-  CARTAO_CNPJ: "Cartão CNPJ",
-};
-
-const PROOF_SHORT_LABELS: Record<ProofType, string> = {
-  RG: "seu RG",
-  CNH: "sua CNH",
-  CONTRATO_SOCIAL: "o Contrato Social",
-  CARTAO_CNPJ: "o Cartão CNPJ",
-};
 
 function toOptions<T extends string>(values: T[], labels: Record<T, string>): ChoiceOption<T>[] {
   return values.map((value) => ({ value, label: labels[value] }));
@@ -67,16 +43,14 @@ export default function CompletarPerfilScreen() {
       </Reveal>
       <Reveal delay={next()} style={styles.header}>
         <Text style={styles.title}>Quase lá, {firstName}!</Text>
-        <Text style={styles.subtitle}>
-          Agora precisamos do seu documento e do endereço para confirmar que é você.
-        </Text>
+        <Text style={styles.subtitle}>Agora precisamos do seu documento e do endereço para confirmar que é você.</Text>
       </Reveal>
 
       {step.error && <ErrorBanner key={step.error} message={step.error} />}
 
       <Reveal delay={next()}>
         <SectionCard title="Seu documento" icon="document-text-outline">
-          <ChoiceGroup
+          <ChoiceList
             label="Qual documento você vai usar?"
             options={toOptions(step.documentTypes, DOCUMENT_LABELS)}
             value={profile.documentType}
@@ -103,9 +77,7 @@ export default function CompletarPerfilScreen() {
               value={profile.cep}
               onChangeText={step.setCep}
             />
-            {step.isLookingUpCep && (
-              <ActivityIndicator style={styles.cepLoader} color={colors.primary} size="small" />
-            )}
+            {step.isLookingUpCep && <ActivityIndicator style={styles.cepLoader} color={colors.primary} size="small" />}
           </View>
           <Input
             label="Rua ou estrada"
@@ -153,12 +125,8 @@ export default function CompletarPerfilScreen() {
       </Reveal>
 
       <Reveal delay={next()}>
-        <SectionCard
-          title="Foto do documento"
-          icon="camera-outline"
-          iconColor={colors.warning}
-        >
-          <ChoiceGroup
+        <SectionCard title="Foto do documento" icon="camera-outline" iconColor={colors.warning}>
+          <ChoiceList
             label="Qual foto você vai enviar?"
             options={toOptions(step.proofTypes, PROOF_LABELS)}
             value={profile.proofType}
@@ -166,7 +134,7 @@ export default function CompletarPerfilScreen() {
           />
           <AttachmentField
             attachment={profile.attachment}
-            title={`Foto d${PROOF_SHORT_LABELS[profile.proofType]}`}
+            title={PROOF_PHOTO_TITLES[profile.proofType]}
             onPick={step.attach}
           />
         </SectionCard>

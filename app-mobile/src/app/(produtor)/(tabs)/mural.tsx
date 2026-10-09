@@ -2,6 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { DemandCard } from "@/components/produtor/DemandCard";
+import { NegotiationSheet } from "@/components/produtor/NegotiationSheet";
+import { PriceSheet } from "@/components/produtor/PriceSheet";
 import { ScreenHeading } from "@/components/produtor/ScreenHeading";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListScreen } from "@/components/ui/ListScreen";
@@ -39,23 +41,53 @@ export default function MuralScreen() {
     </View>
   );
 
+  const editor = mural.priceEditor;
+  const negotiating = mural.negotiation;
+  const negotiatingPrice = negotiating ? mural.priceOf(negotiating.demand) : null;
+
   return (
-    <ListScreen
-      data={mural.demands}
-      keyExtractor={(demand) => demand.id}
-      header={header}
-      empty={emptyState(mural)}
-      renderItem={(demand) => (
-        <DemandCard
-          demand={demand}
-          producerEmail={mural.email}
-          quantity={mural.quantityOf(demand.id)}
-          onQuantityChange={(quantity) => mural.setQuantity(demand.id, quantity)}
-          onOffer={() => mural.offer(demand)}
-          isSending={mural.sendingId === demand.id}
+    <>
+      <ListScreen
+        data={mural.demands}
+        keyExtractor={(demand) => demand.id}
+        header={header}
+        empty={emptyState(mural)}
+        renderItem={(demand) => (
+          <DemandCard
+            demand={demand}
+            producerEmail={mural.email}
+            quantity={mural.quantityOf(demand.id)}
+            onQuantityChange={(quantity) => mural.setQuantity(demand.id, quantity)}
+            onOffer={() => mural.offer(demand)}
+            isSending={mural.sendingId === demand.id}
+            pricing={{ myPrice: mural.priceOf(demand), onEditPrice: () => mural.editPrice(demand) }}
+          />
+        )}
+      />
+      {negotiating && negotiating.demand.precoMedio !== null && negotiatingPrice !== null && (
+        <NegotiationSheet
+          key={negotiating.demand.id}
+          demand={negotiating.demand}
+          quantity={negotiating.quantity}
+          producerPrice={negotiatingPrice}
+          marketPrice={negotiating.demand.precoMedio}
+          isSending={mural.sendingId === negotiating.demand.id}
+          onConfirm={mural.confirmDeal}
+          onEditPrice={mural.changePriceFromNegotiation}
+          onClose={mural.closeNegotiation}
         />
       )}
-    />
+      <PriceSheet
+        visible={editor.target !== null}
+        produto={editor.target?.produto ?? ""}
+        unidade={editor.target?.unidade}
+        currentPrice={editor.currentPrice}
+        suggested={editor.suggested}
+        marketPrice={editor.target?.marketPrice}
+        onSave={editor.save}
+        onClose={editor.close}
+      />
+    </>
   );
 }
 

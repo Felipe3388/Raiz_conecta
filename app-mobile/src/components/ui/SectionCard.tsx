@@ -1,24 +1,19 @@
 import { Ionicons } from "@expo/vector-icons";
-import type { ComponentProps, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { colors, radius, spacing, typography } from "@/theme";
+import type { IconName } from "@/types/icon";
 
 interface SectionCardProps {
   title: string;
   // Frase curta sob o título (usada na tela Meu Perfil).
   description?: string;
-  icon: ComponentProps<typeof Ionicons>["name"];
+  icon: IconName;
   iconColor?: string;
   children: ReactNode;
 }
 
-export function SectionCard({
-  title,
-  description,
-  icon,
-  iconColor = colors.primary,
-  children,
-}: SectionCardProps) {
+export function SectionCard({ title, description, icon, iconColor = colors.primary, children }: SectionCardProps) {
   return (
     <View style={styles.card}>
       <View style={styles.header}>

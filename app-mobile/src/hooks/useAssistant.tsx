@@ -1,14 +1,8 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { DEFAULT_PLACEMENT, type FabPlacement } from "@/lib/assistant/fabPlacement";
+import { useSettings } from "./useSettings";
 
-export type AssistantModal = "help" | "suggest" | "mySuggestions";
+export type AssistantModal = "help" | "suggest" | "mySuggestions" | "undo";
 
 interface AssistantApi {
   // Janela aberta pelo botão flutuante (só uma por vez).
@@ -21,6 +15,9 @@ interface AssistantApi {
   // Quanto o botão sobe para não cobrir uma barra fixa da tela (ex.: "Salvar Escolhas").
   lift: number;
   registerLift: (height: number) => () => void;
+  // Onde o botão ficou depois de ser arrastado (guardado no aparelho).
+  placement: FabPlacement;
+  setPlacement: (placement: FabPlacement) => void;
 }
 
 const NOOP_API: AssistantApi = {
@@ -31,12 +28,15 @@ const NOOP_API: AssistantApi = {
   setTucked: () => {},
   lift: 0,
   registerLift: () => () => {},
+  placement: DEFAULT_PLACEMENT,
+  setPlacement: () => {},
 };
 
 const AssistantContext = createContext<AssistantApi>(NOOP_API);
 
 // Estado do botão flutuante de ajuda, que vive acima de todas as telas do Produtor.
 export function AssistantProvider({ children }: { children: ReactNode }) {
+  const { settings, update } = useSettings();
   const [modal, setModal] = useState<AssistantModal | null>(null);
   const [tucked, setTucked] = useState(false);
   const [lifts, setLifts] = useState<number[]>([]);
@@ -59,8 +59,10 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
       setTucked,
       lift: Math.max(0, ...lifts),
       registerLift,
+      placement: settings.fabPlacement,
+      setPlacement: (fabPlacement) => void update({ fabPlacement }),
     }),
-    [modal, tucked, lifts, registerLift],
+    [modal, tucked, lifts, registerLift, settings.fabPlacement, update],
   );
 
   return <AssistantContext.Provider value={value}>{children}</AssistantContext.Provider>;
