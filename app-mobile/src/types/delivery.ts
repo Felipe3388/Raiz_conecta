@@ -16,16 +16,18 @@ export interface Receipt {
   at: string;
 }
 
-// O que o produtor precisa levar para atender uma oferta: uma entrega por oferta.
+// Um produto que o produtor precisa levar para atender uma proposta aceita: uma entrega por produto aceito (propostaId é o pedido de onde veio). As entregas do
+// mesmo mercado no mesmo dia formam um pedido (lib/delivery/orders).
 export interface Delivery {
   id: string;
-  demandaId: string;
+  propostaId: string;
+  mercado: string;
   produto: string;
   // Unidade do pedido (Kg, Caixas, Maços) e quanto foi pedido nela.
   unidade: string;
   quantidade: number;
-  // Preço por unidade combinado, ou null se a oferta não tem preço.
-  preco: number | null;
+  // Preço fixo por unidade da proposta aceita.
+  preco: number;
   // Dia da entrega, no formato "2026-10-08".
   dueDate: string;
   // Pesagens do produtor, antes de entregar à logística. Elas se somam.
@@ -45,3 +47,6 @@ export interface WeighingInput {
   kg: number;
   source: WeighingSource;
 }
+
+// Quem está pesando: o produtor, antes de entregar à logística, ou o mercado, ao receber.
+export type WeigherRole = "PRODUTOR" | "MERCADO";

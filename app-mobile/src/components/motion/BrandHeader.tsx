@@ -1,43 +1,35 @@
-import { useEffect, useRef, type ComponentProps } from "react";
+import { useEffect, useRef } from "react";
 import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
-import Svg, { Path } from "react-native-svg";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { colors, radius, spacing, typography } from "@/theme";
-import { LEAF_PATHS } from "./LeafIcon";
 import { USE_NATIVE_DRIVER } from "./timing";
 import { useReducedMotion } from "./useReducedMotion";
 
-// No navegador, o Animated injeta `collapsable={false}` em todo componente animado e o Path do
-// react-native-svg o repassaria ao DOM (aviso do React em desenvolvimento). Este invólucro o descarta.
-function SvgPath({ collapsable: _collapsable, ...props }: ComponentProps<typeof Path> & { collapsable?: boolean }) {
-  return <Path {...props} />;
-}
-
-const AnimatedPath = Animated.createAnimatedComponent(SvgPath);
-const DASH_LENGTH = 70;
-
 interface BrandHeaderProps {
   size?: "md" | "lg";
+  // Com fundo verde-claro atrás da logo (padrão). No cadastro a logo aparece sem fundo.
+  framed?: boolean;
 }
 
-// Logo com vida: a folha se desenha ao abrir, balança suavemente e gira quando tocada.
-export function BrandHeader({ size = "md" }: BrandHeaderProps) {
+// Logo com vida: o broto cresce ao abrir, balança suavemente e gira quando tocado.
+export function BrandHeader({ size = "md", framed = true }: BrandHeaderProps) {
   const reduced = useReducedMotion();
-  const draw = useRef(new Animated.Value(DASH_LENGTH)).current;
+  const grow = useRef(new Animated.Value(0)).current;
   const sway = useRef(new Animated.Value(0)).current;
   const spin = useRef(new Animated.Value(0)).current;
-  const iconSize = size === "lg" ? 40 : 30;
+  const iconSize = size === "lg" ? 46 : 34;
 
   useEffect(() => {
     if (reduced) {
-      draw.setValue(0);
+      grow.setValue(1);
       return;
     }
-    const drawing = Animated.timing(draw, {
-      toValue: 0,
+    const growing = Animated.timing(grow, {
+      toValue: 1,
       duration: 900,
       delay: 150,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: false, // propriedades do SVG não aceitam driver nativo
+      easing: Easing.out(Easing.back(1.4)),
+      useNativeDriver: USE_NATIVE_DRIVER,
     });
     const swaying = Animated.loop(
       Animated.sequence([
@@ -55,15 +47,15 @@ export function BrandHeader({ size = "md" }: BrandHeaderProps) {
         }),
       ]),
     );
-    drawing.start();
+    growing.start();
     swaying.start();
     return () => {
-      drawing.stop();
+      growing.stop();
       swaying.stop();
     };
-  }, [reduced, draw, sway]);
+  }, [reduced, grow, sway]);
 
-  function spinLeaf() {
+  function spinLogo() {
     spin.setValue(0);
     Animated.timing(spin, {
       toValue: 1,
@@ -83,25 +75,21 @@ export function BrandHeader({ size = "md" }: BrandHeaderProps) {
     <View style={styles.row} accessibilityRole="header">
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Folha do Raiz Conecta. Toque para girar."
-        onPress={spinLeaf}
-        style={styles.tile}
+        accessibilityLabel="Logo do Raiz Conecta. Toque para girar."
+        onPress={spinLogo}
+        style={framed ? styles.tile : styles.plain}
       >
-        <Animated.View style={{ transform: [{ translateY: lift }, { rotate }] }}>
-          <Svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none">
-            {LEAF_PATHS.map((d) => (
-              <AnimatedPath
-                key={d}
-                d={d}
-                stroke={colors.primary}
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeDasharray={DASH_LENGTH}
-                strokeDashoffset={draw}
-              />
-            ))}
-          </Svg>
+        <Animated.View
+          style={{
+            opacity: grow,
+            transform: [
+              { translateY: lift },
+              { rotate },
+              { scale: grow.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }) },
+            ],
+          }}
+        >
+          <BrandMark size={iconSize} color={colors.primary} />
         </Animated.View>
       </Pressable>
       <Text style={[styles.wordmark, size === "lg" && styles.wordmarkLarge]}>
@@ -114,6 +102,7 @@ export function BrandHeader({ size = "md" }: BrandHeaderProps) {
 const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.sm },
   tile: { padding: 10, backgroundColor: colors.primaryTint, borderRadius: radius.md },
+  plain: { padding: 4 },
   wordmark: { ...typography.title, fontSize: 28, color: colors.text },
   wordmarkLarge: { fontSize: 34 },
   wordmarkAccent: { color: colors.primary },

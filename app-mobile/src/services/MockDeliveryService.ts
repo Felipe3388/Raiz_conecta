@@ -1,39 +1,32 @@
+import { acceptedItems } from "@/lib/produtor/proposals";
 import { weighingJudgement } from "@/lib/delivery/stage";
 import { MAX_WEIGHING_KG } from "@/lib/delivery/weight";
-import { addDays, dayKey } from "@/lib/delivery/schedule";
-import { findOffer } from "@/lib/produtor/demands";
 import type { Delivery, Receipt, Weighing, WeighingInput, WeighingSource } from "@/types/delivery";
 import type { DeliveryGateway } from "./DeliveryGateway";
-import type { DemandGateway } from "./DemandGateway";
 import { DEFAULT_MOCK_LATENCY_MS, wait } from "./mockLatency";
+import type { ProposalGateway } from "./ProposalGateway";
 
 interface MockDeliveryOptions {
-  // De onde vêm as ofertas: no modo simulado, toda oferta do produtor vira uma entrega.
-  demands: DemandGateway;
-  // Dias até a entrega de cada pedido de exemplo (pelo id do pedido); os outros usam `defaultDays`.
-  days?: Record<string, number>;
-  defaultDays?: number;
+  // De onde vêm as entregas: no modo simulado, cada produto que o produtor aceitou vira uma entrega.
+  proposals: ProposalGateway;
   now?: () => Date;
   latencyMs?: number;
 }
 
 const SOURCES: WeighingSource[] = ["BALANCA", "DIGITADO"];
 
-// O que muda numa entrega depois de criada. O resto vem da oferta.
+// O que muda numa entrega depois de criada. O resto vem do pedido aceito.
 interface Progress {
-  dueDate: string;
   weighings: Weighing[];
   handedOverAt: string | null;
   handedOverOutOfRange: boolean;
   receipt: Receipt | null;
 }
 
-// Entregas guardadas em memória. Cada oferta do produtor vira uma entrega com dia marcado; as pesagens e
+// Entregas guardadas em memória. Cada produto aceito vira uma entrega no dia que os adms marcaram no pedido; as pesagens e
 // o andamento ficam aqui, como o servidor faria com a base de dados.
 export class MockDeliveryService implements DeliveryGateway {
-  private readonly demands: DemandGateway;
-  private readonly days: Record<string, number>;
-  private readonly defaultDays: number;
+  private readonly proposals: ProposalGateway;
   private readonly now: () => Date;
   private readonly latencyMs: number;
   private readonly progress = new Map<string, Progress>();
@@ -41,39 +34,35 @@ export class MockDeliveryService implements DeliveryGateway {
   private readonly known = new Map<string, Omit<Delivery, keyof Progress>>();
   private counter = 0;
 
-  constructor({
-    demands,
-    days = {},
-    defaultDays = 2,
-    now = () => new Date(),
-    latencyMs = DEFAULT_MOCK_LATENCY_MS,
-  }: MockDeliveryOptions) {
-    this.demands = demands;
-    this.days = days;
-    this.defaultDays = defaultDays;
+  constructor({ proposals, now = () => new Date(), latencyMs = DEFAULT_MOCK_LATENCY_MS }: MockDeliveryOptions) {
+    this.proposals = proposals;
     this.now = now;
     this.latencyMs = latencyMs;
   }
 
   async listDeliveries(email: string): Promise<Delivery[]> {
     await wait(this.latencyMs);
-    const demands = await this.demands.listDemands(email);
+    const proposals = await this.proposals.listProposals(email);
 
     const deliveries: Delivery[] = [];
-    for (const demand of demands) {
-      const mine = findOffer(demand, email);
-      if (!mine || demand.status === "CANCELADA") continue;
+    for (const proposal of proposals) {
+      if (proposal.status !== "ACEITA") continue;
 
-      const base = {
-        id: demand.id,
-        demandaId: demand.id,
-        produto: demand.produto,
-        unidade: demand.unidade,
-        quantidade: mine.quantidade,
-        preco: mine.preco ?? demand.precoMedio,
-      };
-      this.known.set(this.key(email, demand.id), base);
-      deliveries.push(structuredClone({ ...base, ...this.progressOf(email, demand.id) }));
+      // Cada produto aceito vira uma entrega, com a quantidade que o produtor aceitou (não a que o mercado pediu).
+      for (const item of acceptedItems(proposal)) {
+        const base = {
+          id: item.id,
+          propostaId: proposal.id,
+          mercado: proposal.mercado,
+          produto: item.produto,
+          unidade: item.unidade,
+          quantidade: item.aceita ?? 0,
+          preco: item.preco,
+          dueDate: proposal.entrega,
+        };
+        this.known.set(this.key(email, item.id), base);
+        deliveries.push(structuredClone({ ...base, ...this.progressOf(email, item.id) }));
+      }
     }
     return deliveries;
   }
@@ -125,14 +114,12 @@ export class MockDeliveryService implements DeliveryGateway {
     return `${email.trim().toLowerCase()}|${deliveryId}`;
   }
 
-  // O dia da entrega é marcado na primeira vez que ela aparece e não muda mais.
+  // O andamento nasce vazio na primeira vez que a entrega aparece.
   private progressOf(email: string, deliveryId: string): Progress {
     const key = this.key(email, deliveryId);
     let progress = this.progress.get(key);
     if (!progress) {
-      const days = this.days[deliveryId] ?? this.defaultDays;
       progress = {
-        dueDate: addDays(dayKey(this.now()), days),
         weighings: [],
         handedOverAt: null,
         handedOverOutOfRange: false,

@@ -1,9 +1,8 @@
 import { env } from "@/config/env";
 import { getApiClient } from "@/lib/http";
 import { DEFAULT_MY_PRODUCT_IDS, MOCK_PRODUCTS } from "@/mocks/catalogData";
-import { DEFAULT_DELIVERY_DAYS, MOCK_DELIVERY_DAYS } from "@/mocks/deliveryData";
-import { seedDemands } from "@/mocks/demandData";
 import { MOCK_MARKET, MOCK_PRICE_SIGNALS, seedMyPrices } from "@/mocks/priceData";
+import { seedProposals } from "@/mocks/proposalData";
 import { seedSuggestions } from "@/mocks/suggestionData";
 import { getTokenStorage } from "@/lib/storage";
 import type { AssistantGateway } from "./AssistantGateway";
@@ -13,17 +12,17 @@ import type { CatalogGateway } from "./CatalogGateway";
 import type { CepGateway } from "./CepGateway";
 import { CepService } from "./CepService";
 import type { DeliveryGateway } from "./DeliveryGateway";
-import type { DemandGateway } from "./DemandGateway";
 import { FixedAssistantService } from "./FixedAssistantService";
 import { MockAuthService } from "./MockAuthService";
 import { MockCatalogService } from "./MockCatalogService";
 import { MockDeliveryService } from "./MockDeliveryService";
-import { MockDemandService } from "./MockDemandService";
 import { MockPricingService } from "./MockPricingService";
+import { MockProposalService } from "./MockProposalService";
 import { MockProfileService } from "./MockProfileService";
 import { MockRegistrationService } from "./MockRegistrationService";
 import { MockScaleService } from "./MockScaleService";
 import type { PricingGateway } from "./PricingGateway";
+import type { ProposalGateway } from "./ProposalGateway";
 import type { ProfileGateway } from "./ProfileGateway";
 import type { RegistrationGateway } from "./RegistrationGateway";
 import { RegistrationService } from "./RegistrationService";
@@ -34,7 +33,7 @@ let authService: AuthGateway | null = null;
 let registrationService: RegistrationGateway | null = null;
 let cepService: CepGateway | null = null;
 let catalogService: CatalogGateway | null = null;
-let demandService: DemandGateway | null = null;
+let proposalService: ProposalGateway | null = null;
 let profileService: ProfileGateway | null = null;
 let pricingService: PricingGateway | null = null;
 let deliveryService: DeliveryGateway | null = null;
@@ -57,7 +56,7 @@ export function getCepService(): CepGateway {
   return cepService;
 }
 
-// Área do Produtor (Mural, Catálogo, Ofertas, Perfil): por ora só existe a versão simulada.
+// Área do Produtor (Ofertas, Catálogo, Entregas, Perfil): por ora só existe a versão simulada.
 // Quando as APIs forem ligadas, cada getter passa a escolher entre real e simulada como os de cima.
 export function getCatalogService(): CatalogGateway {
   catalogService ??= new MockCatalogService({
@@ -68,9 +67,10 @@ export function getCatalogService(): CatalogGateway {
   return catalogService;
 }
 
-export function getDemandService(): DemandGateway {
-  demandService ??= new MockDemandService({ seed: seedDemands });
-  return demandService;
+// Propostas dos mercados (preço fixo, aceitar ou recusar): o site ainda não tem nada disto, só a versão simulada.
+export function getProposalService(): ProposalGateway {
+  proposalService ??= new MockProposalService({ seed: seedProposals });
+  return proposalService;
 }
 
 export function getProfileService(): ProfileGateway {
@@ -89,14 +89,10 @@ export function getPricingService(): PricingGateway {
   return pricingService;
 }
 
-// Entregas e pesagem: o site ainda não tem nada disto, então só existe a versão simulada. Toda oferta do produtor
-// vira uma entrega, por isso ela lê as ofertas do mesmo serviço de pedidos que o Mural e as Ofertas usam.
+// Entregas e pesagem: o site ainda não tem nada disto, então só existe a versão simulada. Toda proposta que o produtor
+// aceita vira uma entrega, por isso ela lê as propostas do mesmo serviço que a aba Ofertas usa.
 export function getDeliveryService(): DeliveryGateway {
-  deliveryService ??= new MockDeliveryService({
-    demands: getDemandService(),
-    days: MOCK_DELIVERY_DAYS,
-    defaultDays: DEFAULT_DELIVERY_DAYS,
-  });
+  deliveryService ??= new MockDeliveryService({ proposals: getProposalService() });
   return deliveryService;
 }
 
@@ -118,8 +114,8 @@ export type { AuthGateway } from "./AuthGateway";
 export type { CatalogGateway } from "./CatalogGateway";
 export type { CepGateway, CepLookup } from "./CepGateway";
 export type { DeliveryGateway } from "./DeliveryGateway";
-export type { DemandGateway } from "./DemandGateway";
 export type { PriceResponse, PricingGateway } from "./PricingGateway";
 export type { ProfileGateway } from "./ProfileGateway";
+export type { ProposalGateway } from "./ProposalGateway";
 export type { RegistrationGateway } from "./RegistrationGateway";
 export type { ScaleConnection, ScaleGateway, ScaleReading, ScaleSimulator } from "./ScaleGateway";

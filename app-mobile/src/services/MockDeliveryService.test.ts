@@ -1,69 +1,91 @@
-import type { Demand } from "@/types/produtor";
-import { MockDemandService } from "./MockDemandService";
+import type { Proposal } from "@/types/proposal";
 import { MockDeliveryService } from "./MockDeliveryService";
+import { MockProposalService } from "./MockProposalService";
 
 const ME = "maria@sitio.com";
-const NOW = new Date(2026, 9, 8, 9, 0);
+const NOW = new Date(2026, 9, 13, 9, 0);
 
-function demand(overrides: Partial<Demand> = {}): Demand {
+interface Line {
+  produto?: string;
+  unidade?: string;
+  quantidade?: number;
+  preco?: number;
+  aceita?: number | null;
+}
+
+// Um pedido aceito com um produto (o código do produto é o mesmo do pedido). Por padrão o produtor aceitou tudo o que foi oferecido.
+function proposal(overrides: Partial<Proposal> & Line = {}): Proposal {
+  const { produto = "Cenoura", unidade = "Kg", quantidade = 10, preco = 4.5, aceita, ...order } = overrides;
+  const id = order.id ?? "d1";
   return {
-    id: "d1",
-    produto: "Cenoura",
-    quantidade: 100,
-    unidade: "Kg",
-    precoMedio: 4.5,
-    status: "ABERTA",
-    ofertas: [{ emailProdutor: ME, quantidade: 10 }],
-    criadoEm: "2026-10-01T10:00:00.000Z",
-    ...overrides,
+    id,
+    numero: 1,
+    mercado: "Mercado Teste",
+    itens: [{ id, produto, quantidade, unidade, preco, aceita: aceita ?? quantidade }],
+    entrega: "2026-10-16",
+    status: "ACEITA",
+    recebidaEm: "2026-10-13T08:00:00.000Z",
+    expiraEm: "2026-10-13T08:30:00.000Z",
+    respondidaEm: "2026-10-13T08:05:00.000Z",
+    ...order,
   };
 }
 
-function setup(seed: Demand[] = [demand()], days: Record<string, number> = {}) {
-  const demands = new MockDemandService({ seed: () => seed, latencyMs: 0 });
-  const service = new MockDeliveryService({ demands, days, defaultDays: 2, now: () => NOW, latencyMs: 0 });
-  return { service, demands };
+function setup(seed: Proposal[] = [proposal()]) {
+  const proposals = new MockProposalService({ seed: () => seed, now: () => NOW, latencyMs: 0 });
+  const service = new MockDeliveryService({ proposals, now: () => NOW, latencyMs: 0 });
+  return { service, proposals };
 }
 
 describe("MockDeliveryService.listDeliveries", () => {
-  it("cada oferta do produtor vira uma entrega", async () => {
+  it("cada produto aceito vira uma entrega, com o mercado, o preço fixo e o dia marcado", async () => {
     const { service } = setup([
-      demand({ id: "a" }),
-      demand({ id: "b", ofertas: [{ emailProdutor: "outro@x.com", quantidade: 5 }] }),
-      demand({
-        id: "c",
-        produto: "Tomate",
-        unidade: "Caixas",
-        ofertas: [{ emailProdutor: ME, quantidade: 40, preco: 47 }],
-      }),
+      proposal({ id: "a" }),
+      proposal({ id: "b", status: "RECUSADA" }),
+      proposal({ id: "c", status: "PENDENTE" }),
+      proposal({ id: "d", produto: "Tomate", unidade: "Caixas", quantidade: 40, preco: 36, mercado: "Empório" }),
     ]);
 
     const list = await service.listDeliveries(ME);
 
-    expect(list.map((delivery) => delivery.id)).toEqual(["a", "c"]);
-    expect(list[1]).toMatchObject({ produto: "Tomate", unidade: "Caixas", quantidade: 40, preco: 47 });
+    expect(list.map((delivery) => delivery.id)).toEqual(["a", "d"]);
+    expect(list[0]).toMatchObject({ propostaId: "a", mercado: "Mercado Teste", preco: 4.5, dueDate: "2026-10-16" });
+    expect(list[1]).toMatchObject({
+      produto: "Tomate",
+      unidade: "Caixas",
+      quantidade: 40,
+      preco: 36,
+      mercado: "Empório",
+    });
   });
 
-  it("sem preço combinado, vale o preço médio do pedido", async () => {
-    const [delivery] = await setup().service.listDeliveries(ME);
+  it("um pedido com vários produtos gera uma entrega por produto, com a quantidade aceita; o que ficou de fora não entra", async () => {
+    const order = proposal({ id: "o1", produto: "Morango", quantidade: 30 });
+    order.itens.push(
+      { id: "o1-b", produto: "Alface", quantidade: 30, unidade: "Kg", preco: 2, aceita: 20 },
+      { id: "o1-c", produto: "Abacaxi", quantidade: 40, unidade: "Kg", preco: 4, aceita: 0 },
+    );
+    const { service } = setup([order]);
 
-    expect(delivery.preco).toBe(4.5);
+    const list = await service.listDeliveries(ME);
+
+    expect(list.map((delivery) => [delivery.id, delivery.propostaId, delivery.produto, delivery.quantidade])).toEqual([
+      ["o1", "o1", "Morango", 30],
+      ["o1-b", "o1", "Alface", 20],
+    ]);
   });
 
-  it("pedido cancelado não gera entrega", async () => {
-    const { service } = setup([demand({ status: "CANCELADA" })]);
-
-    expect(await service.listDeliveries(ME)).toEqual([]);
-  });
-
-  it("marca o dia: o da tabela, ou o padrão, e ele não muda depois", async () => {
-    const { service } = setup([demand({ id: "a" }), demand({ id: "b" })], { a: 0 });
+  it("o dia da entrega é o da proposta e não muda entre uma listagem e outra", async () => {
+    const { service } = setup([
+      proposal({ id: "a", entrega: "2026-10-13" }),
+      proposal({ id: "b", entrega: "2026-10-20" }),
+    ]);
 
     const first = await service.listDeliveries(ME);
     const second = await service.listDeliveries(ME);
 
-    expect(first.map((delivery) => delivery.dueDate)).toEqual(["2026-10-08", "2026-10-10"]);
-    expect(second.map((delivery) => delivery.dueDate)).toEqual(["2026-10-08", "2026-10-10"]);
+    expect(first.map((delivery) => delivery.dueDate)).toEqual(["2026-10-13", "2026-10-20"]);
+    expect(second.map((delivery) => delivery.dueDate)).toEqual(["2026-10-13", "2026-10-20"]);
   });
 
   it("começa sem pesagem, sem entrega e sem recebimento", async () => {
@@ -72,11 +94,11 @@ describe("MockDeliveryService.listDeliveries", () => {
     expect(delivery).toMatchObject({ weighings: [], handedOverAt: null, handedOverOutOfRange: false, receipt: null });
   });
 
-  it("uma oferta nova aparece na lista seguinte", async () => {
-    const { service, demands } = setup([demand({ ofertas: [] })]);
+  it("uma proposta aceita durante o uso aparece na lista seguinte", async () => {
+    const { service, proposals } = setup([proposal({ status: "PENDENTE", expiraEm: "2026-10-13T13:00:00.000Z" })]);
     expect(await service.listDeliveries(ME)).toEqual([]);
 
-    await demands.sendOffer({ demandaId: "d1", quantidade: 20, emailProdutor: ME });
+    await proposals.respond(ME, "d1", { answer: "ACEITAR", quantities: { d1: 10 } });
 
     expect((await service.listDeliveries(ME)).map((delivery) => delivery.id)).toEqual(["d1"]);
   });
@@ -230,14 +252,7 @@ describe("MockDeliveryService.simulateReceipt", () => {
 
 describe("isolamento", () => {
   it("o andamento de uma pessoa não aparece para outra", async () => {
-    const { service } = setup([
-      demand({
-        ofertas: [
-          { emailProdutor: ME, quantidade: 10 },
-          { emailProdutor: "joao@x.com", quantidade: 10 },
-        ],
-      }),
-    ]);
+    const { service } = setup();
     await service.listDeliveries(ME);
     await service.listDeliveries("joao@x.com");
     await service.addWeighing(ME, "d1", { kg: 10, source: "BALANCA" });

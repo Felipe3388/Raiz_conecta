@@ -17,4 +17,12 @@ describe("pasta src/app", () => {
     const duplicates = duplicateRoutes(listFiles(path.join(__dirname, "../../app")));
     expect(duplicates).toEqual([]);
   });
+
+  // Telas que saíram do app. Se sobrarem de uma versão antiga, viram uma aba ou uma rota fantasma.
+  const REMOVED_SCREENS = ["(produtor)/(tabs)/mural.tsx", "(produtor)/mural.tsx", "(produtor)/simulador-preco.tsx"];
+
+  it("não tem telas que foram removidas (Mural virou Ofertas; o Simulador de preço saiu)", () => {
+    const files = listFiles(path.join(__dirname, "../../app"));
+    expect(REMOVED_SCREENS.filter((file) => files.includes(file))).toEqual([]);
+  });
 });

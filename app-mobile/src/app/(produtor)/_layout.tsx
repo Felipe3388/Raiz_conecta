@@ -36,7 +36,6 @@ export default function ProdutorLayout() {
                     <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                     <Stack.Screen name="perfil" options={{ title: "Meu Perfil" }} />
                     <Stack.Screen name="configuracoes" options={{ title: "Configurações" }} />
-                    <Stack.Screen name="simulador-preco" options={{ title: "Simulador de preço" }} />
                   </Stack>
                   <AssistantHost />
                 </View>

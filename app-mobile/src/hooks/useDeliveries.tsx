@@ -1,5 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { groupOrders, type Order } from "@/lib/delivery/orders";
 import { pendingCount } from "@/lib/delivery/plan";
+import { nextDeliveryDays } from "@/lib/delivery/schedule";
 import { getDeliveryService, type DeliveryGateway } from "@/services";
 import type { Delivery, WeighingInput } from "@/types/delivery";
 import { useProdutorData } from "./useProdutorData";
@@ -9,13 +11,18 @@ type LoadStatus = "loading" | "ready" | "error";
 interface DeliveriesData {
   status: LoadStatus;
   deliveries: Delivery[];
-  // Quantas entregas pedem ação do produtor hoje: é o número da aba Entregas.
+  // As entregas agrupadas por mercado e dia: é como o produtor as vê.
+  orders: Order[];
+  // Quantos pedidos pedem ação do produtor até o próximo dia de entrega: é o número da aba Entregas.
   pending: number;
+  // O próximo dia de entrega (terça ou sexta), no formato "2026-10-16".
+  nextDay: string;
   // Só no modo simulado dá para fazer de conta que o mercado pesou.
   canSimulateReceipt: boolean;
   addWeighing: (deliveryId: string, input: WeighingInput) => Promise<void>;
   removeWeighing: (deliveryId: string, weighingId: string) => Promise<void>;
-  handOver: (deliveryId: string) => Promise<void>;
+  // Entrega à logística todos os produtos de um pedido, um depois do outro.
+  handOverAll: (deliveryIds: string[]) => Promise<void>;
   simulateReceipt: (deliveryId: string, input: WeighingInput) => Promise<void>;
   reload: () => Promise<void>;
 }
@@ -28,10 +35,10 @@ interface ProviderProps {
   deliveries?: DeliveryGateway;
 }
 
-// Entregas da área do Produtor. Fica dentro de ProdutorDataProvider porque cada oferta vira uma entrega:
-// uma oferta nova (ou desfeita) muda esta lista.
+// Entregas da área do Produtor. Fica dentro de ProdutorDataProvider porque cada proposta aceita vira uma entrega:
+// aceitar uma proposta muda esta lista.
 export function DeliveriesProvider({ email, children, deliveries: gateway = getDeliveryService() }: ProviderProps) {
-  const { status: dataStatus, offers } = useProdutorData();
+  const { status: dataStatus, proposals } = useProdutorData();
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [list, setList] = useState<Delivery[]>([]);
   const loadedOnce = useRef(false);
@@ -53,7 +60,7 @@ export function DeliveriesProvider({ email, children, deliveries: gateway = getD
 
   useEffect(() => {
     if (dataStatus === "ready") void load(loadedOnce.current);
-  }, [dataStatus, offers, load]);
+  }, [dataStatus, proposals, load]);
 
   const reload = useCallback(() => load(false), [load]);
 
@@ -72,8 +79,10 @@ export function DeliveriesProvider({ email, children, deliveries: gateway = getD
     [gateway, email, replace],
   );
 
-  const handOver = useCallback(
-    async (deliveryId: string) => replace(await gateway.handOver(email, deliveryId)),
+  const handOverAll = useCallback(
+    async (deliveryIds: string[]) => {
+      for (const deliveryId of deliveryIds) replace(await gateway.handOver(email, deliveryId));
+    },
     [gateway, email, replace],
   );
 
@@ -85,20 +94,23 @@ export function DeliveriesProvider({ email, children, deliveries: gateway = getD
     [gateway, email, replace],
   );
 
-  const value = useMemo<DeliveriesData>(
-    () => ({
+  const value = useMemo<DeliveriesData>(() => {
+    const orders = groupOrders(list);
+    const today = new Date();
+    return {
       status: dataStatus === "error" ? "error" : status,
       deliveries: list,
-      pending: status === "ready" ? pendingCount(list, new Date()) : 0,
+      orders,
+      pending: status === "ready" ? pendingCount(orders, today) : 0,
+      nextDay: nextDeliveryDays(today, 1)[0],
       canSimulateReceipt: gateway.simulateReceipt !== undefined,
       addWeighing,
       removeWeighing,
-      handOver,
+      handOverAll,
       simulateReceipt,
       reload,
-    }),
-    [dataStatus, status, list, gateway, addWeighing, removeWeighing, handOver, simulateReceipt, reload],
-  );
+    };
+  }, [dataStatus, status, list, gateway, addWeighing, removeWeighing, handOverAll, simulateReceipt, reload]);
 
   return <DeliveriesContext.Provider value={value}>{children}</DeliveriesContext.Provider>;
 }

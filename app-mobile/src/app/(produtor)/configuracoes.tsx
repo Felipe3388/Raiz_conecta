@@ -40,15 +40,6 @@ export default function ConfiguracoesScreen() {
         <SettingsRow icon="lock-closed-outline" label="Política de Privacidade" onPress={settings.openPrivacy} />
       </SectionCard>
 
-      <SectionCard title="Testes" icon="flask-outline" iconColor={colors.warning}>
-        <SettingsRow
-          icon="swap-vertical-outline"
-          label="Simulador de preço"
-          description="Teste o leilão inverso: o preço sobe até chegar a um valor bom para você."
-          onPress={settings.openPriceSimulator}
-        />
-      </SectionCard>
-
       <SectionCard title="Conta" icon="person-circle-outline">
         <SettingsRow
           icon="person-outline"

@@ -1,9 +1,9 @@
 import { Tabs } from "expo-router";
 import type { ComponentProps } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { LeafIcon } from "@/components/motion/LeafIcon";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { PressableScale } from "@/components/motion/PressableScale";
-import { splitTabs } from "@/lib/produtor/tabs";
+import { splitTabs, visibleTabs } from "@/lib/produtor/tabs";
 import { colors, radius, typography } from "@/theme";
 import {
   HOME_BUTTON_RAISE,
@@ -18,11 +18,11 @@ type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>["tabBar"]>
 
 const HOME_LABEL = "Início";
 
-// Barra de abas do Produtor: as quatro abas, duas de cada lado, e no meio um botão redondo, um pouco acima das
-// demais, que leva ao Painel (a tela inicial). A área transparente em cima da barra é onde o botão sobe:
+// Barra de abas do Produtor: as abas repartidas dos dois lados e, no meio, um botão redondo, um pouco acima das
+// demais, que leva ao Painel (a tela inicial). Cada lado ocupa metade da barra, para o botão ficar sempre no centro. A área transparente em cima da barra é onde o botão sobe:
 // o toque só chega a um botão que está dentro da área do seu pai.
 export function ProducerTabBar({ state, descriptors, navigation, insets }: TabBarProps) {
-  const split = splitTabs(state.routes.map((route) => route.name));
+  const split = splitTabs(visibleTabs(state.routes.map((route) => route.name)));
   const routeOf = (name: string) => state.routes.find((route) => route.name === name);
   const focusedName = state.routes[state.index]?.name;
 
@@ -77,7 +77,7 @@ export function ProducerTabBar({ state, descriptors, navigation, insets }: TabBa
     >
       <View style={[styles.bar, { height: TAB_BAR_CONTENT_HEIGHT + insets.bottom, paddingBottom: insets.bottom + 6 }]}>
         <View style={styles.row}>
-          {split.left.map(renderTab)}
+          <View style={styles.half}>{split.left.map(renderTab)}</View>
           <View style={styles.homeSlot}>
             <Text
               numberOfLines={1}
@@ -87,7 +87,7 @@ export function ProducerTabBar({ state, descriptors, navigation, insets }: TabBa
               {HOME_LABEL}
             </Text>
           </View>
-          {split.right.map(renderTab)}
+          <View style={styles.half}>{split.right.map(renderTab)}</View>
         </View>
       </View>
 
@@ -101,7 +101,7 @@ export function ProducerTabBar({ state, descriptors, navigation, insets }: TabBa
             onPress={() => press(split.home as string)}
             style={[styles.home, homeFocused ? styles.homeOn : styles.homeOff]}
           >
-            <LeafIcon size={32} color={homeFocused ? colors.primaryContrast : colors.primary} strokeWidth={2.2} />
+            <BrandMark size={36} color={homeFocused ? colors.primaryContrast : colors.primary} />
           </PressableScale>
         </View>
       )}
@@ -130,6 +130,7 @@ const styles = StyleSheet.create({
     maxWidth: TAB_BAR_MAX_WIDTH,
     alignSelf: "center",
   },
+  half: { flex: 1, flexDirection: "row", alignItems: "flex-start" },
   tab: { flex: 1, alignItems: "center", gap: 2, paddingTop: 4, paddingBottom: 2 },
   label: { ...typography.caption, fontSize: 13, fontWeight: "700" },
   homeSlot: { width: HOME_SLOT_WIDTH, alignSelf: "stretch", alignItems: "center", justifyContent: "flex-end" },

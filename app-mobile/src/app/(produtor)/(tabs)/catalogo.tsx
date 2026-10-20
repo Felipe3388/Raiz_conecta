@@ -34,7 +34,7 @@ function plural(count: number, one: string, many: string) {
   return `${count} ${count === 1 ? one : many}`;
 }
 
-// Meu Catálogo: o produtor marca o que planta; o Mural só mostra pedidos desses produtos.
+// Meu Catálogo: o produtor marca o que planta; as propostas dos mercados chegam para esses produtos.
 export default function CatalogoScreen() {
   const catalog = useCatalogScreen();
 
@@ -47,9 +47,9 @@ export default function CatalogoScreen() {
     <View style={styles.header}>
       <ScreenHeading title="Meu Catálogo" />
       {!isDetails && (
-        <Banner tone="amber" icon="leaf-outline" title="Selecione o que você produz">
-          Marque os produtos que você tem capacidade de vender. O Mural só mostrará demandas dos produtos que você
-          marcar aqui.
+        <Banner tone="amber" icon="nutrition-outline" title="Selecione o que você produz">
+          Marque os produtos que você tem capacidade de vender. Os pedidos dos mercados em Ofertas chegam para os
+          produtos que você marcar aqui.
         </Banner>
       )}
       <SearchBar
@@ -132,7 +132,7 @@ function emptyState(filter: CatalogFilter, query: string) {
   if (!isSearching && filter === "selected") {
     return (
       <EmptyState
-        icon={<Ionicons name="leaf-outline" size={40} color={colors.primary} />}
+        icon={<Ionicons name="nutrition-outline" size={40} color={colors.primary} />}
         title="Você ainda não marcou nenhum produto"
         description="Toque nos produtos que você planta para marcá-los."
       />

@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/motion/PressableScale";
-import { OpportunityRow } from "@/components/produtor/OpportunityRow";
+import { ProposalRow } from "@/components/produtor/ProposalRow";
 import { PriceInsightRow } from "@/components/produtor/PriceInsightRow";
 import { RevenueBars } from "@/components/produtor/RevenueBars";
 import { ScreenHeading } from "@/components/produtor/ScreenHeading";
@@ -13,15 +13,18 @@ import { LoadError } from "@/components/ui/LoadError";
 import { PageLoader } from "@/components/ui/PageLoader";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useDashboardScreen } from "@/hooks/useDashboardScreen";
+import { deliveryDayLabel } from "@/lib/delivery/schedule";
 import { formatBRL } from "@/lib/format/currency";
 import { chartRows } from "@/lib/produtor/dashboard";
 import { colors, radius, spacing, typography } from "@/theme";
 
 const MAX_CHART_ROWS = 5;
 
-function deliveriesText(count: number): string {
-  if (count === 0) return "Nada para separar ou entregar hoje.";
-  return count === 1 ? "1 entrega para separar ou entregar." : `${count} entregas para separar ou entregar.`;
+function deliveriesText(count: number, dayLabel: string): string {
+  if (count === 0) return `Nada para separar ou entregar até ${dayLabel}.`;
+  return count === 1
+    ? `1 pedido para separar e entregar até ${dayLabel}.`
+    : `${count} pedidos para separar e entregar até ${dayLabel}.`;
 }
 // Espaço no fim para o botão de ajuda não cobrir o último bloco.
 const BOTTOM_SPACE = 96;
@@ -29,12 +32,13 @@ const BOTTOM_SPACE = 96;
 // Painel: um resumo simples da atividade do produtor, com atalhos para cada tela.
 export default function PainelScreen() {
   const router = useRouter();
-  const { status, summary, reload, prices, deliveriesToday } = useDashboardScreen();
+  const { status, summary, reload, prices, nextDelivery, now } = useDashboardScreen();
 
   if (status === "loading") return <PageLoader />;
   if (status === "error") return <LoadError onRetry={reload} />;
 
   const rows = chartRows(summary.revenueByProduct, MAX_CHART_ROWS);
+  const nextDayLabel = nextDelivery ? deliveryDayLabel(nextDelivery.day, now).toLowerCase() : "";
 
   return (
     <FormScreen edges={[]} centered={false} animated={false} bottomSpace={BOTTOM_SPACE}>
@@ -44,28 +48,32 @@ export default function PainelScreen() {
       </View>
 
       <View style={styles.hero}>
-        <Text style={styles.heroLabel}>Receita estimada das suas ofertas</Text>
+        <Text style={styles.heroLabel}>Receita estimada do que você aceitou</Text>
         <Text style={styles.heroValue} accessibilityRole="header">
           {formatBRL(summary.estimatedRevenue)}
         </Text>
         <Text style={styles.heroNote}>
-          {summary.offersCount === 0
-            ? "Quando você fizer ofertas no Mural, o valor aparece aqui."
-            : `Com base em ${summary.offersCount} ${summary.offersCount === 1 ? "oferta" : "ofertas"} e no preço combinado ou estimado de cada uma.`}
+          {summary.acceptedCount === 0
+            ? "Quando você aceitar pedidos em Ofertas, o valor aparece aqui."
+            : `Com base em ${summary.acceptedCount} ${summary.acceptedCount === 1 ? "pedido aceito" : "pedidos aceitos"} e no preço fixo de cada produto.`}
         </Text>
       </View>
 
-      {deliveriesToday !== null && (
+      {nextDelivery !== null && (
         <PressableScale
           accessibilityRole="button"
-          accessibilityLabel={`Entregas de hoje: ${deliveriesText(deliveriesToday)} Toque para abrir.`}
+          accessibilityLabel={`Próxima entrega: ${deliveriesText(nextDelivery.pending, nextDayLabel)} Toque para abrir.`}
           onPress={() => router.navigate("/entregas")}
-          style={[styles.deliveries, deliveriesToday > 0 && styles.deliveriesDue]}
+          style={[styles.deliveries, nextDelivery.pending > 0 && styles.deliveriesDue]}
         >
-          <Ionicons name="cube-outline" size={26} color={deliveriesToday > 0 ? colors.warningStrong : colors.primary} />
+          <Ionicons
+            name="cube-outline"
+            size={26}
+            color={nextDelivery.pending > 0 ? colors.warningStrong : colors.primary}
+          />
           <View style={styles.deliveriesText}>
-            <Text style={styles.deliveriesTitle}>Entregas de hoje</Text>
-            <Text style={styles.deliveriesNote}>{deliveriesText(deliveriesToday)}</Text>
+            <Text style={styles.deliveriesTitle}>Próxima entrega</Text>
+            <Text style={styles.deliveriesNote}>{deliveriesText(nextDelivery.pending, nextDayLabel)}</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.textSubtle} />
         </PressableScale>
@@ -73,19 +81,19 @@ export default function PainelScreen() {
 
       <View style={styles.tiles}>
         <StatTile
-          icon="grid-outline"
-          value={summary.openDemands}
-          label="Pedidos abertos"
-          onPress={() => router.navigate("/mural")}
-        />
-        <StatTile
-          icon="checkmark-done-outline"
-          value={summary.offersCount}
-          label="Minhas ofertas"
+          icon="time-outline"
+          value={summary.pendingCount}
+          label="Para responder"
           onPress={() => router.navigate("/ofertas")}
         />
         <StatTile
-          icon="leaf-outline"
+          icon="checkmark-done-outline"
+          value={summary.acceptedCount}
+          label="Aceitos"
+          onPress={() => router.navigate("/ofertas")}
+        />
+        <StatTile
+          icon="nutrition-outline"
           value={summary.savedProducts}
           label="No catálogo"
           onPress={() => router.navigate("/catalogo")}
@@ -96,7 +104,7 @@ export default function PainelScreen() {
         {rows.length > 0 ? (
           <RevenueBars rows={rows} />
         ) : (
-          <Text style={styles.empty}>Ainda não há receita para mostrar. Ela aparece quando você faz ofertas.</Text>
+          <Text style={styles.empty}>Ainda não há receita para mostrar. Ela aparece quando você aceita pedidos.</Text>
         )}
       </SectionCard>
 
@@ -134,26 +142,22 @@ export default function PainelScreen() {
         )}
       </SectionCard>
 
-      <SectionCard title="Maiores oportunidades" icon="trending-up-outline" iconColor={colors.warning}>
-        {summary.savedProducts === 0 ? (
-          <View style={styles.emptyBlock}>
-            <Text style={styles.empty}>Marque no Catálogo o que você produz para ver os pedidos desses produtos.</Text>
-            <Button label="Abrir Catálogo" variant="amber" onPress={() => router.navigate("/catalogo")} />
-          </View>
-        ) : summary.opportunities.length > 0 ? (
+      <SectionCard title="Responder primeiro" icon="time-outline" iconColor={colors.warning}>
+        {summary.urgent.length > 0 ? (
           <View style={styles.list}>
-            {summary.opportunities.map((opportunity) => (
-              <OpportunityRow
-                key={opportunity.demand.id}
-                opportunity={opportunity}
-                onPress={() => router.navigate("/mural")}
+            {summary.urgent.map((proposal) => (
+              <ProposalRow
+                key={proposal.id}
+                proposal={proposal}
+                now={now}
+                onPress={() => router.navigate("/ofertas")}
               />
             ))}
           </View>
         ) : (
           <View style={styles.emptyBlock}>
             <Ionicons name="checkmark-circle-outline" size={28} color={colors.primary} />
-            <Text style={styles.empty}>Nenhum pedido aberto agora. Volte mais tarde.</Text>
+            <Text style={styles.empty}>Nenhum pedido esperando resposta agora. Volte mais tarde.</Text>
           </View>
         )}
       </SectionCard>

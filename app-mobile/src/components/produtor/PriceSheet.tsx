@@ -16,24 +16,13 @@ interface PriceSheetProps {
   currentPrice: number | null;
   // A média da plataforma: só uma referência, nunca vira o preço dele sozinha.
   suggested: SuggestedPrice | null;
-  // Quanto o pedido aberto paga, quando a folha é aberta a partir dele.
-  marketPrice?: number | null;
   // `null` remove o preço.
   onSave: (price: number | null) => Promise<void>;
   onClose: () => void;
 }
 
-// Folha para o produtor definir o preço que pede por um produto (o preço ofertado).
-export function PriceSheet({
-  visible,
-  produto,
-  unidade,
-  currentPrice,
-  suggested,
-  marketPrice = null,
-  onSave,
-  onClose,
-}: PriceSheetProps) {
+// Folha para o produtor sugerir o preço de um produto (o preço ofertado). Só a equipe usa: o preço dos pedidos é fixo.
+export function PriceSheet({ visible, produto, unidade, currentPrice, suggested, onSave, onClose }: PriceSheetProps) {
   const form = usePriceForm(visible, currentPrice, onSave);
 
   return (
@@ -76,15 +65,9 @@ export function PriceSheet({
           ) : (
             <Text style={styles.referenceNote}>Ainda não temos uma média para este produto.</Text>
           )}
-          {marketPrice !== null && (
-            <View style={styles.referenceText}>
-              <Text style={styles.referenceLabel}>Este pedido paga</Text>
-              <Text style={styles.referenceValue}>{formatBRL(marketPrice)}</Text>
-            </View>
-          )}
           <Text style={styles.referenceNote}>
-            A média é só uma referência. O preço que vale é o que você escreve aqui: o mercado começa oferecendo menos e
-            sobe até chegar nele.
+            É só uma sugestão: ela ajuda a nossa equipe a montar os preços dos pedidos. O preço dos pedidos em Ofertas é
+            fixo e não muda por causa dele.
           </Text>
         </View>
       </View>

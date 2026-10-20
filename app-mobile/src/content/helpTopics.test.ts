@@ -1,7 +1,7 @@
 import type { ScreenId } from "@/lib/assistant/fabActions";
 import { HELP_TOPICS, suggestionsFor, topicById } from "./helpTopics";
 
-const SCREENS: ScreenId[] = ["mural", "catalogo", "ofertas", "entregas", "painel", "perfil", "configuracoes"];
+const SCREENS: ScreenId[] = ["catalogo", "ofertas", "entregas", "painel", "perfil", "configuracoes"];
 
 describe("HELP_TOPICS", () => {
   it("cada pergunta tem identificador único, pergunta e resposta", () => {
@@ -13,11 +13,18 @@ describe("HELP_TOPICS", () => {
     expect(HELP_TOPICS.every((t) => t.answer.length <= 420)).toBe(true);
   });
 
-  it("ensina o essencial: catálogo, mural, oferta, ofertas e suporte", () => {
+  it("ensina o essencial: catálogo, ofertas, aceitar, entregas e suporte", () => {
     const text = HELP_TOPICS.map((t) => t.answer)
       .join(" ")
       .toLowerCase();
-    for (const term of ["catálogo", "mural", "ofertar", "salvar escolhas", "suporte@raizconecta.com.br"]) {
+    for (const term of [
+      "catálogo",
+      "ofertas",
+      "aceitar",
+      "entregas",
+      "salvar escolhas",
+      "suporte@raizconecta.com.br",
+    ]) {
       expect(text).toContain(term);
     }
   });
@@ -27,12 +34,27 @@ describe("HELP_TOPICS", () => {
   });
 });
 
-describe("negociação do preço", () => {
-  it("explica que a proposta vem uma de cada vez, com pausa e a opção de mudar de ideia", () => {
-    const answer = topicById("negociar-preco")?.answer ?? "";
-    expect(answer).toContain("uma proposta de cada vez");
-    expect(answer).toContain("pausa");
-    expect(answer).toContain("Mudei de ideia");
+describe("preço das propostas", () => {
+  it("explica que o preço é fixo, que vem um produtor por vez e que recusar manda para outro", () => {
+    const answer = topicById("como-funciona-preco")?.answer ?? "";
+    expect(answer).toContain("preço fixo");
+    expect(answer).toContain("um produtor por vez");
+    expect(answer).toContain("segue para outro produtor");
+  });
+
+  it("não revela ao produtor o preço do mercado nem a escada de preços", () => {
+    const text = HELP_TOPICS.map((t) => t.answer)
+      .join(" ")
+      .toLowerCase();
+    for (const term of ["escada", "teto", "leilão", "80%", "preço do mercado"]) expect(text).not.toContain(term);
+  });
+});
+
+describe("dias de entrega", () => {
+  it("diz que são terça e sexta e que a equipe define", () => {
+    const answer = topicById("dias-entrega")?.answer ?? "";
+    expect(answer).toContain("terça e sexta");
+    expect(answer).toContain("equipe");
   });
 });
 
@@ -51,9 +73,9 @@ describe("suggestionsFor", () => {
   });
 
   it("não repete o que já foi perguntado", () => {
-    const first = suggestionsFor("mural", [], 3);
+    const first = suggestionsFor("ofertas", [], 3);
     const next = suggestionsFor(
-      "mural",
+      "ofertas",
       first.map((t) => t.id),
       3,
     );
@@ -70,7 +92,7 @@ describe("suggestionsFor", () => {
   it("sem limite explícito devolve todas as que sobraram", () => {
     expect(
       suggestionsFor(
-        "mural",
+        "ofertas",
         HELP_TOPICS.map((t) => t.id),
       ),
     ).toEqual([]);

@@ -3,7 +3,7 @@ import { colors, typography } from "@/theme";
 
 interface ScreenHeadingProps {
   title: string;
-  // Quantidade mostrada entre parênteses, como nas abas do site: "Mural de Oportunidades (5)".
+  // Quantidade mostrada entre parênteses, como nas abas do site: "Ofertas (5)".
   count?: number;
 }
 

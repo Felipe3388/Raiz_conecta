@@ -68,10 +68,6 @@ describe("describeDelivery (tudo o que o cartão da entrega mostra)", () => {
     expect(card.receipt?.verdict).toBe("ABAIXO");
   });
 
-  it("sem preço, sem valor", () => {
-    expect(describeDelivery(makeDelivery({ preco: null }), today).value).toBeNull();
-  });
-
   it("entregue fora da faixa fica marcado", () => {
     const card = describeDelivery(
       makeDelivery({ ...handedOver, handedOverOutOfRange: true, weighings: [weighing(6)] }),

@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { hasSelectionChanged, selectedProductNames, toggleProductId } from "@/lib/produtor/catalog";
-import { muralDemands, offerDemands } from "@/lib/produtor/demands";
-import { getCatalogService, getDemandService, type CatalogGateway, type DemandGateway } from "@/services";
-import type { CatalogProduct, Demand, ProductSuggestion } from "@/types/produtor";
+import { hasSelectionChanged, toggleProductId } from "@/lib/produtor/catalog";
+import { getCatalogService, getProposalService, type CatalogGateway, type ProposalGateway } from "@/services";
+import type { CatalogProduct, ProductSuggestion } from "@/types/produtor";
+import type { Proposal, ProposalResponse } from "@/types/proposal";
 
 type LoadStatus = "loading" | "ready" | "error";
 
@@ -13,18 +13,16 @@ interface ProdutorData {
   selectedIds: number[];
   savedIds: number[];
   hasUnsavedSelection: boolean;
-  // Demandas que aparecem no Mural e as em que o produtor já ofertou.
-  mural: Demand[];
-  offers: Demand[];
+  // Propostas dos mercados: as que esperam resposta, as aceitas e as encerradas.
+  proposals: Proposal[];
   reload: () => Promise<void>;
   toggleProduct: (id: number) => void;
   // Devolve as escolhas que valiam antes de salvar, para quem quiser desfazer.
   saveSelection: () => Promise<number[]>;
   // Volta o catálogo salvo para uma lista de produtos (usado no "Desfazer").
   restoreSavedIds: (ids: number[]) => Promise<void>;
-  // `preco` é o valor por unidade combinado na negociação; sem ele vale a estimativa do pedido.
-  sendOffer: (demandId: string, quantity: number, preco?: number) => Promise<void>;
-  cancelOffer: (demandId: string) => Promise<void>;
+  // Aceita ou recusa uma proposta. Devolve a proposta já atualizada.
+  respondToProposal: (proposalId: string, response: ProposalResponse) => Promise<Proposal>;
   // Devolve o código da sugestão, para ela poder ser retirada.
   suggestProduct: (suggestion: ProductSuggestion) => Promise<string>;
   withdrawSuggestion: (id: string) => Promise<void>;
@@ -36,39 +34,39 @@ interface ProviderProps {
   email: string;
   children: ReactNode;
   catalog?: CatalogGateway;
-  demands?: DemandGateway;
+  proposals?: ProposalGateway;
 }
 
-// Dados da área do Produtor, compartilhados pelas abas: uma oferta feita no Mural já aparece em Ofertas.
+// Dados da área do Produtor, compartilhados pelas abas: uma proposta aceita em Ofertas já vira entrega em Entregas.
 export function ProdutorDataProvider({
   email,
   children,
   catalog = getCatalogService(),
-  demands = getDemandService(),
+  proposals: proposalGateway = getProposalService(),
 }: ProviderProps) {
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [savedIds, setSavedIds] = useState<number[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [allDemands, setAllDemands] = useState<Demand[]>([]);
+  const [proposals, setProposals] = useState<Proposal[]>([]);
 
   const reload = useCallback(async () => {
     setStatus("loading");
     try {
-      const [loadedProducts, loadedIds, loadedDemands] = await Promise.all([
+      const [loadedProducts, loadedIds, loadedProposals] = await Promise.all([
         catalog.listProducts(),
         catalog.getMyProductIds(email),
-        demands.listDemands(email),
+        proposalGateway.listProposals(email),
       ]);
       setProducts(loadedProducts);
       setSavedIds(loadedIds);
       setSelectedIds(loadedIds);
-      setAllDemands(loadedDemands);
+      setProposals(loadedProposals);
       setStatus("ready");
     } catch {
       setStatus("error");
     }
-  }, [catalog, demands, email]);
+  }, [catalog, proposalGateway, email]);
 
   useEffect(() => {
     reload();
@@ -94,20 +92,13 @@ export function ProdutorDataProvider({
     [catalog, email],
   );
 
-  const sendOffer = useCallback(
-    async (demandId: string, quantity: number, preco?: number) => {
-      await demands.sendOffer({ demandaId: demandId, quantidade: quantity, emailProdutor: email, preco });
-      setAllDemands(await demands.listDemands(email));
+  const respondToProposal = useCallback(
+    async (proposalId: string, response: ProposalResponse) => {
+      const updated = await proposalGateway.respond(email, proposalId, response);
+      setProposals((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+      return updated;
     },
-    [demands, email],
-  );
-
-  const cancelOffer = useCallback(
-    async (demandId: string) => {
-      await demands.cancelOffer({ demandaId: demandId, emailProdutor: email });
-      setAllDemands(await demands.listDemands(email));
-    },
-    [demands, email],
+    [proposalGateway, email],
   );
 
   const suggestProduct = useCallback(
@@ -118,8 +109,6 @@ export function ProdutorDataProvider({
   const withdrawSuggestion = useCallback((id: string) => catalog.withdrawSuggestion(email, id), [catalog, email]);
 
   const value = useMemo<ProdutorData>(() => {
-    // O Mural usa as escolhas já salvas, não as que ainda estão sendo marcadas.
-    const myProductNames = selectedProductNames(products, savedIds);
     return {
       status,
       email,
@@ -127,14 +116,12 @@ export function ProdutorDataProvider({
       selectedIds,
       savedIds,
       hasUnsavedSelection: hasSelectionChanged(savedIds, selectedIds),
-      mural: muralDemands(allDemands, email, myProductNames),
-      offers: offerDemands(allDemands, email),
+      proposals,
       reload,
       toggleProduct,
       saveSelection,
       restoreSavedIds,
-      sendOffer,
-      cancelOffer,
+      respondToProposal,
       suggestProduct,
       withdrawSuggestion,
     };
@@ -144,13 +131,12 @@ export function ProdutorDataProvider({
     products,
     selectedIds,
     savedIds,
-    allDemands,
+    proposals,
     reload,
     toggleProduct,
     saveSelection,
     restoreSavedIds,
-    sendOffer,
-    cancelOffer,
+    respondToProposal,
     suggestProduct,
     withdrawSuggestion,
   ]);

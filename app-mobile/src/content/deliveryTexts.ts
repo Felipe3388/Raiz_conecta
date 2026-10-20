@@ -1,4 +1,5 @@
 import type { DeliveryCard } from "@/lib/delivery/card";
+import type { OrderCard } from "@/lib/delivery/orderCard";
 import { formatKg } from "@/lib/format/weight";
 import { roundKg, type WeightJudgement, type WeightVerdict } from "@/lib/delivery/weight";
 import type { DeliveryStage } from "@/types/delivery";
@@ -20,13 +21,13 @@ export const STAGE_INFO: Record<DeliveryStage, StageInfo> = {
     label: "A separar",
     tone: "warning",
     icon: "basket-outline",
-    hint: "Separe o produto e pese na balança.",
+    hint: "Separe os produtos do pedido e pese um a um na balança.",
   },
   PRONTA: {
     label: "Pronta",
     tone: "success",
     icon: "checkmark-circle-outline",
-    hint: "Peso conferido. Entregue à logística quando ela chegar.",
+    hint: "Todos os produtos pesados. Entregue o pedido à logística quando ela chegar.",
   },
   COM_LOGISTICA: {
     label: "Com a logística",
@@ -38,13 +39,13 @@ export const STAGE_INFO: Record<DeliveryStage, StageInfo> = {
     label: "Recebida",
     tone: "success",
     icon: "shield-checkmark-outline",
-    hint: "O mercado recebeu e o peso bateu.",
+    hint: "O mercado recebeu e o peso de todos os produtos bateu.",
   },
   DIVERGENTE: {
     label: "Divergente",
     tone: "danger",
     icon: "alert-circle-outline",
-    hint: "O peso que o mercado mediu ficou fora da faixa.",
+    hint: "O mercado mediu algum produto fora da faixa.",
   },
 };
 
@@ -78,10 +79,9 @@ export const WEIGH_ERRORS = {
   nothing: "Ainda não há um peso estável para registrar.",
 };
 
-// "Separar hoje", "Separar amanhã", "Separar para seg, 12/10".
+// "Separar hoje", "Separar para sex, 16/10".
 export function pickListTitle(dayLabel: string): string {
-  const lower = dayLabel.toLowerCase();
-  return lower === "hoje" || lower === "amanhã" ? `Separar ${lower}` : `Separar para ${dayLabel}`;
+  return dayLabel.toLowerCase().startsWith("hoje") ? "Separar hoje" : `Separar para ${dayLabel}`;
 }
 
 // A frase curta sobre o peso: "Dentro da faixa", "Faltam 0,5 kg para entrar na faixa", "Passou 1,5 kg do limite".
@@ -100,24 +100,43 @@ export function verdictSummary({ verdict, actualKg, range }: WeightJudgement): s
 interface ConfirmText {
   title: string;
   description: string;
-  // Entregar com o peso fora da faixa pede um aviso mais sério.
+  // Entregar com algum peso fora da faixa pede um aviso mais sério.
   warning: boolean;
 }
 
-// O que a janela de "Entregar à logística" diz, conforme o peso pesado.
-export function handOverText(card: DeliveryCard): ConfirmText {
-  const weighed = formatKg(card.weighedKg);
-  const { minKg, maxKg } = card.weighing.range;
-  if (card.weighing.verdict === "NA_FAIXA") {
+// O que a janela de "Entregar pedido à logística" diz, conforme o peso pesado de cada produto.
+export function orderHandOverText(card: OrderCard): ConfirmText {
+  const count = card.itemCount === 1 ? "1 produto" : `${card.itemCount} produtos`;
+  if (card.outOfRange.length === 0) {
     return {
-      title: "Entregar à logística?",
-      description: `${weighed} pesados, dentro da faixa. Depois de entregar, o peso não pode mais ser mudado.`,
+      title: "Entregar o pedido à logística?",
+      description: `${card.mercado}: ${count}, ${formatKg(card.weighedKg)} pesados, todos dentro da faixa. Depois de entregar, os pesos não podem mais ser mudados.`,
       warning: false,
     };
   }
+
+  const names = card.outOfRange.map((item) => item.delivery.produto).join(", ");
   return {
-    title: "Peso fora da faixa. Entregar mesmo assim?",
-    description: `Você pesou ${weighed}, e o aceito é de ${formatKg(minKg)} a ${formatKg(maxKg)}. O mercado será avisado da diferença.`,
+    title: "Há peso fora da faixa. Entregar mesmo assim?",
+    description: `Fora da faixa aceita: ${names}. O mercado será avisado da diferença. Depois de entregar, os pesos não podem mais ser mudados.`,
     warning: true,
   };
+}
+
+interface ItemStatus {
+  label: string;
+  tone: StageTone;
+}
+
+// A situação de um produto dentro do pedido, na linha da lista: a pesar, quanto pesou, o que o mercado mediu.
+export function itemStatus(card: DeliveryCard): ItemStatus {
+  if (card.receipt && card.delivery.receipt) {
+    return {
+      label: `Mercado: ${formatKg(card.delivery.receipt.kg)}`,
+      tone: VERDICT_TONES[card.receipt.verdict],
+    };
+  }
+  if (card.delivery.handedOverAt) return { label: `Entregue · ${formatKg(card.weighedKg)}`, tone: "info" };
+  if (card.weighedKg > 0) return { label: formatKg(card.weighedKg), tone: VERDICT_TONES[card.weighing.verdict] };
+  return { label: "A pesar", tone: "neutral" };
 }

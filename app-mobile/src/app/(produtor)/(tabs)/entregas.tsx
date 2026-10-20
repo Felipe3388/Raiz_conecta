@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, View } from "react-native";
-import { DeliveryCardView } from "@/components/entregas/DeliveryCardView";
+import { OrderCardView } from "@/components/entregas/OrderCardView";
 import { PickListCard } from "@/components/entregas/PickListCard";
 import { WeighSheet } from "@/components/entregas/WeighSheet";
 import { ScreenHeading } from "@/components/produtor/ScreenHeading";
@@ -10,12 +10,13 @@ import { FilterChips } from "@/components/ui/FilterChips";
 import { ListScreen } from "@/components/ui/ListScreen";
 import { LoadError } from "@/components/ui/LoadError";
 import { PageLoader } from "@/components/ui/PageLoader";
-import { handOverText, pickListTitle } from "@/content/deliveryTexts";
+import { orderHandOverText, pickListTitle } from "@/content/deliveryTexts";
 import { useEntregasScreen } from "@/hooks/useEntregasScreen";
 import { DONE_FILTER } from "@/lib/delivery/plan";
 import { colors, spacing, typography } from "@/theme";
 
-// Entregas: o que separar em cada dia, pedido por pedido, e a pesagem que confere o peso antes de a logística levar.
+// Entregas: só nos dias de entrega definidos pelos adms (terça e sexta). Em cada dia, o total a separar e, abaixo, um
+// cartão por pedido (mercado), com a lista de produtos a pesar um a um antes de a logística levar.
 export default function EntregasScreen() {
   const screen = useEntregasScreen();
 
@@ -23,13 +24,15 @@ export default function EntregasScreen() {
   if (screen.status === "error") return <LoadError onRetry={screen.reload} />;
 
   const chip = screen.chips.find((item) => item.id === screen.filter);
-  const confirm = screen.handOver.card ? handOverText(screen.handOver.card) : null;
+  const confirm = screen.handOver.card ? orderHandOverText(screen.handOver.card) : null;
 
   const header = (
     <View style={styles.header}>
       <View style={styles.top}>
         <ScreenHeading title="Entregas" count={screen.cards.length} />
-        <Text style={styles.subtitle}>Separe e pese o que você prometeu. O mercado confere o peso ao receber.</Text>
+        <Text style={styles.subtitle}>
+          Entregas às terças e sextas. Separe o total do dia, pese cada pedido e o mercado confere ao receber.
+        </Text>
       </View>
 
       <FilterChips
@@ -42,7 +45,7 @@ export default function EntregasScreen() {
 
       {screen.cards.length > 0 && (
         <Text accessibilityRole="header" style={styles.section}>
-          {screen.filter === DONE_FILTER ? "Pedidos concluídos" : "Por pedido"}
+          {screen.filter === DONE_FILTER ? "Pedidos concluídos" : "Por pedido (mercado)"}
         </Text>
       )}
     </View>
@@ -52,41 +55,45 @@ export default function EntregasScreen() {
     <>
       <ListScreen
         data={screen.cards}
-        keyExtractor={(card) => card.delivery.id}
+        keyExtractor={(card) => card.key}
         header={header}
         empty={
           screen.total === 0 ? (
             <EmptyState
               icon={<Ionicons name="cube-outline" size={40} color={colors.primary} />}
               title="Nenhuma entrega ainda."
-              description="Quando você ofertar no Mural, o que precisa entregar aparece aqui."
+              description="Quando você aceitar um pedido em Ofertas, ele aparece aqui, no dia de entrega."
             />
           ) : (
             <EmptyState
               icon={<Ionicons name="calendar-outline" size={40} color={colors.primary} />}
-              title="Nada para entregar neste dia."
-              description="Escolha outro dia acima para ver o que separar."
+              title="Nenhum pedido neste dia."
+              description="Escolha outro dia de entrega acima para ver o que separar."
             />
           )
         }
         renderItem={(card) => (
-          <DeliveryCardView
+          <OrderCardView
             card={card}
-            onWeigh={() => screen.weigh.open(card.delivery.id)}
-            onHandOver={() => screen.handOver.ask(card.delivery.id)}
-            onSimulateReceipt={
-              screen.canSimulateReceipt ? () => screen.weigh.open(card.delivery.id, "MERCADO") : undefined
-            }
+            onWeigh={() => screen.weigh.open(card.key)}
+            onHandOver={() => screen.handOver.ask(card.key)}
+            onSimulateReceipt={screen.canSimulateReceipt ? () => screen.weigh.open(card.key, "MERCADO") : undefined}
           />
         )}
       />
 
       <WeighSheet
         visible={screen.weigh.card !== null}
+        order={screen.weigh.order}
         card={screen.weigh.card}
+        position={screen.weigh.position}
+        isLast={screen.weigh.isLast}
         role={screen.weigh.role}
         onRegister={screen.weigh.register}
         onRemove={screen.weigh.remove}
+        onSelect={screen.weigh.goTo}
+        onPrevious={screen.weigh.previous}
+        onNext={screen.weigh.next}
         onClose={screen.weigh.close}
       />
 
@@ -94,7 +101,7 @@ export default function EntregasScreen() {
         visible={confirm !== null}
         title={confirm?.title ?? ""}
         description={confirm?.description ?? ""}
-        confirmLabel={confirm?.warning ? "Entregar mesmo assim" : "Entregar"}
+        confirmLabel={confirm?.warning ? "Entregar mesmo assim" : "Entregar pedido"}
         cancelLabel="Voltar"
         variant={confirm?.warning ? "danger" : "success"}
         isLoading={screen.handOver.isLoading}

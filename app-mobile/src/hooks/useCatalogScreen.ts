@@ -40,7 +40,7 @@ export function useCatalogScreen() {
       const previous = await data.saveSelection();
       undo.announce({
         title: "Catálogo salvo!",
-        description: "O Mural de Oportunidades foi atualizado.",
+        description: "Os pedidos dos seus produtos chegam em Ofertas.",
         label: "Catálogo salvo",
         revert: () => data.restoreSavedIds(previous),
       });

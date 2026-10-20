@@ -3,11 +3,8 @@ import { WEIGH_ERRORS } from "@/content/deliveryTexts";
 import { keepLocked, scaleStatus } from "@/lib/delivery/scale";
 import { deliveryExpectedKg, totalWeighedKg } from "@/lib/delivery/stage";
 import { judgeWeight, parseKg, roundKg, toleranceFor } from "@/lib/delivery/weight";
-import type { Delivery, WeighingInput, WeighingSource } from "@/types/delivery";
+import type { Delivery, WeigherRole, WeighingInput, WeighingSource } from "@/types/delivery";
 import { useScale } from "./useScale";
-
-// Quem está pesando: o produtor, antes de entregar à logística, ou o mercado, ao receber.
-export type WeigherRole = "PRODUTOR" | "MERCADO";
 
 interface Options {
   visible: boolean;
@@ -27,7 +24,8 @@ export function useWeighSheet({ visible, delivery, role, onRegister }: Options) 
   const [locked, setLocked] = useState(false);
   const scale = useScale(visible && source === "BALANCA");
 
-  // Cada vez que a folha abre, recomeça limpa, com a balança vazia.
+  // Cada vez que a folha abre, ou que se passa para outro produto do pedido, recomeça limpa, com a balança vazia.
+  const deliveryId = delivery?.id ?? null;
   useEffect(() => {
     if (!visible) return;
     setSource("BALANCA");
@@ -35,8 +33,8 @@ export function useWeighSheet({ visible, delivery, role, onRegister }: Options) 
     setError(null);
     setLocked(false);
     scale.simulator?.clear();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- só ao abrir
-  }, [visible]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só ao abrir ou trocar de produto
+  }, [visible, deliveryId]);
 
   useEffect(() => {
     setLocked((current) => keepLocked(current, scale.kg));

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Animated, Easing, StyleSheet, View, useWindowDimensions } from "react-native";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { colors } from "@/theme";
-import { LeafIcon } from "./LeafIcon";
 import { USE_NATIVE_DRIVER } from "./timing";
 import { useReducedMotion } from "./useReducedMotion";
 
@@ -47,7 +47,7 @@ function FallingLeaf({ left, size, duration, delay, height }: (typeof LEAVES)[nu
         },
       ]}
     >
-      <LeafIcon size={size} color={colors.primary} />
+      <BrandMark size={size} color={colors.primary} />
     </Animated.View>
   );
 }

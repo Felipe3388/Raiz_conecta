@@ -1,5 +1,5 @@
 import type { CatalogFilter, CatalogSort } from "@/lib/produtor/catalogView";
-import type { MuralSort, OfferFilter, OfferSort } from "@/lib/produtor/demandView";
+import type { ProposalFilter, ProposalSort } from "@/lib/produtor/proposals";
 
 interface Option<T extends string> {
   value: T;
@@ -19,21 +19,16 @@ export const CATALOG_FILTER_LABELS: Record<CatalogFilter, string> = {
   unselected: "Não selecionados",
 };
 
-export const MURAL_SORT_OPTIONS: Option<MuralSort>[] = [
-  { value: "recent", label: "Mais recentes" },
-  { value: "priceDesc", label: "Maior preço" },
-  { value: "missingDesc", label: "O que mais falta" },
-  { value: "nameAsc", label: "Nome (A a Z)" },
-];
-
-export const OFFER_FILTER_LABELS: Record<OfferFilter, string> = {
-  all: "Todas",
-  open: "Em aberto",
-  closed: "Fechadas",
+export const PROPOSAL_FILTER_LABELS: Record<ProposalFilter, string> = {
+  all: "Todos",
+  pending: "Pendentes",
+  accepted: "Aceitos",
+  closed: "Encerrados",
 };
 
-export const OFFER_SORT_OPTIONS: Option<OfferSort>[] = [
+export const PROPOSAL_SORT_OPTIONS: Option<ProposalSort>[] = [
+  { value: "priority", label: "Pendentes primeiro" },
   { value: "recent", label: "Mais recentes" },
-  { value: "offeredDesc", label: "Maior quantidade que ofertei" },
-  { value: "nameAsc", label: "Nome (A a Z)" },
+  { value: "valueDesc", label: "Maior valor" },
+  { value: "nameAsc", label: "Mercado (A a Z)" },
 ];

@@ -81,8 +81,7 @@ export const MOCK_MARKET: MarketData[] = [
   },
 ];
 
-// Preços que quem entra já tem no catálogo: um que cabe no pedido do Mural (Alface) e um que passa
-// (Tomate), para dar para ver o confronto dos dois casos. Os demais ficam sem preço.
+// Preços que quem entra já tem no catálogo (Tomate e Alface). Os demais ficam sem preço.
 export function seedMyPrices(_email: string): Record<string, number> {
   return { [priceKey("Tomate")]: 46, [priceKey("Alface")]: 3.1 };
 }

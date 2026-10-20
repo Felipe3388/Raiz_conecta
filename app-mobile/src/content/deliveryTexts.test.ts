@@ -2,8 +2,11 @@ import { describeDelivery } from "@/lib/delivery/card";
 import { makeDelivery, weighing } from "@/lib/delivery/fixtures";
 import { DEFAULT_TOLERANCE, judgeWeight } from "@/lib/delivery/weight";
 import { DELIVERY_STAGES } from "@/lib/delivery/stage";
+import { describeOrder } from "@/lib/delivery/orderCard";
+import { groupOrders } from "@/lib/delivery/orders";
 import {
-  handOverText,
+  itemStatus,
+  orderHandOverText,
   pickListTitle,
   SCALE_TEXTS,
   STAGE_INFO,
@@ -37,10 +40,9 @@ describe("textos de entrega", () => {
 });
 
 describe("pickListTitle", () => {
-  it("hoje e amanhã em minúscula, outros dias com a data", () => {
-    expect(pickListTitle("Hoje")).toBe("Separar hoje");
-    expect(pickListTitle("Amanhã")).toBe("Separar amanhã");
-    expect(pickListTitle("seg, 12/10")).toBe("Separar para seg, 12/10");
+  it("hoje em minúscula, outros dias com a data", () => {
+    expect(pickListTitle("Hoje, ter 13/10")).toBe("Separar hoje");
+    expect(pickListTitle("sex, 16/10")).toBe("Separar para sex, 16/10");
   });
 });
 
@@ -61,22 +63,56 @@ describe("verdictSummary", () => {
   });
 });
 
-describe("handOverText", () => {
-  const today = new Date(2026, 9, 8);
+const today = new Date(2026, 9, 13);
+const orderOf = (...deliveries: Parameters<typeof groupOrders>[0]) => describeOrder(groupOrders(deliveries)[0], today);
 
-  it("peso certo: pergunta simples", () => {
-    const card = describeDelivery(makeDelivery({ weighings: [weighing(9.88)] }), today);
+describe("orderHandOverText", () => {
+  it("tudo na faixa: pergunta simples, com o mercado e o peso total", () => {
+    const text = orderHandOverText(
+      orderOf(
+        makeDelivery({ id: "a", weighings: [weighing(9.88)] }),
+        makeDelivery({ id: "b", produto: "Outro", weighings: [weighing(10, "x")] }),
+      ),
+    );
 
-    expect(handOverText(card)).toMatchObject({ title: "Entregar à logística?", warning: false });
-    expect(handOverText(card).description).toContain("9,88 kg");
+    expect(text).toMatchObject({ title: "Entregar o pedido à logística?", warning: false });
+    expect(text.description).toContain("Mercado Teste");
+    expect(text.description).toContain("2 produtos");
+    expect(text.description).toContain("19,88 kg");
   });
 
-  it("peso fora da faixa: avisa a faixa e que o mercado será avisado", () => {
-    const card = describeDelivery(makeDelivery({ weighings: [weighing(6)] }), today);
-    const text = handOverText(card);
+  it("peso fora da faixa: cita os produtos e avisa que o mercado será avisado", () => {
+    const text = orderHandOverText(
+      orderOf(
+        makeDelivery({ id: "a", weighings: [weighing(10)] }),
+        makeDelivery({ id: "b", produto: "Morango", weighings: [weighing(6, "x")] }),
+      ),
+    );
 
     expect(text.warning).toBe(true);
-    expect(text.description).toContain("9,8 kg a 11 kg");
+    expect(text.description).toContain("Morango");
     expect(text.description).toContain("mercado será avisado");
+  });
+});
+
+describe("itemStatus", () => {
+  const card = (overrides: Parameters<typeof makeDelivery>[0] = {}) => describeDelivery(makeDelivery(overrides), today);
+
+  it("sem peso: a pesar", () => {
+    expect(itemStatus(card())).toEqual({ label: "A pesar", tone: "neutral" });
+  });
+
+  it("pesado: o peso, em verde na faixa e em âmbar abaixo dela", () => {
+    expect(itemStatus(card({ weighings: [weighing(10)] }))).toEqual({ label: "10 kg", tone: "success" });
+    expect(itemStatus(card({ weighings: [weighing(6)] }))).toEqual({ label: "6 kg", tone: "warning" });
+  });
+
+  it("entregue à logística e depois recebido", () => {
+    const handed = { weighings: [weighing(10)], handedOverAt: "2026-10-13T12:00:00.000Z" };
+    expect(itemStatus(card(handed))).toEqual({ label: "Entregue · 10 kg", tone: "info" });
+    expect(itemStatus(card({ ...handed, receipt: { kg: 9.9, source: "BALANCA", at: "x" } }))).toEqual({
+      label: "Mercado: 9,9 kg",
+      tone: "success",
+    });
   });
 });

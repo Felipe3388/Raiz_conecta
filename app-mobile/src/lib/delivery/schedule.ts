@@ -36,3 +36,29 @@ const NAMED_DAYS: Record<number, string> = { [-1]: "Ontem", 0: "Hoje", 1: "Amanh
 export function dayLabel(key: string, today: Date): string {
   return NAMED_DAYS[dayOffset(key, today)] ?? weekdayLabel(key);
 }
+
+// Dias da semana em que há entrega (0 = domingo): terça e sexta. Quem define são os adms; por enquanto é fixo aqui,
+// e as regras recebem a lista por parâmetro para ela poder vir do servidor depois.
+export const DELIVERY_WEEKDAYS: number[] = [2, 5];
+
+export function isDeliveryDay(key: string, weekdays: number[] = DELIVERY_WEEKDAYS): boolean {
+  return weekdays.includes(parseDay(key).getDay());
+}
+
+// Os próximos dias de entrega a partir de hoje (hoje conta, se for um deles).
+export function nextDeliveryDays(today: Date, count: number, weekdays: number[] = DELIVERY_WEEKDAYS): string[] {
+  if (weekdays.length === 0) return [];
+  const days: string[] = [];
+  let key = dayKey(today);
+  while (days.length < count) {
+    if (isDeliveryDay(key, weekdays)) days.push(key);
+    key = addDays(key, 1);
+  }
+  return days;
+}
+
+// "Hoje, ter 13/10" ou "sex, 16/10": como o dia de entrega aparece nas abas.
+export function deliveryDayLabel(key: string, today: Date): string {
+  const label = weekdayLabel(key).replace(",", "");
+  return dayOffset(key, today) === 0 ? `Hoje, ${label}` : weekdayLabel(key);
+}

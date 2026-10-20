@@ -9,40 +9,6 @@ export interface CatalogProduct {
   unidadePadrao: string;
 }
 
-export interface Offer {
-  quantidade: number;
-  emailProdutor: string;
-  // Preço por unidade combinado nesta oferta. Ofertas antigas não têm.
-  preco?: number;
-}
-
-export type DemandStatus = "ABERTA" | "CONCLUIDA" | "CANCELADA";
-
-// Pedido de um mercado (GET /api/mercado/demandas). O app não mostra quem pediu.
-export interface Demand {
-  id: string;
-  produto: string;
-  quantidade: number;
-  unidade: string;
-  precoMedio: number | null;
-  status: DemandStatus;
-  ofertas: Offer[];
-  criadoEm: string;
-}
-
-export interface OfferRequest {
-  demandaId: string;
-  quantidade: number;
-  emailProdutor: string;
-  preco?: number;
-}
-
-// Cancelar a oferta que o próprio produtor acabou de fazer (usado no "Desfazer").
-export interface CancelOfferRequest {
-  demandaId: string;
-  emailProdutor: string;
-}
-
 // "Sugerir Novo Produto": campos como a pessoa digitou.
 export interface ProductSuggestion {
   nomeProduto: string;

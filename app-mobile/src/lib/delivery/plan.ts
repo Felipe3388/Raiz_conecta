@@ -1,27 +1,21 @@
 import { normalizeText } from "@/lib/text/normalize";
 import type { Delivery, DeliveryStage } from "@/types/delivery";
-import { addDays, dayKey, dayLabel, dayOffset } from "./schedule";
+import { isOrderDone, isOrderLate, isOrderOpen, type Order } from "./orders";
+import { dayOffset, deliveryDayLabel, nextDeliveryDays } from "./schedule";
 import { deliveryExpectedKg, stageOf, totalWeighedKg } from "./stage";
 import { roundKg } from "./weight";
 
-// Aba das entregas já conferidas pelo mercado (recebidas ou divergentes).
+// Aba dos pedidos já conferidos pelo mercado (recebidos ou divergentes).
 export const DONE_FILTER = "done";
 
-const DONE_STAGES: DeliveryStage[] = ["RECEBIDA", "DIVERGENTE"];
 // Etapas em que ainda cabe ao produtor separar, pesar ou entregar.
 const PRODUCER_STAGES: DeliveryStage[] = ["A_SEPARAR", "PRONTA"];
 
-const isDone = (delivery: Delivery) => DONE_STAGES.includes(stageOf(delivery));
 const isOpenForProducer = (delivery: Delivery) => PRODUCER_STAGES.includes(stageOf(delivery));
 
 // Atrasada: o dia combinado passou e a entrega ainda não saiu das mãos do produtor.
 export function isLate(delivery: Delivery, today: Date): boolean {
   return isOpenForProducer(delivery) && dayOffset(delivery.dueDate, today) < 0;
-}
-
-// O dia em que a entrega aparece: o que ficou para trás e ainda não terminou passa a valer hoje.
-function shownDay(delivery: Delivery, today: Date): string {
-  return dayOffset(delivery.dueDate, today) < 0 ? dayKey(today) : delivery.dueDate;
 }
 
 export interface DayChip {
@@ -30,43 +24,49 @@ export interface DayChip {
   count: number;
 }
 
-// As abas: Hoje e Amanhã sempre, os outros dias só se tiverem entrega, e "Concluídas" no fim.
-export function dayChips(deliveries: Delivery[], today: Date): DayChip[] {
-  const todayKey = dayKey(today);
-  const tomorrowKey = addDays(todayKey, 1);
-  const counts = new Map<string, number>([
-    [todayKey, 0],
-    [tomorrowKey, 0],
-  ]);
+// Quantos dias de entrega aparecem sempre nas abas, mesmo sem pedidos.
+const ALWAYS_SHOWN_DAYS = 2;
+
+// O dia em que o pedido aparece: o que ficou para trás e ainda não terminou passa a valer o próximo dia de entrega.
+function shownDay(order: Order, today: Date): string {
+  return dayOffset(order.dueDate, today) < 0 ? nextDeliveryDays(today, 1)[0] : order.dueDate;
+}
+
+// As abas: os próximos dois dias de entrega sempre (terça e sexta), outros dias só se tiverem pedido, e "Concluídos"
+// no fim.
+export function dayChips(orders: Order[], today: Date): DayChip[] {
+  const counts = new Map<string, number>(nextDeliveryDays(today, ALWAYS_SHOWN_DAYS).map((day) => [day, 0]));
 
   let done = 0;
-  for (const delivery of deliveries) {
-    if (isDone(delivery)) {
+  for (const order of orders) {
+    if (isOrderDone(order)) {
       done += 1;
       continue;
     }
-    const day = shownDay(delivery, today);
+    const day = shownDay(order, today);
     counts.set(day, (counts.get(day) ?? 0) + 1);
   }
 
   const chips = [...counts.entries()]
     .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-    .map(([id, count]) => ({ id, label: dayLabel(id, today), count }));
-  return done > 0 ? [...chips, { id: DONE_FILTER, label: "Concluídas", count: done }] : chips;
+    .map(([id, count]) => ({ id, label: deliveryDayLabel(id, today), count }));
+  return done > 0 ? [...chips, { id: DONE_FILTER, label: "Concluídos", count: done }] : chips;
 }
 
-const byProduct = (a: Delivery, b: Delivery) => {
-  const left = normalizeText(a.produto);
-  const right = normalizeText(b.produto);
+const byMarket = (a: Order, b: Order) => {
+  const left = normalizeText(a.mercado);
+  const right = normalizeText(b.mercado);
   return left < right ? -1 : left > right ? 1 : 0;
 };
 
-// Entregas de uma aba. No dia, as atrasadas vêm primeiro; o resto, por nome do produto.
-export function filterDeliveries(deliveries: Delivery[], filter: string, today: Date): Delivery[] {
-  if (filter === DONE_FILTER) return deliveries.filter(isDone).sort(byProduct);
-  return deliveries
-    .filter((delivery) => !isDone(delivery) && shownDay(delivery, today) === filter)
-    .sort((a, b) => Number(isLate(b, today)) - Number(isLate(a, today)) || byProduct(a, b));
+// Pedidos de uma aba. No dia, os atrasados vêm primeiro; o resto, pelo nome do mercado. Os concluídos, do mais recente.
+export function filterOrders(orders: Order[], filter: string, today: Date): Order[] {
+  if (filter === DONE_FILTER) {
+    return orders.filter(isOrderDone).sort((a, b) => b.dueDate.localeCompare(a.dueDate) || byMarket(a, b));
+  }
+  return orders
+    .filter((order) => !isOrderDone(order) && shownDay(order, today) === filter)
+    .sort((a, b) => Number(isOrderLate(b, today)) - Number(isOrderLate(a, today)) || byMarket(a, b));
 }
 
 export interface PickItem {
@@ -114,7 +114,9 @@ export function buildPickList(deliveries: Delivery[]): PickItem[] {
     });
 }
 
-// Quantas entregas pedem uma ação do produtor hoje (são de hoje ou estão atrasadas): vira o número da aba.
-export function pendingCount(deliveries: Delivery[], today: Date): number {
-  return deliveries.filter((delivery) => isOpenForProducer(delivery) && dayOffset(delivery.dueDate, today) <= 0).length;
+// Quantos pedidos pedem ação do produtor até o próximo dia de entrega (são desse dia ou estão atrasados): vira o
+// número da aba.
+export function pendingCount(orders: Order[], today: Date): number {
+  const [nextDay] = nextDeliveryDays(today, 1);
+  return orders.filter((order) => isOrderOpen(order) && order.dueDate <= nextDay).length;
 }

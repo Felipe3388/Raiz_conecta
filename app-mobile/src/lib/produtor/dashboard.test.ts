@@ -1,127 +1,124 @@
-import type { Demand } from "@/types/produtor";
+import type { Proposal } from "@/types/proposal";
 import { barShare, buildDashboard, chartRows, MIN_BAR_SHARE } from "./dashboard";
 
-const ME = "maria@sitio.com";
+const NOW = new Date("2026-10-13T12:00:00.000Z");
+const inMinutes = (minutes: number) => new Date(NOW.getTime() + minutes * 60_000).toISOString();
 
-function demand(id: string, overrides: Partial<Demand> = {}): Demand {
+interface Line {
+  produto?: string;
+  quantidade?: number;
+  preco?: number;
+  aceita?: number | null;
+}
+
+// Um pedido com um produto só (o suficiente para a maioria dos testes). Num pedido aceito, `aceita` começa igual à
+// quantidade oferecida.
+function proposal(id: string, overrides: Partial<Proposal> & Line = {}): Proposal {
+  const { produto = "Tomate", quantidade = 10, preco = 10, aceita, ...order } = overrides;
+  const status = order.status ?? "ACEITA";
   return {
     id,
-    produto: "Tomate",
-    quantidade: 100,
-    unidade: "Caixas",
-    precoMedio: 10,
-    status: "ABERTA",
-    ofertas: [],
-    criadoEm: "2026-10-01T10:00:00.000Z",
-    ...overrides,
+    numero: 1,
+    mercado: "Mercado Teste",
+    itens: [
+      {
+        id: `${id}-i`,
+        produto,
+        quantidade,
+        unidade: "Kg",
+        preco,
+        aceita: aceita !== undefined ? aceita : status === "ACEITA" ? quantidade : null,
+      },
+    ],
+    entrega: "2026-10-16",
+    status: "ACEITA",
+    recebidaEm: inMinutes(-60),
+    expiraEm: inMinutes(-45),
+    respondidaEm: inMinutes(-50),
+    ...order,
   };
 }
-const mine = (quantidade: number) => ({ emailProdutor: ME, quantidade });
+const pending = (id: string, minutesLeft: number, overrides: Partial<Proposal> & Line = {}) =>
+  proposal(id, { status: "PENDENTE", expiraEm: inMinutes(minutesLeft), respondidaEm: null, ...overrides });
+
+const summarize = (proposals: Proposal[], savedProductCount = 0) =>
+  buildDashboard({ proposals, savedProductCount, now: NOW });
 
 describe("buildDashboard", () => {
   it("sem nada ainda, tudo zerado", () => {
-    expect(buildDashboard({ mural: [], offers: [], email: ME, savedProductCount: 0 })).toEqual({
-      openDemands: 0,
-      offersCount: 0,
+    expect(summarize([])).toEqual({
+      pendingCount: 0,
+      acceptedCount: 0,
       savedProducts: 0,
       estimatedRevenue: 0,
       revenueByProduct: [],
-      opportunities: [],
+      urgent: [],
     });
   });
 
-  it("conta pedidos abertos, ofertas e produtos do catálogo", () => {
-    const summary = buildDashboard({
-      mural: [demand("m1"), demand("m2")],
-      offers: [demand("o1", { ofertas: [mine(10)] })],
-      email: ME,
-      savedProductCount: 5,
-    });
-    expect([summary.openDemands, summary.offersCount, summary.savedProducts]).toEqual([2, 1, 5]);
-  });
-
-  it("receita estimada é a quantidade que a pessoa ofertou vezes o preço médio", () => {
-    const summary = buildDashboard({
-      mural: [],
-      offers: [
-        demand("o1", { precoMedio: 45, ofertas: [{ emailProdutor: "x@y.com", quantidade: 60 }, mine(40)] }),
-        demand("o2", { produto: "Alface", precoMedio: 3.2, ofertas: [mine(30)] }),
+  it("conta pendentes dentro do prazo, aceitas e produtos do catálogo", () => {
+    const summary = summarize(
+      [
+        pending("p1", 10),
+        pending("p2", 5),
+        pending("vencida", -2),
+        proposal("a1"),
+        proposal("r1", { status: "RECUSADA" }),
       ],
-      email: ME,
-      savedProductCount: 0,
-    });
-    expect(summary.estimatedRevenue).toBeCloseTo(40 * 45 + 30 * 3.2, 5);
+      5,
+    );
+    expect([summary.pendingCount, summary.acceptedCount, summary.savedProducts]).toEqual([2, 1, 5]);
   });
 
-  it("usa o preço combinado na negociação no lugar da estimativa do pedido", () => {
-    const summary = buildDashboard({
-      mural: [],
-      offers: [
-        demand("o1", { precoMedio: 45, ofertas: [{ emailProdutor: ME, quantidade: 40, preco: 38 }] }),
-        demand("o2", { produto: "Alface", precoMedio: 3.2, ofertas: [mine(30)] }),
-      ],
-      email: ME,
-      savedProductCount: 0,
-    });
-    expect(summary.estimatedRevenue).toBeCloseTo(40 * 38 + 30 * 3.2, 5);
-    expect(summary.revenueByProduct[0]).toEqual({ produto: "Tomate", revenue: 40 * 38 });
+  it("receita estimada: só as propostas aceitas, quantidade vezes o preço fixo", () => {
+    const summary = summarize([
+      proposal("a1", { quantidade: 40, preco: 4.1 }),
+      proposal("a2", { produto: "Alface", quantidade: 30, preco: 2.69 }),
+      pending("p1", 10, { quantidade: 100, preco: 50 }),
+      proposal("r1", { status: "RECUSADA", quantidade: 100, preco: 50 }),
+    ]);
+    expect(summary.estimatedRevenue).toBeCloseTo(40 * 4.1 + 30 * 2.69, 5);
   });
 
-  it("oferta com preço combinado conta mesmo se o pedido não tem estimativa", () => {
-    const summary = buildDashboard({
-      mural: [],
-      offers: [demand("o1", { precoMedio: null, ofertas: [{ emailProdutor: ME, quantidade: 10, preco: 5 }] })],
-      email: ME,
-      savedProductCount: 0,
-    });
-    expect(summary.estimatedRevenue).toBe(50);
+  it("a receita conta só o que foi aceito: aceitar parte do pedido paga parte", () => {
+    const partial = proposal("a1", { produto: "Alface", quantidade: 30, aceita: 20, preco: 2 });
+    const refused = proposal("r1", { status: "RECUSADA", aceita: 0 });
+    const summary = summarize([partial, refused]);
+    expect(summary.estimatedRevenue).toBe(40);
+    expect(summary.revenueByProduct).toEqual([{ produto: "Alface", revenue: 40 }]);
   });
 
-  it("pedido sem preço não entra na receita", () => {
-    const summary = buildDashboard({
-      mural: [],
-      offers: [demand("o1", { precoMedio: null, ofertas: [mine(40)] })],
-      email: ME,
-      savedProductCount: 0,
-    });
-    expect(summary.estimatedRevenue).toBe(0);
+  it("um pedido com vários produtos soma cada produto aceito", () => {
+    const order = proposal("a1", { produto: "Morango", quantidade: 30, preco: 12 });
+    order.itens.push({ id: "a1-b", produto: "Abacaxi", quantidade: 40, unidade: "Kg", preco: 4, aceita: 0 });
+    order.itens.push({ id: "a1-c", produto: "Alface", quantidade: 10, unidade: "Kg", preco: 2, aceita: 5 });
+    const summary = summarize([order]);
+    expect(summary.estimatedRevenue).toBe(370);
+    expect(summary.revenueByProduct.map((row) => row.produto)).toEqual(["Morango", "Alface"]);
   });
 
   it("agrupa a receita por produto, do maior para o menor", () => {
-    const summary = buildDashboard({
-      mural: [],
-      offers: [
-        demand("o1", { produto: "Tomate", precoMedio: 10, ofertas: [mine(5)] }),
-        demand("o2", { produto: "Banana", precoMedio: 20, ofertas: [mine(10)] }),
-        demand("o3", { produto: "tomate", precoMedio: 10, ofertas: [mine(10)] }),
-      ],
-      email: ME,
-      savedProductCount: 0,
-    });
+    const summary = summarize([
+      proposal("a1", { produto: "Tomate", quantidade: 5, preco: 10 }),
+      proposal("a2", { produto: "Banana", quantidade: 10, preco: 20 }),
+      proposal("a3", { produto: "tomate", quantidade: 5, preco: 10 }),
+    ]);
     expect(summary.revenueByProduct).toEqual([
       { produto: "Banana", revenue: 200 },
-      { produto: "Tomate", revenue: 150 },
+      { produto: "Tomate", revenue: 100 },
     ]);
   });
 
-  it("maiores oportunidades: o que ainda falta vezes o preço, no máximo três", () => {
-    const summary = buildDashboard({
-      mural: [
-        demand("m1", { quantidade: 100, precoMedio: 10 }),
-        demand("m2", { quantidade: 100, precoMedio: 50, ofertas: [{ emailProdutor: "x@y.com", quantidade: 90 }] }),
-        demand("m3", { quantidade: 10, precoMedio: 100 }),
-        demand("m4", { quantidade: 200, precoMedio: 20 }),
-        demand("m5", { quantidade: 50, precoMedio: null }),
-      ],
-      offers: [],
-      email: ME,
-      savedProductCount: 0,
-    });
-    expect(summary.opportunities.map((o) => [o.demand.id, o.value])).toEqual([
-      ["m4", 4000],
-      ["m1", 1000],
-      ["m3", 1000],
+  it("as mais urgentes são as pendentes com o prazo mais curto, no máximo três", () => {
+    const summary = summarize([
+      pending("p1", 12),
+      pending("p2", 3),
+      pending("p3", 8),
+      pending("p4", 14),
+      pending("vencida", -1),
+      proposal("a1"),
     ]);
+    expect(summary.urgent.map((item) => item.id)).toEqual(["p2", "p3", "p1"]);
   });
 });
 

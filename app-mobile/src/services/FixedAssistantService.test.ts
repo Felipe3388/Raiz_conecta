@@ -12,10 +12,10 @@ describe("FixedAssistantService", () => {
 
   it("a saudação muda conforme a tela", async () => {
     const service = new FixedAssistantService();
-    const mural = (await service.greeting("mural")).map((m) => m.text).join(" ");
+    const painel = (await service.greeting("painel")).map((m) => m.text).join(" ");
     const ofertas = (await service.greeting("ofertas")).map((m) => m.text).join(" ");
 
-    expect(mural).not.toBe(ofertas);
+    expect(painel).not.toBe(ofertas);
   });
 
   it("sugere primeiro as perguntas da tela e respeita o limite", async () => {
@@ -27,9 +27,9 @@ describe("FixedAssistantService", () => {
 
   it("não sugere de novo o que já foi perguntado", async () => {
     const service = new FixedAssistantService();
-    const [first] = await service.suggestions("mural", [], 1);
+    const [first] = await service.suggestions("ofertas", [], 1);
 
-    const next = await service.suggestions("mural", [first.id]);
+    const next = await service.suggestions("ofertas", [first.id]);
 
     expect(next.some((s) => s.id === first.id)).toBe(false);
   });
@@ -53,7 +53,7 @@ describe("FixedAssistantService", () => {
     const service = new FixedAssistantService();
     const a = await service.reply(HELP_TOPICS[0].id);
     const b = await service.reply(HELP_TOPICS[0].id);
-    const greeting = await service.greeting("mural");
+    const greeting = await service.greeting("ofertas");
 
     const ids = [a.id, b.id, ...greeting.map((m) => m.id)];
     expect(new Set(ids).size).toBe(ids.length);

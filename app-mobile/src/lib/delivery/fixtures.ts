@@ -4,7 +4,8 @@ import type { Delivery, Weighing } from "@/types/delivery";
 export function makeDelivery(overrides: Partial<Delivery> = {}): Delivery {
   return {
     id: "d-1",
-    demandaId: "d-1",
+    propostaId: "d-1",
+    mercado: "Mercado Teste",
     produto: "Cenoura",
     unidade: "Kg",
     quantidade: 10,

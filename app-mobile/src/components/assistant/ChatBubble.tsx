@@ -1,5 +1,5 @@
-import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, View } from "react-native";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { Reveal } from "@/components/motion/Reveal";
 import type { ChatMessage } from "@/types/assistant";
 import { colors, radius, spacing, typography } from "@/theme";
@@ -11,7 +11,7 @@ export function ChatBubble({ message }: { message: ChatMessage }) {
     <Reveal offset={8} style={[styles.row, isUser && styles.rowUser]}>
       {!isUser && (
         <View style={styles.avatar}>
-          <Ionicons name="leaf" size={16} color={colors.primaryText} />
+          <BrandMark size={18} color={colors.primaryText} />
         </View>
       )}
       <View style={[styles.bubble, isUser ? styles.user : styles.bot]}>
@@ -33,7 +33,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryTint,
   },
   bubble: { maxWidth: "82%", paddingVertical: spacing.sm + 4, paddingHorizontal: spacing.md, borderRadius: radius.lg },
-  bot: { backgroundColor: colors.surfaceMuted, borderWidth: 1, borderColor: colors.borderMid, borderBottomLeftRadius: 4 },
+  bot: {
+    backgroundColor: colors.surfaceMuted,
+    borderWidth: 1,
+    borderColor: colors.borderMid,
+    borderBottomLeftRadius: 4,
+  },
   user: { backgroundColor: colors.primary, borderBottomRightRadius: 4 },
   text: { ...typography.body, color: colors.text },
   userText: { color: colors.primaryContrast },

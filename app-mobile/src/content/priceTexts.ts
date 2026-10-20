@@ -28,8 +28,3 @@ export function changeLabel(change: number | null): string {
   if (percent === 0) return "0%";
   return `${percent > 0 ? "+" : "-"}${Math.abs(percent)}%`;
 }
-
-// Como o preço do mercado confronta o do produtor, na frase mostrada no pedido.
-export const FIT_WITHIN_TEXT = "O mercado paga o que você pede.";
-export const FIT_ABOVE_TEXT = "O mercado paga menos do que você pede: vamos negociar o preço.";
-export const FIT_NONE_TEXT = "Defina o seu preço para negociar com o mercado.";

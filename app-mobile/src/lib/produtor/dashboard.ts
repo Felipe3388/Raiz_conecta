@@ -1,61 +1,56 @@
 import { normalizeText } from "@/lib/text/normalize";
-import type { Demand } from "@/types/produtor";
-import { findOffer, remainingQuantity } from "./demands";
+import type { Proposal } from "@/types/proposal";
+import { acceptedItems, acceptedTotal, effectiveStatus, sortProposals } from "./proposals";
 
-const MAX_OPPORTUNITIES = 3;
-
-export interface Opportunity {
-  demand: Demand;
-  // Quanto ainda falta vezes o preço médio: o tamanho do negócio que está aberto.
-  value: number;
-}
+const MAX_URGENT = 3;
 
 export interface DashboardSummary {
-  openDemands: number;
-  offersCount: number;
+  // Propostas esperando resposta dentro do prazo e propostas aceitas (planejadas para entregar).
+  pendingCount: number;
+  acceptedCount: number;
   savedProducts: number;
   estimatedRevenue: number;
   revenueByProduct: { produto: string; revenue: number }[];
-  opportunities: Opportunity[];
+  // As pendentes com o prazo mais curto: o que responder primeiro.
+  urgent: Proposal[];
 }
 
 interface DashboardInput {
-  mural: Demand[];
-  offers: Demand[];
-  email: string;
+  proposals: Proposal[];
   savedProductCount: number;
+  now: Date;
 }
 
-const price = (demand: Demand) => demand.precoMedio ?? 0;
-
-// Resumo do painel, calculado só com o que o app já carregou (nada de endpoint novo).
-export function buildDashboard({ mural, offers, email, savedProductCount }: DashboardInput): DashboardSummary {
+// Resumo do painel, calculado só com o que o app já carregou (nada de endpoint novo). A receita vem do que foi
+// aceito em cada pedido: o preço é fixo, então a conta é quantidade aceita vezes preço.
+export function buildDashboard({ proposals, savedProductCount, now }: DashboardInput): DashboardSummary {
   const revenueByKey = new Map<string, { produto: string; revenue: number }>();
   let estimatedRevenue = 0;
+  const accepted = proposals.filter((proposal) => proposal.status === "ACEITA");
 
-  for (const demand of offers) {
-    const mine = findOffer(demand, email);
-    // O preço combinado na negociação vale mais que a estimativa do pedido.
-    const revenue = (mine?.quantidade ?? 0) * (mine?.preco ?? price(demand));
-    estimatedRevenue += revenue;
+  for (const proposal of accepted) {
+    estimatedRevenue += acceptedTotal(proposal);
 
-    const key = normalizeText(demand.produto);
-    const current = revenueByKey.get(key);
-    revenueByKey.set(key, { produto: current?.produto ?? demand.produto, revenue: (current?.revenue ?? 0) + revenue });
+    for (const item of acceptedItems(proposal)) {
+      const revenue = (item.aceita ?? 0) * item.preco;
+      const key = normalizeText(item.produto);
+      const current = revenueByKey.get(key);
+      revenueByKey.set(key, {
+        produto: current?.produto ?? item.produto,
+        revenue: (current?.revenue ?? 0) + revenue,
+      });
+    }
   }
 
-  const opportunities = mural
-    .map((demand) => ({ demand, value: remainingQuantity(demand) * price(demand) }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, MAX_OPPORTUNITIES);
+  const pending = proposals.filter((proposal) => effectiveStatus(proposal, now) === "PENDENTE");
 
   return {
-    openDemands: mural.length,
-    offersCount: offers.length,
+    pendingCount: pending.length,
+    acceptedCount: accepted.length,
     savedProducts: savedProductCount,
     estimatedRevenue,
     revenueByProduct: [...revenueByKey.values()].sort((a, b) => b.revenue - a.revenue),
-    opportunities,
+    urgent: sortProposals(pending, "priority", now).slice(0, MAX_URGENT),
   };
 }
 

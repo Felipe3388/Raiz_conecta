@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/Button";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { Input } from "@/components/ui/Input";
 import { SCALE_TEXTS, VERDICT_TONES, verdictSummary, type StageTone } from "@/content/deliveryTexts";
-import { useWeighSheet, type WeigherRole } from "@/hooks/useWeighSheet";
+import { useWeighSheet } from "@/hooks/useWeighSheet";
 import type { DeliveryCard } from "@/lib/delivery/card";
+import type { OrderCard } from "@/lib/delivery/orderCard";
 import type { ScaleStatusKey } from "@/lib/delivery/scale";
 import { formatKg, formatPercent } from "@/lib/format/weight";
 import { colors, radius, spacing, typography } from "@/theme";
-import type { WeighingInput, WeighingSource } from "@/types/delivery";
+import type { WeigherRole, WeighingInput, WeighingSource } from "@/types/delivery";
+import { OrderItemRow } from "./OrderItemRow";
 import { ScaleSimulatorPanel } from "./ScaleSimulatorPanel";
 import { TONE_COLORS } from "./tones";
 import { WeightGauge } from "./WeightGauge";
@@ -32,16 +34,37 @@ const STATUS_TONES: Record<ScaleStatusKey, StageTone> = {
 
 interface WeighSheetProps {
   visible: boolean;
+  // O pedido que está sendo pesado e o produto da vez.
+  order: OrderCard | null;
   card: DeliveryCard | null;
+  // A posição do produto da vez no pedido (a partir de 0) e se ele é o último.
+  position: number;
+  isLast: boolean;
   role: WeigherRole;
   onRegister: (input: WeighingInput) => Promise<void>;
   onRemove: (weighingId: string) => void;
+  onSelect: (deliveryId: string) => void;
+  onPrevious: () => void;
+  onNext: () => void;
   onClose: () => void;
 }
 
-// Folha de pesagem. O produtor pesa em lotes (balança ou digitando) até chegar ao peso do pedido;
-// o mercado pesa a entrega inteira ao receber.
-export function WeighSheet({ visible, card, role, onRegister, onRemove, onClose }: WeighSheetProps) {
+// Folha de pesagem de um pedido, produto por produto. O produtor pesa cada um em lotes (balança ou digitando) até chegar
+// ao peso pedido e passa ao próximo; o mercado pesa cada produto inteiro ao receber.
+export function WeighSheet({
+  visible,
+  order,
+  card,
+  position,
+  isLast,
+  role,
+  onRegister,
+  onRemove,
+  onSelect,
+  onPrevious,
+  onNext,
+  onClose,
+}: WeighSheetProps) {
   const sheet = useWeighSheet({ visible, delivery: card?.delivery ?? null, role, onRegister });
   const isProducer = role === "PRODUTOR";
   const delivery = card?.delivery;
@@ -51,6 +74,8 @@ export function WeighSheet({ visible, card, role, onRegister, onRemove, onClose 
   const missing = Math.max(0, sheet.expectedKg - sheet.projectedKg);
 
   const registerLabel = sheet.candidate !== null ? `Registrar ${formatKg(sheet.candidate)}` : "Registrar peso";
+  const total = order?.itemCount ?? 1;
+  const inRange = card?.weighing.verdict === "NA_FAIXA";
 
   return (
     <BottomSheet
@@ -58,11 +83,7 @@ export function WeighSheet({ visible, card, role, onRegister, onRemove, onClose 
       onClose={onClose}
       icon="scale-outline"
       title={isProducer ? `Pesar ${delivery?.produto ?? ""}` : `Pesagem do mercado: ${delivery?.produto ?? ""}`}
-      subtitle={
-        card
-          ? `Esperado ${formatKg(sheet.expectedKg)} · aceita de ${formatKg(range.minKg)} a ${formatKg(range.maxKg)}`
-          : undefined
-      }
+      subtitle={card ? `${order?.mercado ?? ""} · produto ${position + 1} de ${total}` : undefined}
       footer={
         <View style={styles.footer}>
           <Button
@@ -71,7 +92,24 @@ export function WeighSheet({ visible, card, role, onRegister, onRemove, onClose 
             disabled={sheet.candidate === null}
             onPress={sheet.register}
           />
-          {isProducer && <Button label="Concluir" variant="ghost" onPress={onClose} />}
+          {isProducer ? (
+            <View style={styles.steps}>
+              {position > 0 && (
+                <View style={styles.step}>
+                  <Button label="Anterior" variant="ghost" onPress={onPrevious} />
+                </View>
+              )}
+              <View style={styles.step}>
+                <Button
+                  label={isLast ? "Concluir pesagem" : "Próximo produto"}
+                  variant={inRange ? "outline" : "ghost"}
+                  onPress={onNext}
+                />
+              </View>
+            </View>
+          ) : (
+            <Button label="Fechar" variant="ghost" onPress={onClose} />
+          )}
         </View>
       }
     >
@@ -81,6 +119,23 @@ export function WeighSheet({ visible, card, role, onRegister, onRemove, onClose 
           keyboardDismissMode="on-drag"
           contentContainerStyle={styles.body}
         >
+          {order && order.itemCount > 1 && (
+            <View style={styles.order}>
+              <Text style={styles.orderTitle}>Produtos do pedido</Text>
+              {order.items.map((item) => (
+                <PressableScale
+                  key={item.delivery.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Ir para ${item.delivery.produto}`}
+                  disabled={item.delivery.id === delivery.id}
+                  onPress={() => onSelect(item.delivery.id)}
+                >
+                  <OrderItemRow card={item} current={item.delivery.id === delivery.id} />
+                </PressableScale>
+              ))}
+            </View>
+          )}
+
           <FilterChips value={sheet.source} onChange={sheet.changeSource} options={SOURCE_OPTIONS} />
 
           {sheet.source === "BALANCA" ? (
@@ -120,6 +175,9 @@ export function WeighSheet({ visible, card, role, onRegister, onRemove, onClose 
           )}
 
           <View style={[styles.summary, { backgroundColor: tone.soft, borderColor: tone.border }]}>
+            <Text style={styles.expected}>
+              Esperado {formatKg(sheet.expectedKg)} · aceita de {formatKg(range.minKg)} a {formatKg(range.maxKg)}
+            </Text>
             <WeightGauge
               range={range}
               expectedKg={sheet.expectedKg}
@@ -187,6 +245,10 @@ export function WeighSheet({ visible, card, role, onRegister, onRemove, onClose 
 const styles = StyleSheet.create({
   body: { gap: spacing.md, padding: spacing.md },
   footer: { gap: spacing.xs },
+  steps: { flexDirection: "row", gap: spacing.sm },
+  step: { flex: 1 },
+  order: { gap: spacing.xs + 2 },
+  orderTitle: { ...typography.label, color: colors.textStrong },
   scale: {
     alignItems: "center",
     gap: spacing.xs,
@@ -201,6 +263,7 @@ const styles = StyleSheet.create({
   status: { flexDirection: "row", alignItems: "center", gap: 6 },
   statusText: { ...typography.hint, fontWeight: "700", flexShrink: 1 },
   summary: { gap: spacing.sm, padding: spacing.md, borderWidth: 1, borderRadius: radius.md },
+  expected: { ...typography.hint, fontWeight: "700", color: colors.textStrong },
   sumRow: { flexDirection: "row", justifyContent: "space-between", gap: spacing.sm },
   sumLabel: { ...typography.body, color: colors.textMuted },
   sumValue: { ...typography.body, fontWeight: "700", color: colors.text },

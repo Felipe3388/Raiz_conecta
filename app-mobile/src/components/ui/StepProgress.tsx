@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Animated, Easing, StyleSheet, Text, View } from "react-native";
-import { LeafIcon } from "@/components/motion/LeafIcon";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { useReducedMotion } from "@/components/motion/useReducedMotion";
 import { colors, radius, spacing, typography } from "@/theme";
 
@@ -39,12 +39,9 @@ export function StepProgress({ step, total }: { step: number; total: number }) {
           style={[styles.fill, { width: fraction.interpolate({ inputRange: [0, 1], outputRange: ["0%", "100%"] }) }]}
         />
         <Animated.View
-          style={[
-            styles.leaf,
-            { left: fraction.interpolate({ inputRange: [0, 1], outputRange: ["0%", "100%"] }) },
-          ]}
+          style={[styles.leaf, { left: fraction.interpolate({ inputRange: [0, 1], outputRange: ["0%", "100%"] }) }]}
         >
-          <LeafIcon size={LEAF_SIZE} color={colors.primaryPressed} />
+          <BrandMark size={LEAF_SIZE} color={colors.primaryPressed} />
         </Animated.View>
       </View>
     </View>

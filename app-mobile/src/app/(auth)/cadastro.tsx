@@ -33,7 +33,7 @@ export default function CadastroScreen() {
 
   return (
     <FormScreen animated={false}>
-      <BrandHeader />
+      <BrandHeader framed={false} />
       <Reveal delay={next()}>
         <StepProgress step={1} total={2} />
       </Reveal>

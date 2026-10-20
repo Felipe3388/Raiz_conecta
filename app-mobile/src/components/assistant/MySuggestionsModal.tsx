@@ -1,3 +1,4 @@
+import { BrandMark } from "@/components/brand/BrandMark";
 import { Ionicons } from "@expo/vector-icons";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SuggestionItem } from "@/components/produtor/SuggestionItem";
@@ -42,10 +43,12 @@ export function MySuggestionsModal({ visible, onClose, onSuggest }: MySuggestion
       {status === "ready" && items.length === 0 && (
         <View style={styles.center}>
           <View style={styles.emptyIcon}>
-            <Ionicons name="leaf-outline" size={32} color={colors.primary} />
+            <BrandMark size={34} color={colors.primary} />
           </View>
           <Text style={styles.emptyTitle}>Você ainda não sugeriu nenhum produto</Text>
-          <Text style={styles.message}>Não achou o que planta no catálogo? Envie uma sugestão e nossa equipe avalia.</Text>
+          <Text style={styles.message}>
+            Não achou o que planta no catálogo? Envie uma sugestão e nossa equipe avalia.
+          </Text>
         </View>
       )}
 

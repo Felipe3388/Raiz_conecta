@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
-import { LeafIcon } from "@/components/motion/LeafIcon";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { colors, radius, spacing } from "@/theme";
 
 // Logo compacta do topo das telas logadas, como o cabeçalho do site.
@@ -7,7 +7,7 @@ export function HeaderBrand() {
   return (
     <View style={styles.row} accessibilityRole="header">
       <View style={styles.tile}>
-        <LeafIcon size={22} color={colors.primary} />
+        <BrandMark size={24} color={colors.primary} />
       </View>
       <Text style={styles.wordmark}>
         Raiz<Text style={styles.accent}>Conecta</Text>

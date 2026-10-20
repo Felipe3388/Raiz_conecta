@@ -15,42 +15,49 @@ export const HELP_TOPICS: HelpTopic[] = [
     id: "visao-geral",
     question: "O que eu posso fazer no Raiz Conecta?",
     answer:
-      "O Raiz Conecta liga você a mercados da sua região. Aqui você escolhe o que produz (Catálogo), vê os pedidos dos mercados (Mural), diz quanto vai enviar (Ofertar), acompanha seus negócios (Ofertas), separa e pesa o que vai entregar (Entregas) e vê o resumo no Painel, pelo botão Início.",
+      "O Raiz Conecta liga você a mercados da sua região. Aqui você escolhe o que produz (Catálogo), recebe e responde os pedidos dos mercados (Ofertas), separa e pesa os pedidos nos dias de entrega (Entregas) e vê o resumo no Painel, pelo botão Início.",
     screens: ["painel", "ofertas", "entregas", "perfil", "configuracoes"],
   },
   {
     id: "como-comecar",
     question: "Por onde eu começo?",
     answer:
-      "Comece pelo Catálogo: marque os produtos que você planta e toque em Salvar Escolhas. Depois abra o Mural, onde aparecem os pedidos desses produtos.",
-    screens: ["mural", "catalogo", "painel"],
+      "Comece pelo Catálogo: marque os produtos que você planta e toque em Salvar Escolhas. Depois abra Ofertas, onde chegam os pedidos dos mercados para esses produtos.",
+    screens: ["ofertas", "catalogo", "painel"],
   },
   {
-    id: "mural-vazio",
-    question: "Por que meu Mural está vazio ou escondido?",
+    id: "ofertas-vazio",
+    question: "Por que não chegam pedidos?",
     answer:
-      "O Mural só mostra pedidos dos produtos que você salvou no Catálogo. Se ele está escondido, abra o Catálogo, marque o que você produz e toque em Salvar Escolhas. Se não há pedidos, volte mais tarde ou marque mais produtos.",
-    screens: ["mural", "painel"],
+      "Os pedidos chegam quando um mercado pede um dos produtos do seu Catálogo. Abra o Catálogo, marque o que você produz e toque em Salvar Escolhas. Se já fez isso, volte mais tarde: os pedidos vão chegando conforme os mercados compram.",
+    screens: ["ofertas", "painel"],
   },
   {
-    id: "como-ofertar",
-    question: "Como faço uma oferta?",
+    id: "responder-proposta",
+    question: "Como respondo a um pedido?",
     answer:
-      "No Mural, escolha o pedido, use + e − (ou digite) para dizer quanto vai enviar e toque em Ofertar. Você não pode oferecer mais do que ainda falta no pedido.",
-    screens: ["mural", "ofertas", "painel"],
+      "Em Ofertas, os pedidos aparecem agrupados por mercado: toque no mercado para abrir a lista. Um mercado pode ter um ou vários pedidos, e cada pedido mostra os produtos, o preço fixo e o dia da entrega. Escolha quanto você aceita de cada produto, ou toque em Aceitar tudo, e confirme em Confirmar quantidades. Para não aceitar nada, toque em Recusar pedido. O preço não muda: ele é definido pela equipe da Raiz.",
+    screens: ["ofertas", "painel"],
   },
   {
-    id: "onde-ofertas",
-    question: "Onde vejo o que já ofertei?",
+    id: "filtros-ofertas",
+    question: "Como acho um pedido?",
     answer:
-      "Na aba Ofertas ficam todos os pedidos em que você garantiu uma quantidade. Use Todas, Em aberto e Fechadas para achar o que procura.",
-    screens: ["mural", "ofertas", "painel"],
+      "Use a busca (produto ou mercado) e os filtros Todos, Pendentes, Aceitos e Encerrados. O botão Ordenar põe em ordem. O que você aceitou fica planejado em Entregas.",
+    screens: ["ofertas", "painel"],
+  },
+  {
+    id: "tempo-proposta",
+    question: "E se o tempo do pedido acabar?",
+    answer:
+      "Cada pedido vale por 30 minutos, já contando o tempo de o aviso chegar até você. Sem resposta no prazo, o pedido vira Expirado e segue para outro produtor. O mesmo acontece se você recusar. Por isso responda logo que o pedido chegar; o contador mostra quanto tempo resta.",
+    screens: ["ofertas", "painel"],
   },
   {
     id: "salvar-catalogo",
     question: "Marquei produtos e nada mudou. E agora?",
     answer:
-      "As escolhas só valem depois de tocar em Salvar Escolhas, na barra que aparece embaixo da tela. Depois de salvar, o Mural é atualizado.",
+      "As escolhas só valem depois de tocar em Salvar Escolhas, na barra que aparece embaixo da tela. Depois de salvar, os pedidos dos seus produtos passam a chegar em Ofertas.",
     screens: ["catalogo"],
   },
   {
@@ -112,35 +119,35 @@ export const HELP_TOPICS: HelpTopic[] = [
     question: "Como escondo ou mostro este botão?",
     answer:
       "Abra o botão e toque em Esconder botão: ele fica na lateral da tela. Para ele voltar, toque na abinha que ficou na lateral.",
-    screens: ["mural", "catalogo", "ofertas", "entregas", "painel", "perfil", "configuracoes", "simulador"],
+    screens: ["catalogo", "ofertas", "entregas", "painel", "perfil", "configuracoes"],
   },
   {
     id: "mover-botao",
     question: "Posso mudar o botão de lugar?",
     answer:
       "Pode. Segure o botão verde e arraste para onde quiser; ao soltar, ele gruda na lateral mais próxima. Se você o esconder, ele fica só com uma abinha na lateral, e ainda dá para arrastar a abinha para outro ponto.",
-    screens: ["mural", "catalogo", "ofertas", "entregas", "painel", "perfil", "configuracoes", "simulador"],
+    screens: ["catalogo", "ofertas", "entregas", "painel", "perfil", "configuracoes"],
   },
   {
     id: "desfazer",
     question: "Fiz algo sem querer. Como desfaço?",
     answer:
-      "Logo depois de salvar o catálogo, definir um preço, ofertar, sugerir um produto ou mudar o perfil, aparece um aviso com o botão Desfazer. Se ele já sumiu, abra o botão verde e toque em Desfazer ação recente: você tem um minuto para voltar atrás.",
-    screens: ["mural", "catalogo", "ofertas", "entregas", "painel", "perfil", "configuracoes"],
+      "Logo depois de salvar o catálogo, definir um preço, sugerir um produto ou mudar o perfil, aparece um aviso com o botão Desfazer. Se ele já sumiu, abra o botão verde e toque em Desfazer ação recente: você tem um minuto para voltar atrás.",
+    screens: ["catalogo", "ofertas", "entregas", "painel", "perfil", "configuracoes"],
   },
   {
     id: "preco-ofertado",
     question: "Como defino o preço dos meus produtos?",
     answer:
-      "No Catálogo, marque o produto e toque no lápis com o preço (ou em Definir preço). Esse é o preço que você pede. A média sugerida que aparece ali é só uma referência da plataforma, não muda o seu preço.",
-    screens: ["catalogo", "mural"],
+      "No Catálogo, marque o produto e toque no lápis com o preço (ou em Definir preço). É o preço que você sugere: ele ajuda a equipe a montar os pedidos, mas não muda o preço dos pedidos, que é fixo. A média que aparece ali é só uma referência.",
+    screens: ["catalogo", "ofertas"],
   },
   {
-    id: "negociar-preco",
-    question: "Como funciona a negociação do preço?",
+    id: "como-funciona-preco",
+    question: "Como funciona o preço dos pedidos?",
     answer:
-      "O mercado faz uma proposta de cada vez, começando baixo, e você só aceita ou recusa. Ao recusar, há uma pausa curta e a próxima chega mais alta, até o seu preço ou o máximo do pedido. Na pausa, toque em Mudei de ideia para aceitar a que recusou. Cada resposta ajuda a média sugerida.",
-    screens: ["mural", "catalogo", "painel"],
+      "Cada pedido de mercado chega a um produtor por vez, com preço fixo e 30 minutos para responder. Você pode aceitar só uma parte de cada produto: o resto segue para outro produtor, e outros produtores completam o pedido. Se você recusar, ou o tempo acabar, o pedido inteiro segue para outro produtor. Você não negocia o valor, mas o preço que sugere no Catálogo ajuda a equipe a ajustá-lo.",
+    screens: ["ofertas", "catalogo", "painel"],
   },
   {
     id: "preco-vendas-painel",
@@ -153,7 +160,14 @@ export const HELP_TOPICS: HelpTopic[] = [
     id: "como-entregar",
     question: "Como funcionam as entregas?",
     answer:
-      "Cada oferta vira uma entrega, com um dia marcado. Na aba Entregas você vê o que separar no dia e, pedido por pedido, pesa o produto. Com o peso certo, toque em Entregar à logística. Quando o mercado recebe, ele pesa de novo para conferir.",
+      "Cada produto que você aceita entra no pedido do mercado, com entrega às terças e sextas. Em Entregas você vê o total a separar no dia e, em cada pedido, pesa os produtos um a um. Com tudo pesado, toque em Entregar pedido à logística; o mercado confere o peso ao receber.",
+    screens: ["entregas", "ofertas", "painel"],
+  },
+  {
+    id: "dias-entrega",
+    question: "Em que dias eu entrego?",
+    answer:
+      "A equipe define dois dias de entrega por semana; por enquanto são terça e sexta. Você tem até o dia para separar e pesar o pedido. As abas de dia, em Entregas, mostram o que separar em cada um, e o número na aba avisa quantos pedidos esperam você.",
     screens: ["entregas", "ofertas", "painel"],
   },
   {
@@ -167,7 +181,7 @@ export const HELP_TOPICS: HelpTopic[] = [
     id: "usar-balanca",
     question: "Como uso a balança?",
     answer:
-      "Em Pesar, deixe a opção Usar balança e ponha o produto nela. Quando o peso parar de oscilar, toque em Registrar. Se o pedido for grande, pese em vários lotes: eles se somam. Sem balança, escolha Digitar peso.",
+      "Toque em Pesar pedido. A tela mostra um produto de cada vez: ponha-o na balança e, quando o peso parar de oscilar, toque em Registrar; depois, em Próximo produto. Pedidos grandes podem ser pesados em lotes, que se somam. Sem balança, escolha Digitar peso.",
     screens: ["entregas"],
   },
   {
@@ -175,7 +189,7 @@ export const HELP_TOPICS: HelpTopic[] = [
     question: "Para que serve o botão Início?",
     answer:
       "O botão redondo no meio da barra leva ao Painel, o resumo da sua atividade. Ele é a primeira tela de toda vez que você entra no app.",
-    screens: ["painel", "mural", "catalogo", "ofertas", "entregas"],
+    screens: ["painel", "catalogo", "ofertas", "entregas"],
   },
 ];
 

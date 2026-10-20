@@ -23,7 +23,6 @@ export function useSettingsScreen() {
     openPrivacy: () => setOpenDocument("privacy"),
     closeDocument: () => setOpenDocument(null),
     goToProfile: () => router.push("/perfil"),
-    openPriceSimulator: () => router.push("/simulador-preco"),
     contactSupport,
     signOut,
     version: Constants.expoConfig?.version ?? "1.0.0",

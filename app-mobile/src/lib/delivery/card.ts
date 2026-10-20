@@ -25,8 +25,8 @@ export interface DeliveryCard {
   weighing: WeightJudgement;
   receipt: WeightJudgement | null;
   actions: DeliveryAction[];
-  // Quanto vale: o pedido inteiro ainda não conferido, ou o peso que o mercado mediu (valueConfirmed).
-  value: number | null;
+  // Quanto vale: a entrega inteira ainda não conferida, ou o peso que o mercado mediu (valueConfirmed).
+  value: number;
   valueConfirmed: boolean;
   // Foi entregue à logística com o peso fora da faixa.
   sentOutOfRange: boolean;
@@ -36,12 +36,9 @@ export interface DeliveryCard {
 export function describeDelivery(delivery: Delivery, today: Date): DeliveryCard {
   const receipt = receiptJudgement(delivery);
   const confirmed = delivery.receipt !== null;
-  const value =
-    delivery.preco === null
-      ? null
-      : confirmed
-        ? valueForKg(delivery.receipt?.kg ?? 0, delivery.unidade, delivery.preco)
-        : Math.round(delivery.quantidade * delivery.preco * 100) / 100;
+  const value = confirmed
+    ? valueForKg(delivery.receipt?.kg ?? 0, delivery.unidade, delivery.preco)
+    : Math.round(delivery.quantidade * delivery.preco * 100) / 100;
 
   return {
     delivery,

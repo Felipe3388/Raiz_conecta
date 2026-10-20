@@ -19,7 +19,7 @@ export function AssistantHost() {
     suggest: () => open("suggest"),
     mySuggestions: () => open("mySuggestions"),
     goCatalog: () => router.navigate("/catalogo"),
-    goMural: () => router.navigate("/mural"),
+    goOffers: () => router.navigate("/ofertas"),
     undo: () => open("undo"),
   };
 

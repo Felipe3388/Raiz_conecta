@@ -1,37 +1,28 @@
 import { fabActionsFor, hasTabBar, screenFromPath, type ScreenId } from "./fabActions";
 
-const SCREENS: ScreenId[] = [
-  "mural",
-  "catalogo",
-  "ofertas",
-  "entregas",
-  "painel",
-  "perfil",
-  "configuracoes",
-  "simulador",
-];
+const SCREENS: ScreenId[] = ["catalogo", "ofertas", "entregas", "painel", "perfil", "configuracoes"];
 
 describe("screenFromPath", () => {
   it.each([
-    ["/mural", "mural"],
     ["/catalogo", "catalogo"],
     ["/ofertas", "ofertas"],
     ["/entregas", "entregas"],
     ["/painel", "painel"],
     ["/perfil", "perfil"],
     ["/configuracoes", "configuracoes"],
-    ["/simulador-preco", "simulador"],
+    ["/mural", "ofertas"],
+    ["/simulador-preco", "ofertas"],
     ["/catalogo/", "catalogo"],
-    ["/", "mural"],
-    ["/qualquer-coisa", "mural"],
+    ["/", "ofertas"],
+    ["/qualquer-coisa", "ofertas"],
   ])("%p é a tela %p", (path, screen) => {
     expect(screenFromPath(path)).toBe(screen);
   });
 });
 
 describe("hasTabBar", () => {
-  it("as quatro abas e o Painel (botão Início) têm barra inferior", () => {
-    expect(SCREENS.filter(hasTabBar)).toEqual(["mural", "catalogo", "ofertas", "entregas", "painel"]);
+  it("as três abas e o Painel (botão Início) têm barra inferior", () => {
+    expect(SCREENS.filter(hasTabBar)).toEqual(["catalogo", "ofertas", "entregas", "painel"]);
   });
 });
 
@@ -46,14 +37,14 @@ describe("fabActionsFor", () => {
     expect(ids).toEqual(["suggest", "mySuggestions", "help"]);
   });
 
-  it("mural leva ao catálogo; ofertas e painel levam ao mural", () => {
-    expect(fabActionsFor("mural").map((a) => a.id)).toContain("goCatalog");
-    expect(fabActionsFor("ofertas").map((a) => a.id)).toContain("goMural");
-    expect(fabActionsFor("painel").map((a) => a.id)).toContain("goMural");
+  it("ofertas leva ao catálogo; entregas e painel levam às ofertas", () => {
+    expect(fabActionsFor("ofertas").map((a) => a.id)).toContain("goCatalog");
+    expect(fabActionsFor("entregas").map((a) => a.id)).toContain("goOffers");
+    expect(fabActionsFor("painel").map((a) => a.id)).toContain("goOffers");
   });
 
   it("não oferece ir para a própria tela", () => {
-    expect(fabActionsFor("mural").map((a) => a.id)).not.toContain("goMural");
+    expect(fabActionsFor("ofertas").map((a) => a.id)).not.toContain("goOffers");
     expect(fabActionsFor("catalogo").map((a) => a.id)).not.toContain("goCatalog");
   });
 

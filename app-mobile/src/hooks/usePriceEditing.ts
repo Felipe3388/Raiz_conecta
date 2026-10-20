@@ -7,8 +7,6 @@ import { useUndo } from "./useUndo";
 export interface PriceTarget {
   produto: string;
   unidade?: string;
-  // Quanto o pedido paga, quando a edição começa por um pedido do Mural.
-  marketPrice?: number | null;
 }
 
 // Controller de "definir o meu preço": guarda qual produto está sendo editado, salva e deixa desfazer.

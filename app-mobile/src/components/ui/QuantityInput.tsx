@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import { StyleSheet, TextInput, View } from "react-native";
 import { PressableScale } from "@/components/motion/PressableScale";
 import { useHoldRepeat } from "@/hooks/useHoldRepeat";
-import { clampQuantity } from "@/lib/produtor/demands";
+import { clampQuantity } from "@/lib/produtor/quantity";
 import { heldValue } from "@/lib/produtor/holdRepeat";
 import { colors, radius, spacing } from "@/theme";
 
