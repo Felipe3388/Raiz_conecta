@@ -6,6 +6,18 @@ import jwt from "jsonwebtoken";
 const JWT_SECRET =
   process.env.JWT_SECRET || "chave-secreta-super-segura-raiz-conecta"; // top descriçoes
 
+// Definição dos headers padrão de CORS para desenvolvimento local
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*", // Em produção, mude para seu domínio correto se preferir
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
+// 1. Função OPTIONS essencial para responder à verificação prévia (Preflight) do navegador
+export async function OPTIONS() {
+  return NextResponse.json({}, { status: 200, headers: corsHeaders });
+}
+
 export async function POST(req: Request) {
   try {
     const { email, senha } = await req.json();
@@ -13,7 +25,7 @@ export async function POST(req: Request) {
     if (!email || !senha) {
       return NextResponse.json(
         { error: "E-mail e senha são obrigatórios." },
-        { status: 400 },
+        { status: 400, headers: corsHeaders },
       );
     }
 
@@ -25,7 +37,7 @@ export async function POST(req: Request) {
     if (!usuario) {
       return NextResponse.json(
         { error: "E-mail ou senha incorretos." },
-        { status: 401 },
+        { status: 401, headers: corsHeaders },
       );
     }
 
@@ -35,7 +47,7 @@ export async function POST(req: Request) {
     if (!senhaValida) {
       return NextResponse.json(
         { error: "E-mail ou senha incorretos." },
-        { status: 401 },
+        { status: 401, headers: corsHeaders },
       );
     }
 
@@ -46,7 +58,7 @@ export async function POST(req: Request) {
           error:
             "Sua conta foi suspensa ou rejeitada. Entre em contato com o suporte.",
         },
-        { status: 403 },
+        { status: 403, headers: corsHeaders },
       );
     }
 
@@ -76,7 +88,7 @@ export async function POST(req: Request) {
       { expiresIn: "2h" },
     );
 
-    // 6. Monta a resposta
+    // 6. Monta a resposta incluindo os headers de CORS
     const response = NextResponse.json(
       {
         message: "Login realizado com sucesso!",
@@ -88,7 +100,7 @@ export async function POST(req: Request) {
           status: usuario.status,
         },
       },
-      { status: 200 },
+      { status: 200, headers: corsHeaders },
     );
 
     // 7. Salva o token nos Cookies para o Middleware funcionar
@@ -104,7 +116,7 @@ export async function POST(req: Request) {
     console.error("Erro na API de Login:", error);
     return NextResponse.json(
       { error: "Erro interno no servidor." },
-      { status: 500 },
+      { status: 500, headers: corsHeaders },
     );
   }
 }
