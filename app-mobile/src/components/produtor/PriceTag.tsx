@@ -46,6 +46,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   tagEmpty: { borderStyle: "dashed", borderColor: colors.borderStrong },
-  text: { fontSize: 14, fontWeight: "800", color: colors.warningDarkest },
+  text: { fontSize: 14, fontWeight: "700", color: colors.warningDarkest },
   textEmpty: { color: colors.textMuted, fontWeight: "700" },
 });

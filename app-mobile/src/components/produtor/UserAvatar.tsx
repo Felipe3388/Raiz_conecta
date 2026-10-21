@@ -30,5 +30,5 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.primaryBorder,
   },
-  text: { fontWeight: "900", color: colors.primaryText },
+  text: { fontWeight: "700", color: colors.primaryText },
 });

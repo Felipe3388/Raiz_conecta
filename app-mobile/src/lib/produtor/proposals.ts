@@ -149,6 +149,19 @@ export function proposalCounts(proposals: Proposal[], now: Date): Record<Proposa
   };
 }
 
+// O produtor só vê, em cada pedido, os produtos que ele vende (os do catálogo dele). Um mercado que pediu 3 produtos
+// aparece com 1 só, se esse é o único que o produtor vende; o pedido que não tem nenhum dos produtos dele some.
+// O que o produtor já aceitou continua na lista, mesmo que ele tenha tirado o produto do catálogo depois, porque é um
+// compromisso de entrega. É o servidor que decide a quem cada pedido vai; esta regra deixa o app coerente com o catálogo.
+export function onlyMyProducts(proposals: Proposal[], productNames: string[]): Proposal[] {
+  const sold = new Set(productNames.map(normalizeText));
+  return proposals.flatMap((proposal) => {
+    const itens = proposal.itens.filter((item) => sold.has(normalizeText(item.produto)) || (item.aceita ?? 0) > 0);
+    if (itens.length === 0) return [];
+    return [itens.length === proposal.itens.length ? proposal : { ...proposal, itens }];
+  });
+}
+
 // Busca por um dos produtos do pedido, pelo mercado ou pelo número do pedido.
 export function searchProposals(proposals: Proposal[], query: string): Proposal[] {
   return proposals.filter(

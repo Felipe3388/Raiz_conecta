@@ -59,7 +59,7 @@ export function Input({
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor={colors.textSubtle}
+          placeholderTextColor={colors.placeholder}
           secureTextEntry={isHidden}
           editable={editable}
           keyboardType={keyboardType}
@@ -92,22 +92,22 @@ export function Input({
 
 const styles = StyleSheet.create({
   field: { gap: spacing.xs },
-  label: { ...typography.label, color: colors.text },
+  label: { ...typography.hint, fontWeight: "600", color: colors.textStrong },
   box: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
     paddingHorizontal: spacing.md,
-    minHeight: 56,
+    minHeight: 52,
     backgroundColor: colors.surface,
-    borderColor: colors.borderStrong,
-    borderWidth: 1.5,
+    borderColor: colors.borderMid,
+    borderWidth: 1,
     borderRadius: radius.md,
   },
-  boxFocused: { borderColor: colors.primary },
+  boxFocused: { borderColor: colors.primary, borderWidth: 2 },
   boxMultiline: { alignItems: "flex-start", paddingVertical: spacing.sm + 4 },
   boxDisabled: { opacity: 0.6 },
-  boxError: { borderColor: colors.danger },
+  boxError: { borderColor: colors.danger, borderWidth: 2 },
   // outlineWidth remove o contorno padrão do navegador; o foco é indicado pela borda do campo.
   input: { ...typography.input, flex: 1, color: colors.text, outlineWidth: 0 },
   inputMultiline: { minHeight: 88, textAlignVertical: "top" },

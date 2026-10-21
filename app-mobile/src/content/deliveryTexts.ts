@@ -21,7 +21,7 @@ export const STAGE_INFO: Record<DeliveryStage, StageInfo> = {
     label: "A separar",
     tone: "warning",
     icon: "basket-outline",
-    hint: "Separe os produtos do pedido e pese um a um na balança.",
+    hint: "Separe os produtos do pedido e use Iniciar pesagem, no topo da tela.",
   },
   PRONTA: {
     label: "Pronta",
@@ -139,4 +139,61 @@ export function itemStatus(card: DeliveryCard): ItemStatus {
   if (card.delivery.handedOverAt) return { label: `Entregue · ${formatKg(card.weighedKg)}`, tone: "info" };
   if (card.weighedKg > 0) return { label: formatKg(card.weighedKg), tone: VERDICT_TONES[card.weighing.verdict] };
   return { label: "A pesar", tone: "neutral" };
+}
+
+// Configurações > Pesagem: o modo rápido (automático) ou o manual (por pedido).
+export const WEIGH_MODE_TEXTS = {
+  label: "Pesagem automática (modo rápido)",
+  autoOn: "Ligada: ao pesar, o app passa ao próximo produto sozinho assim que o peso estabiliza.",
+  autoOff: "Desligada: você registra cada produto e confirma cada pedido antes de seguir.",
+  hint: "Muda como funciona o botão Iniciar pesagem, em Entregas.",
+  voiceLabel: "Voz na pesagem",
+  voiceOn: "Ligada: o celular fala o mercado e o que pesar a cada produto.",
+  voiceOff: "Desligada: a pesagem fica em silêncio.",
+} as const;
+
+// A sessão de pesagem ("Iniciar pesagem").
+export const RUN_TEXTS = {
+  start: "Iniciar pesagem",
+  title: "Pesagem",
+  close: "Fechar pesagem",
+  startAuto: "Modo rápido: o app registra e passa ao próximo produto sozinho quando o peso estabiliza.",
+  startManual: "Modo manual: você registra cada produto e confirma cada pedido. Mude em Mais > Configurações.",
+  nothing: "Tudo pesado. Entregue os pedidos à logística quando ela chegar.",
+  autoNote: "Modo rápido",
+  manualNote: "Modo manual",
+  market: "Mercado",
+  weigh: (kg: string) => `Pese ${kg}`,
+  range: (min: string, max: string) => `Aceita de ${min} a ${max}`,
+  locked: "Peso registrado. Tire o produto da balança.",
+  register: "Registrar peso",
+  next: "Próximo produto",
+  finishOrder: "Concluir pedido",
+  previous: "Produto anterior",
+  typeWeight: "Digitar peso",
+  useScale: "Usar balança",
+  mute: "Desligar a voz",
+  unmute: "Ligar a voz",
+  confirmTitle: "Confirmar pedido",
+  confirmHint: "Confira os pesos. Depois de confirmar, o app passa ao próximo pedido.",
+  confirm: "Confirmar pedido",
+  confirmLast: "Confirmar e concluir",
+  review: "Voltar e revisar",
+  // Pausa entre um pedido e o seguinte.
+  betweenTitle: (mercado: string) => `Pedido de ${mercado} pronto`,
+  betweenDone: (order: number, orders: number) => `Pedido ${order} de ${orders} concluído`,
+  betweenNext: "Próximo pedido",
+  betweenProducts: (count: number) => `${count} ${count === 1 ? "produto" : "produtos"} para pesar`,
+  betweenCountdown: (seconds: number) => `Começa em ${seconds} s`,
+  betweenHint: "Prepare os próximos produtos. Se não der agora, deixe este pedido para depois.",
+  startNow: "Pesar agora",
+  later: "Deixar para depois",
+  skippedNote: (count: number) =>
+    `${count} ${count === 1 ? "pedido ficou" : "pedidos ficaram"} para depois, continua em Entregas.`,
+} as const;
+
+// "Pedido 1 de 3 · Produto 2 de 4": onde a pessoa está na sessão.
+export function runProgressLabel(position: { order: number; orders: number; item: number; items: number }): string {
+  const order = position.orders > 1 ? `Pedido ${position.order} de ${position.orders} · ` : "";
+  return `${order}Produto ${position.item} de ${position.items}`;
 }

@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
-import { colors, radius, spacing, typography } from "@/theme";
+import { colors, elevation, radius, spacing, typography } from "@/theme";
 import { Button } from "./Button";
 
 interface ConfirmModalProps {
@@ -75,12 +75,13 @@ const styles = StyleSheet.create({
     gap: spacing.sm + 4,
     padding: spacing.lg,
     backgroundColor: colors.surface,
-    borderRadius: radius.lg + 4,
+    borderRadius: radius.xl,
+    boxShadow: elevation.raised,
   },
   icon: { padding: spacing.md, borderRadius: radius.full },
   iconSuccess: { backgroundColor: colors.primarySoft },
   iconDanger: { backgroundColor: colors.dangerSoft },
   title: { ...typography.heading, color: colors.text, textAlign: "center" },
-  description: { ...typography.body, color: colors.textMuted, textAlign: "center", lineHeight: 23 },
+  description: { ...typography.body, color: colors.textMuted, textAlign: "center" },
   actions: { alignSelf: "stretch", gap: spacing.xs, marginTop: spacing.sm },
 });

@@ -89,6 +89,6 @@ const styles = StyleSheet.create({
   referenceRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.sm },
   referenceText: { gap: 2 },
   referenceLabel: { ...typography.hint, fontWeight: "700", color: colors.textMuted },
-  referenceValue: { fontSize: 20, fontWeight: "900", color: colors.warningDarkest },
+  referenceValue: { fontSize: 20, fontWeight: "700", color: colors.warningDarkest },
   referenceNote: { ...typography.hint, color: colors.textMuted },
 });

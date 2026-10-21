@@ -28,12 +28,13 @@ export function FormScreen({
 }) {
   return (
     <Screen edges={edges}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={styles.flex}
-      >
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.flex}>
         <ScrollView
-          contentContainerStyle={[styles.scrollContent, centered && styles.centered, { paddingBottom: spacing.lg + bottomSpace }]}
+          contentContainerStyle={[
+            styles.scrollContent,
+            centered && styles.centered,
+            { paddingBottom: spacing.lg + bottomSpace },
+          ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >

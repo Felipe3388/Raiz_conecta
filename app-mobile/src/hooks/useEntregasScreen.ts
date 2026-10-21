@@ -2,10 +2,12 @@ import { useMemo, useState } from "react";
 import { describeOrder, type OrderCard } from "@/lib/delivery/orderCard";
 import { firstItemToWeigh, nextItemToWeigh, previousItem } from "@/lib/delivery/orderFlow";
 import { buildPickList, dayChips, DONE_FILTER, filterOrders } from "@/lib/delivery/plan";
+import { filterByStatus, statusOptions, type StatusFilter } from "@/lib/delivery/statusFilter";
 import { judgeWeight, toleranceFor } from "@/lib/delivery/weight";
 import { formatKg } from "@/lib/format/weight";
 import type { WeigherRole, WeighingInput } from "@/types/delivery";
 import { useDeliveries } from "./useDeliveries";
+import { useWeighRun } from "./useWeighRun";
 import { useToast } from "./useToast";
 
 // A pesagem em andamento: de qual pedido, quem pesa e em qual produto do pedido está.
@@ -15,12 +17,13 @@ interface WeighSession {
   itemId: string;
 }
 
-// Controller da aba Entregas: o dia escolhido, o que separar no total, os pedidos de cada mercado e as janelas de
-// pesar (produto a produto) e de entregar o pedido à logística.
+// Controller da aba Entregas: o dia escolhido, o que separar no total, os pedidos de cada mercado, a sessão de pesagem
+// (Iniciar pesagem), a janela para ajustar a pesagem de um pedido e a de entregar o pedido à logística.
 export function useEntregasScreen() {
   const data = useDeliveries();
   const toast = useToast();
   const [chosenDay, setChosenDay] = useState<string | null>(null);
+  const [status, setStatus] = useState<StatusFilter>("all");
   const [session, setSession] = useState<WeighSession | null>(null);
   const [handOverKey, setHandOverKey] = useState<string | null>(null);
   const [isHandingOver, setIsHandingOver] = useState(false);
@@ -32,12 +35,18 @@ export function useEntregasScreen() {
   const filter = chosenDay !== null && chips.some((chip) => chip.id === chosenDay) ? chosenDay : chips[0].id;
 
   const visible = useMemo(() => filterOrders(data.orders, filter, today), [data.orders, filter, today]);
-  const cards = useMemo(() => visible.map((order) => describeOrder(order, today)), [visible, today]);
+  // Todos os pedidos do dia; o filtro de situação (falta pesar, para a logística) só muda o que a lista mostra.
+  const dayCards = useMemo(() => visible.map((order) => describeOrder(order, today)), [visible, today]);
+  const cards = useMemo(() => filterByStatus(dayCards, status), [dayCards, status]);
+  const statuses = useMemo(() => statusOptions(dayCards), [dayCards]);
   // O total a separar no dia, somando os pedidos de todos os mercados.
   const pickList = useMemo(
     () => (filter === DONE_FILTER ? [] : buildPickList(visible.flatMap((order) => order.items))),
     [visible, filter],
   );
+
+  // A sessão "Iniciar pesagem" pesa os pedidos do dia escolhido, um produto por vez.
+  const run = useWeighRun({ cards: dayCards });
 
   const cardByKey = (key: string | null): OrderCard | null => {
     const order = key === null ? undefined : data.orders.find((item) => item.key === key);
@@ -133,9 +142,15 @@ export function useEntregasScreen() {
     filter,
     chooseDay: setChosenDay,
     cards,
+    // Quantos pedidos tem o dia, antes do filtro de situação.
+    dayTotal: dayCards.length,
+    statuses,
+    situation: status,
+    chooseSituation: setStatus,
     pickList,
     total: data.deliveries.length,
     canSimulateReceipt: data.canSimulateReceipt,
+    run,
     // A janela de pesar: o pedido, o produto da vez (sempre a versão mais nova) e quem está pesando.
     weigh: {
       order: sessionOrder,

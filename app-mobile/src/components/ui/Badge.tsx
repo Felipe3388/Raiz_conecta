@@ -39,5 +39,5 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
   },
   dot: { width: 7, height: 7, borderRadius: radius.full },
-  label: { fontSize: 12, fontWeight: "800", textTransform: "uppercase", letterSpacing: 0.5 },
+  label: { fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
 });

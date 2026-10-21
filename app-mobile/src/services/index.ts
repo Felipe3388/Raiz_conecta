@@ -27,6 +27,8 @@ import type { ProfileGateway } from "./ProfileGateway";
 import type { RegistrationGateway } from "./RegistrationGateway";
 import { RegistrationService } from "./RegistrationService";
 import type { ScaleGateway } from "./ScaleGateway";
+import type { ScaleLinkGateway } from "./ScaleLinkGateway";
+import { MockScaleLinkService } from "./MockScaleLinkService";
 
 // Composição: cada serviço é criado uma vez e escolhido entre real e simulado conforme o .env.
 let authService: AuthGateway | null = null;
@@ -38,6 +40,7 @@ let profileService: ProfileGateway | null = null;
 let pricingService: PricingGateway | null = null;
 let deliveryService: DeliveryGateway | null = null;
 let scaleService: ScaleGateway | null = null;
+let scaleLinkService: ScaleLinkGateway | null = null;
 let assistantService: AssistantGateway | null = null;
 
 export function getAuthService(): AuthGateway {
@@ -102,6 +105,12 @@ export function getScaleService(): ScaleGateway {
   return scaleService;
 }
 
+// O vínculo da balança com o produtor (chave do par produtor + balança). Hoje é simulado.
+export function getScaleLinkService(): ScaleLinkGateway {
+  scaleLinkService ??= new MockScaleLinkService();
+  return scaleLinkService;
+}
+
 // Ajuda: respostas fixas, sem rede. Um chatbot de verdade entra aqui no futuro.
 export function getAssistantService(): AssistantGateway {
   assistantService ??= new FixedAssistantService();
@@ -117,5 +126,6 @@ export type { DeliveryGateway } from "./DeliveryGateway";
 export type { PriceResponse, PricingGateway } from "./PricingGateway";
 export type { ProfileGateway } from "./ProfileGateway";
 export type { ProposalGateway } from "./ProposalGateway";
+export type { ScaleLinkGateway } from "./ScaleLinkGateway";
 export type { RegistrationGateway } from "./RegistrationGateway";
 export type { ScaleConnection, ScaleGateway, ScaleReading, ScaleSimulator } from "./ScaleGateway";

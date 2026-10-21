@@ -22,7 +22,7 @@ import {
   selectedCount,
   selectionTotal,
 } from "@/lib/produtor/proposals";
-import { colors, radius, spacing, typography } from "@/theme";
+import { elevation, colors, radius, spacing, typography } from "@/theme";
 import type { Proposal, ProposalQuantities } from "@/types/proposal";
 import { OrderItemRow } from "./OrderItemRow";
 
@@ -148,17 +148,16 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.md,
     backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
+    boxShadow: elevation.card,
     borderRadius: radius.lg,
   },
   blockAccepted: { borderColor: colors.primaryBorder, backgroundColor: colors.primarySoft },
   blockPending: { borderColor: colors.warningBorder },
   top: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   titleBlock: { flex: 1, gap: 2 },
-  title: { fontSize: 18, fontWeight: "900", color: colors.text },
+  title: { fontSize: 18, fontWeight: "700", color: colors.text },
   metaItem: { flexDirection: "row", alignItems: "center", gap: 6 },
-  metaText: { ...typography.hint, fontWeight: "800", color: colors.textStrong, flexShrink: 1 },
+  metaText: { ...typography.hint, fontWeight: "700", color: colors.textStrong, flexShrink: 1 },
   items: { gap: spacing.sm },
   footer: { gap: spacing.sm, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.border },
   countdown: {
@@ -178,7 +177,7 @@ const styles = StyleSheet.create({
   countdownTextUrgent: { color: colors.dangerText },
   totalRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.sm },
   totalLabel: { ...typography.label, color: colors.textStrong, flexShrink: 1 },
-  total: { fontSize: 20, fontWeight: "900", color: colors.primaryPressed },
+  total: { fontSize: 20, fontWeight: "700", color: colors.primaryPressed },
   note: { ...typography.hint, color: colors.textMuted },
   noteAccepted: { ...typography.hint, fontWeight: "700", color: colors.primaryText },
   actions: { flexDirection: "row", gap: spacing.sm },

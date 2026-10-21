@@ -71,7 +71,14 @@ const styles = StyleSheet.create({
     borderTopColor: colors.warningBorder,
     boxShadow: "0px -3px 10px rgba(0, 0, 0, 0.1)",
   },
-  row: { flexDirection: "row", alignItems: "center", gap: spacing.md, width: "100%", maxWidth: 720, alignSelf: "center" },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    width: "100%",
+    maxWidth: 720,
+    alignSelf: "center",
+  },
   count: { ...typography.label, flex: 1, color: colors.warningText },
   button: { flexShrink: 0 },
 });

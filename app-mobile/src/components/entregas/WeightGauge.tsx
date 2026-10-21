@@ -95,5 +95,5 @@ const styles = StyleSheet.create({
   },
   legend: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", columnGap: spacing.sm },
   legendText: { ...typography.caption, color: colors.textMuted },
-  legendStrong: { fontWeight: "800", color: colors.textStrong },
+  legendStrong: { fontWeight: "700", color: colors.textStrong },
 });

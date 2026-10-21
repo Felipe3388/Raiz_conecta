@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { BrandMark } from "@/components/brand/BrandMark";
 import { PressableScale } from "@/components/motion/PressableScale";
 import { splitTabs, visibleTabs } from "@/lib/produtor/tabs";
-import { colors, radius, typography } from "@/theme";
+import { colors, elevation, radius, typography } from "@/theme";
 import {
   HOME_BUTTON_RAISE,
   HOME_BUTTON_SIZE,
@@ -38,7 +38,7 @@ export function ProducerTabBar({ state, descriptors, navigation, insets }: TabBa
     if (!route) return null;
     const options = descriptors[route.key].options;
     const focused = focusedName === name;
-    const color = focused ? colors.primary : colors.textSubtle;
+    const color = focused ? colors.primary : colors.textMuted;
     const title = options.title ?? name;
     const badge = options.tabBarBadge;
 
@@ -82,7 +82,7 @@ export function ProducerTabBar({ state, descriptors, navigation, insets }: TabBa
             <Text
               numberOfLines={1}
               maxFontSizeMultiplier={TAB_LABEL_MAX_FONT_SCALE}
-              style={[styles.label, { color: homeFocused ? colors.primary : colors.textSubtle }]}
+              style={[styles.label, { color: homeFocused ? colors.primary : colors.textMuted }]}
             >
               {HOME_LABEL}
             </Text>
@@ -119,8 +119,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     paddingTop: 6,
     backgroundColor: colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: colors.borderMid,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.borderStrong,
   },
   row: {
     flex: 1,
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
   },
   half: { flex: 1, flexDirection: "row", alignItems: "flex-start" },
   tab: { flex: 1, alignItems: "center", gap: 2, paddingTop: 4, paddingBottom: 2 },
-  label: { ...typography.caption, fontSize: 13, fontWeight: "700" },
+  label: { ...typography.caption, fontSize: 12, lineHeight: 16, fontWeight: "600" },
   homeSlot: { width: HOME_SLOT_WIDTH, alignSelf: "stretch", alignItems: "center", justifyContent: "flex-end" },
   badge: {
     position: "absolute",
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     backgroundColor: colors.danger,
   },
-  badgeText: { fontSize: 11, fontWeight: "800", color: colors.primaryContrast },
+  badgeText: { fontSize: 11, fontWeight: "700", color: colors.primaryContrast },
   // Linha no topo, centralizada: o botão fica no meio da largura, um pouco acima da barra.
   homeWrap: { position: "absolute", top: 0, left: 0, right: 0, alignItems: "center", pointerEvents: "box-none" },
   home: {
@@ -155,9 +155,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.full,
-    borderWidth: 4,
-    boxShadow: "0px 4px 14px rgba(22, 101, 52, 0.35)",
+    borderWidth: 3,
+    boxShadow: elevation.raised,
   },
-  homeOn: { backgroundColor: colors.primary, borderColor: colors.primaryTint },
-  homeOff: { backgroundColor: colors.surface, borderColor: colors.primary },
+  homeOn: { backgroundColor: colors.primary, borderColor: colors.surface },
+  homeOff: { backgroundColor: colors.surface, borderColor: colors.surface },
 });

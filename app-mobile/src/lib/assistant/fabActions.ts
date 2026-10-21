@@ -1,11 +1,11 @@
 import type { IconName } from "@/types/icon";
 
-export type ScreenId = "catalogo" | "ofertas" | "entregas" | "painel" | "perfil" | "configuracoes";
+export type ScreenId = "catalogo" | "ofertas" | "entregas" | "painel" | "mais" | "perfil" | "configuracoes" | "balanca";
 
-const TAB_SCREENS: ScreenId[] = ["catalogo", "ofertas", "entregas", "painel"];
+const TAB_SCREENS: ScreenId[] = ["catalogo", "ofertas", "entregas", "painel", "mais"];
 // Primeiro pedaço da rota (ex.: "catalogo") -> tela. A maioria tem o mesmo nome; o resto está listado aqui.
 const SCREEN_BY_SEGMENT: Record<string, ScreenId> = Object.fromEntries(
-  [...TAB_SCREENS, "perfil", "configuracoes"].map((screen) => [screen, screen as ScreenId]),
+  [...TAB_SCREENS, "perfil", "configuracoes", "balanca"].map((screen) => [screen, screen as ScreenId]),
 );
 
 // Rota do Expo Router (ex.: "/catalogo") -> tela. O que não for conhecido cai em Ofertas.
@@ -14,7 +14,7 @@ export function screenFromPath(pathname: string): ScreenId {
   return (first !== undefined && SCREEN_BY_SEGMENT[first]) || "ofertas";
 }
 
-// Só as telas da barra inferior (as três abas e o Painel, no botão Início) a mostram; as outras abrem por cima.
+// Só as telas da barra inferior (as quatro abas e o Painel, no botão Início) a mostram; as outras abrem por cima.
 export function hasTabBar(screen: ScreenId): boolean {
   return TAB_SCREENS.includes(screen);
 }
@@ -42,8 +42,10 @@ const ACTIONS_BY_SCREEN: Record<ScreenId, FabActionId[]> = {
   ofertas: ["goCatalog", "help"],
   entregas: ["goOffers", "help"],
   painel: ["goOffers", "help"],
+  mais: ["help"],
   perfil: ["help"],
   configuracoes: ["help"],
+  balanca: ["help"],
 };
 
 // `canUndo`: há uma ação recente que ainda dá para desfazer. A opção aparece em qualquer tela, antes da Ajuda.

@@ -10,10 +10,12 @@ const NOT_UNDERSTOOD = "Não entendi essa pergunta. Escolha uma das opções aba
 const WHERE_YOU_ARE: Record<ScreenId, string> = {
   catalogo: "Você está no Catálogo, onde marca o que produz.",
   ofertas: "Você está em Ofertas, com os pedidos dos mercados: escolha quanto aceita de cada produto.",
-  entregas: "Você está em Entregas, onde separa e pesa os pedidos de terça e sexta.",
+  entregas: "Você está em Entregas, onde separa e pesa os pedidos de terça e sexta (Iniciar pesagem).",
   painel: "Você está no Painel, o início do app, com o resumo da sua atividade.",
+  mais: "Você está em Mais, com perfil, balança, configurações, privacidade e ajuda.",
   perfil: "Você está em Meu Perfil, com os dados da sua conta.",
-  configuracoes: "Você está em Configurações.",
+  configuracoes: "Você está em Configurações, com a acessibilidade e o modo de pesagem.",
+  balanca: "Você está em Balança, onde conecta a balança ao celular em 2 passos.",
 };
 
 export class FixedAssistantService implements AssistantGateway {

@@ -16,12 +16,7 @@ interface AttachmentFieldProps {
 const DOCUMENT_HINT =
   "Coloque o documento sobre uma mesa, com boa luz, e tire a foto sem cortar as bordas. Tamanho máximo: 5 MB.";
 
-export function AttachmentField({
-  attachment,
-  title,
-  hint = DOCUMENT_HINT,
-  onPick,
-}: AttachmentFieldProps) {
+export function AttachmentField({ attachment, title, hint = DOCUMENT_HINT, onPick }: AttachmentFieldProps) {
   return (
     <View style={[styles.box, attachment && styles.boxFilled]}>
       {attachment ? (

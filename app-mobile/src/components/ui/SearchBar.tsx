@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
-import { colors, radius, spacing, typography } from "@/theme";
+import { colors, elevation, radius, spacing, typography } from "@/theme";
 
 interface SearchBarProps {
   value: string;
@@ -12,8 +12,8 @@ interface SearchBarProps {
 }
 
 const ACCENTS = {
-  green: { focus: colors.primary, rest: colors.borderStrong },
-  amber: { focus: colors.warning, rest: colors.warningBorder },
+  green: { focus: colors.primary, rest: "transparent" },
+  amber: { focus: colors.warningStrong, rest: "transparent" },
 };
 
 export function SearchBar({ value, onChangeText, placeholder = "Buscar...", accent = "green" }: SearchBarProps) {
@@ -28,7 +28,7 @@ export function SearchBar({ value, onChangeText, placeholder = "Buscar...", acce
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={colors.textSubtle}
+        placeholderTextColor={colors.placeholder}
         autoCorrect={false}
         returnKeyType="search"
         onFocus={() => setIsFocused(true)}
@@ -55,10 +55,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.sm,
     paddingHorizontal: spacing.md,
-    minHeight: 52,
+    minHeight: 48,
     backgroundColor: colors.surface,
-    borderWidth: 1.5,
+    borderWidth: 2,
     borderRadius: radius.md,
+    boxShadow: elevation.card,
   },
   input: { ...typography.input, flex: 1, color: colors.text, outlineWidth: 0 },
 });

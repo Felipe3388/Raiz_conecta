@@ -52,5 +52,5 @@ const styles = StyleSheet.create({
   text: { flex: 1, gap: 2 },
   product: { ...typography.label, color: colors.text },
   detail: { ...typography.hint, color: colors.warningText },
-  time: { ...typography.hint, fontWeight: "800", color: colors.warningDark },
+  time: { ...typography.hint, fontWeight: "700", color: colors.warningDark },
 });

@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/motion/PressableScale";
-import { colors, radius, spacing, typography } from "@/theme";
+import { colors, elevation, radius, spacing, typography } from "@/theme";
 import type { IconName } from "@/types/icon";
 
 interface StatTileProps {
@@ -38,10 +38,9 @@ const styles = StyleSheet.create({
     padding: spacing.md - 2,
     borderRadius: radius.lg,
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderStrong,
+    boxShadow: elevation.card,
   },
-  icon: { alignSelf: "flex-start", padding: 8, borderRadius: radius.full, backgroundColor: colors.primaryTint },
-  value: { fontSize: 30, lineHeight: 36, fontWeight: "900", color: colors.text },
-  label: { ...typography.caption, fontWeight: "700", color: colors.textMuted },
+  icon: { alignSelf: "flex-start", padding: 8, borderRadius: radius.md - 4, backgroundColor: colors.primaryTint },
+  value: { ...typography.title, ...typography.numeric, color: colors.text },
+  label: { ...typography.hint, fontWeight: "600", color: colors.textMuted },
 });

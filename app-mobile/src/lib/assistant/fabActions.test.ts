@@ -1,6 +1,6 @@
 import { fabActionsFor, hasTabBar, screenFromPath, type ScreenId } from "./fabActions";
 
-const SCREENS: ScreenId[] = ["catalogo", "ofertas", "entregas", "painel", "perfil", "configuracoes"];
+const SCREENS: ScreenId[] = ["catalogo", "ofertas", "entregas", "painel", "mais", "perfil", "configuracoes", "balanca"];
 
 describe("screenFromPath", () => {
   it.each([
@@ -22,7 +22,7 @@ describe("screenFromPath", () => {
 
 describe("hasTabBar", () => {
   it("as três abas e o Painel (botão Início) têm barra inferior", () => {
-    expect(SCREENS.filter(hasTabBar)).toEqual(["catalogo", "ofertas", "entregas", "painel"]);
+    expect(SCREENS.filter(hasTabBar)).toEqual(["catalogo", "ofertas", "entregas", "painel", "mais"]);
   });
 });
 

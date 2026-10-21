@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/motion/PressableScale";
-import { colors, radius, spacing, typography } from "@/theme";
+import { colors, elevation, radius, spacing, typography } from "@/theme";
 
 export interface FilterOption<T extends string> {
   value: T;
@@ -15,9 +15,15 @@ interface FilterChipsProps<T extends string> {
   accent?: "green" | "amber";
 }
 
+// Chips "cheios": o selecionado é sólido e os outros são cinza claro, sem bordas pesadas.
 const ACCENTS = {
-  green: { on: colors.primary, onText: colors.primaryContrast, off: colors.borderStrong, countOff: colors.border },
-  amber: { on: colors.warningStrong, onText: colors.primaryContrast, off: colors.warningBorder, countOff: colors.warningSoft },
+  green: { on: colors.primary, onText: colors.primaryContrast, off: colors.surface, countOff: colors.background },
+  amber: {
+    on: colors.warningStrong,
+    onText: colors.primaryContrast,
+    off: colors.surface,
+    countOff: colors.warningSoft,
+  },
 };
 
 // Filtros em fileira (Todos, Selecionados...), com a quantidade de cada um. Rola de lado se faltar espaço.
@@ -35,15 +41,14 @@ export function FilterChips<T extends string>({ options, value, onChange, accent
             accessibilityLabel={option.count === undefined ? option.label : `${option.label}, ${option.count}`}
             aria-checked={isSelected}
             onPress={() => onChange(option.value)}
-            style={[
-              styles.chip,
-              { borderColor: isSelected ? tone.on : tone.off, backgroundColor: isSelected ? tone.on : colors.surface },
-            ]}
+            style={[styles.chip, { backgroundColor: isSelected ? tone.on : tone.off }, !isSelected && styles.chipOff]}
           >
             <Text style={[styles.label, { color: isSelected ? tone.onText : colors.textStrong }]}>{option.label}</Text>
             {option.count !== undefined && (
               <View style={[styles.count, { backgroundColor: isSelected ? "rgba(255,255,255,0.28)" : tone.countOff }]}>
-                <Text style={[styles.countText, { color: isSelected ? tone.onText : colors.textStrong }]}>{option.count}</Text>
+                <Text style={[styles.countText, { color: isSelected ? tone.onText : colors.textStrong }]}>
+                  {option.count}
+                </Text>
               </View>
             )}
           </PressableScale>
@@ -62,10 +67,10 @@ const styles = StyleSheet.create({
     minHeight: 44,
     paddingLeft: spacing.md,
     paddingRight: spacing.sm + 2,
-    borderWidth: 1.5,
     borderRadius: radius.full,
   },
+  chipOff: { boxShadow: elevation.card },
   label: { ...typography.button, fontSize: 15 },
   count: { minWidth: 26, alignItems: "center", paddingVertical: 2, paddingHorizontal: 7, borderRadius: radius.full },
-  countText: { fontSize: 13, fontWeight: "800" },
+  countText: { fontSize: 13, fontWeight: "700" },
 });

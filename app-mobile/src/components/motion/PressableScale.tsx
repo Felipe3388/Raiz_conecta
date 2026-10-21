@@ -52,9 +52,7 @@ export function PressableScale({
       }}
     >
       {(state) => (
-        <Animated.View
-          style={[typeof style === "function" ? style(state) : style, { transform: [{ scale }] }]}
-        >
+        <Animated.View style={[typeof style === "function" ? style(state) : style, { transform: [{ scale }] }]}>
           {typeof children === "function" ? children(state) : children}
         </Animated.View>
       )}

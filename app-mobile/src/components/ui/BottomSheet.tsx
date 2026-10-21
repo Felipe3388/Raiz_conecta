@@ -84,6 +84,7 @@ function SheetBody({
           },
         ]}
       >
+        <View style={styles.grabber} />
         <View style={styles.header}>
           {icon && (
             <View style={styles.headerIcon}>
@@ -125,11 +126,20 @@ const styles = StyleSheet.create({
     maxHeight: "88%",
     alignSelf: "center",
     backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.lg + 8,
-    borderTopRightRadius: radius.lg + 8,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
     overflow: "hidden",
   },
   tall: { height: "88%" },
+  // A "alça" no topo, como nas folhas do iOS: indica que a folha pode ser fechada.
+  grabber: {
+    alignSelf: "center",
+    width: 40,
+    height: 5,
+    marginTop: 8,
+    borderRadius: radius.full,
+    backgroundColor: colors.borderStrong,
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",

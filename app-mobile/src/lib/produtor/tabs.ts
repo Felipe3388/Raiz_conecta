@@ -3,7 +3,7 @@ export const HOME_ROUTE = "painel";
 
 // As rotas que viram botão na barra. O Expo Router cria uma aba para qualquer arquivo em `(tabs)`; se sobrar uma tela
 // antiga (ao extrair uma versão nova por cima da pasta velha), ela não vira botão na barra.
-export const PRODUCER_TABS = ["catalogo", "painel", "ofertas", "entregas"];
+export const PRODUCER_TABS = ["catalogo", "ofertas", "painel", "entregas", "mais"];
 
 export function visibleTabs(routeNames: string[]): string[] {
   return routeNames.filter((name) => PRODUCER_TABS.includes(name));
@@ -18,7 +18,7 @@ export interface TabSplit {
 }
 
 // Divide as rotas da barra: o botão Início fica no meio, com as abas repartidas dos dois lados. Sobrando uma, ela vai
-// para a direita (três abas: Catálogo à esquerda; Ofertas e Entregas à direita).
+// para a direita. Com as quatro abas do Produtor: Catálogo e Ofertas à esquerda; Entregas e Mais à direita.
 export function splitTabs(routeNames: string[], homeRoute: string = HOME_ROUTE): TabSplit {
   const tabs = routeNames.filter((name) => name !== homeRoute);
   const half = Math.floor(tabs.length / 2);

@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { colors, radius, spacing, typography } from "@/theme";
+import { colors, elevation, radius, spacing, typography } from "@/theme";
 import type { IconName } from "@/types/icon";
 
 interface SectionCardProps {
@@ -14,10 +14,13 @@ interface SectionCardProps {
 }
 
 export function SectionCard({ title, description, icon, iconColor = colors.primary, children }: SectionCardProps) {
+  const iconTint = iconColor === colors.danger ? colors.dangerSoft : colors.primaryTint;
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <Ionicons name={icon} size={18} color={iconColor} />
+        <View style={[styles.iconTile, { backgroundColor: iconTint }]}>
+          <Ionicons name={icon} size={18} color={iconColor} />
+        </View>
         <View style={styles.headerText}>
           <Text style={styles.title}>{title}</Text>
           {description && <Text style={styles.description}>{description}</Text>}
@@ -34,19 +37,12 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.borderStrong,
+    boxShadow: elevation.card,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    paddingBottom: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
+  header: { flexDirection: "row", alignItems: "center", gap: spacing.sm + 2 },
+  iconTile: { width: 32, height: 32, alignItems: "center", justifyContent: "center", borderRadius: radius.sm },
   headerText: { flex: 1, gap: 2 },
-  title: { ...typography.button, fontSize: 16, color: colors.text },
+  title: { ...typography.subheading, color: colors.text },
   description: { ...typography.hint, color: colors.textMuted },
   body: { gap: spacing.md },
 });

@@ -30,7 +30,7 @@ import {
   snapPlacement,
   type FabLayout,
 } from "@/lib/assistant/fabPlacement";
-import { colors, radius, spacing } from "@/theme";
+import { colors, elevation, radius, spacing } from "@/theme";
 import { FabActionPill } from "./FabActionPill";
 
 const SIZE = 60;
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: radius.full,
     backgroundColor: colors.primary,
-    boxShadow: "0px 4px 14px rgba(22, 101, 52, 0.45)",
+    boxShadow: elevation.raised,
   },
   handleTucked: { opacity: TUCKED_OPACITY },
   // Escondido, só a borda do botão aparece: a setinha vai para esse lado para ser vista.

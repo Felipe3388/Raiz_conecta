@@ -14,6 +14,7 @@ import {
   itemTotal,
   marketKey,
   minutesLabel,
+  onlyMyProducts,
   PROPOSAL_WINDOW_MINUTES,
   proposalCounts,
   proposalTotal,
@@ -330,5 +331,57 @@ describe("fullQuantities e itemsSummary", () => {
 describe("marketKey", () => {
   it("ignora acento e maiúsculas, como a busca", () => {
     expect(marketKey("Empório São José")).toBe(marketKey("EMPORIO SAO JOSE"));
+  });
+});
+
+describe("onlyMyProducts (o produtor só vê o que vende)", () => {
+  const order = proposal({
+    itens: [
+      item({ id: "a", produto: "Banana" }),
+      item({ id: "b", produto: "Tomate" }),
+      item({ id: "c", produto: "Laranja" }),
+    ],
+  });
+
+  it("um mercado que pediu 3 produtos aparece só com o que o produtor vende", () => {
+    const [shown] = onlyMyProducts([order], ["Tomate"]);
+    expect(shown.itens.map((entry) => entry.produto)).toEqual(["Tomate"]);
+    expect(shown.id).toBe(order.id);
+  });
+
+  it("não considera acento nem maiúsculas ao comparar os nomes", () => {
+    expect(onlyMyProducts([proposal({ itens: [item({ produto: "Maçã" })] })], ["maca"])).toHaveLength(1);
+  });
+
+  it("o pedido sem nenhum produto do produtor some", () => {
+    expect(onlyMyProducts([order], ["Cenoura"])).toEqual([]);
+  });
+
+  it("sem produtos no catálogo, nenhum pedido pendente aparece", () => {
+    expect(onlyMyProducts([order], [])).toEqual([]);
+  });
+
+  it("se o produtor vende tudo, o pedido segue igual", () => {
+    expect(onlyMyProducts([order], ["Banana", "Tomate", "Laranja"])[0]).toBe(order);
+  });
+
+  it("atualiza junto com o catálogo: pôr um produto novo traz o item de volta", () => {
+    expect(onlyMyProducts([order], ["Tomate"])[0].itens).toHaveLength(1);
+    expect(onlyMyProducts([order], ["Tomate", "Laranja"])[0].itens).toHaveLength(2);
+  });
+
+  it("o que o produtor já aceitou continua, mesmo que ele tenha tirado o produto do catálogo", () => {
+    const accepted = proposal({
+      status: "ACEITA",
+      itens: [item({ id: "a", produto: "Morango", aceita: 30 }), item({ id: "b", produto: "Laranja", aceita: 0 })],
+    });
+    const [shown] = onlyMyProducts([accepted], ["Tomate"]);
+    expect(shown.itens.map((entry) => entry.produto)).toEqual(["Morango"]);
+  });
+
+  it("não altera a lista recebida", () => {
+    const copy = structuredClone(order);
+    onlyMyProducts([order], ["Tomate"]);
+    expect(order).toEqual(copy);
   });
 });

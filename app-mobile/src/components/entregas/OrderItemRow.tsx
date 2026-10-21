@@ -60,5 +60,5 @@ const styles = StyleSheet.create({
   product: { ...typography.label, fontSize: 17, color: colors.text },
   detail: { ...typography.hint, color: colors.textMuted },
   status: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: radius.full, borderWidth: 1 },
-  statusText: { fontSize: 13, fontWeight: "800" },
+  statusText: { fontSize: 13, fontWeight: "700" },
 });

@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { hasSelectionChanged, toggleProductId } from "@/lib/produtor/catalog";
+import { onlyMyProducts } from "@/lib/produtor/proposals";
 import { getCatalogService, getProposalService, type CatalogGateway, type ProposalGateway } from "@/services";
 import type { CatalogProduct, ProductSuggestion } from "@/types/produtor";
 import type { Proposal, ProposalResponse } from "@/types/proposal";
@@ -13,7 +14,8 @@ interface ProdutorData {
   selectedIds: number[];
   savedIds: number[];
   hasUnsavedSelection: boolean;
-  // Propostas dos mercados: as que esperam resposta, as aceitas e as encerradas.
+  // Propostas dos mercados com só os produtos que o produtor vende (catálogo salvo): as que esperam resposta, as
+  // aceitas e as encerradas.
   proposals: Proposal[];
   reload: () => Promise<void>;
   toggleProduct: (id: number) => void;
@@ -48,7 +50,7 @@ export function ProdutorDataProvider({
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [savedIds, setSavedIds] = useState<number[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [allProposals, setAllProposals] = useState<Proposal[]>([]);
 
   const reload = useCallback(async () => {
     setStatus("loading");
@@ -61,7 +63,7 @@ export function ProdutorDataProvider({
       setProducts(loadedProducts);
       setSavedIds(loadedIds);
       setSelectedIds(loadedIds);
-      setProposals(loadedProposals);
+      setAllProposals(loadedProposals);
       setStatus("ready");
     } catch {
       setStatus("error");
@@ -95,7 +97,7 @@ export function ProdutorDataProvider({
   const respondToProposal = useCallback(
     async (proposalId: string, response: ProposalResponse) => {
       const updated = await proposalGateway.respond(email, proposalId, response);
-      setProposals((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+      setAllProposals((current) => current.map((item) => (item.id === updated.id ? updated : item)));
       return updated;
     },
     [proposalGateway, email],
@@ -107,6 +109,12 @@ export function ProdutorDataProvider({
   );
 
   const withdrawSuggestion = useCallback((id: string) => catalog.withdrawSuggestion(email, id), [catalog, email]);
+
+  // Muda sozinha quando o catálogo é salvo: tirar ou pôr um produto muda os pedidos que aparecem em Ofertas.
+  const proposals = useMemo(() => {
+    const sold = products.filter((product) => savedIds.includes(product.cdProduto)).map((product) => product.nome);
+    return onlyMyProducts(allProposals, sold);
+  }, [allProposals, products, savedIds]);
 
   const value = useMemo<ProdutorData>(() => {
     return {

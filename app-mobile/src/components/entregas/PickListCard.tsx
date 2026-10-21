@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   body: { flex: 1, gap: 6 },
   top: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", gap: spacing.sm },
   name: { ...typography.label, fontSize: 18, color: colors.text },
-  kg: { fontSize: 18, fontWeight: "900", color: colors.primaryPressed },
+  kg: { fontSize: 18, fontWeight: "700", color: colors.primaryPressed },
   detail: { ...typography.hint, color: colors.textMuted },
   missing: { ...typography.hint, fontWeight: "700", color: colors.warningStrong },
   done: { ...typography.hint, fontWeight: "700", color: colors.primaryPressed },

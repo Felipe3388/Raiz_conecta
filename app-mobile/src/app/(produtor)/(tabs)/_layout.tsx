@@ -12,15 +12,16 @@ import { badgeLabel, HOME_ROUTE } from "@/lib/produtor/tabs";
 import { colors } from "@/theme";
 import type { IconName } from "@/types/icon";
 
-function tabIcon(name: IconName) {
-  return function TabIcon({ color, size }: { color: ColorValue; size: number }) {
-    return <Ionicons name={name} size={size} color={color} />;
+// Contorno quando a aba está parada e símbolo cheio quando ela está aberta, como nas barras de abas do iOS.
+function tabIcon(outline: IconName, filled: IconName) {
+  return function TabIcon({ color, size, focused }: { color: ColorValue; size: number; focused: boolean }) {
+    return <Ionicons name={focused ? filled : outline} size={size} color={color} />;
   };
 }
 
-// As três abas do Produtor (Ofertas, Catálogo, Entregas) e, no meio da barra, o botão redondo Início, que
-// leva ao Painel: a tela em que o app abre depois do login. O ícone da conta, no canto do cabeçalho, leva ao perfil
-// e às configurações.
+// As quatro abas do Produtor (Catálogo e Ofertas à esquerda; Entregas e Mais à direita) e, no meio da barra, o botão
+// redondo Início, que leva ao Painel: a tela em que o app abre depois do login. O ícone da conta, no canto do
+// cabeçalho, leva ao perfil e à saída; o resto (configurações, privacidade, balança, ajuda) fica na aba Mais.
 export default function TabsLayout() {
   const { status, proposals } = useProdutorData();
   const { pending } = useDeliveries();
@@ -45,24 +46,30 @@ export default function TabsLayout() {
         sceneStyle: { backgroundColor: colors.background },
       }}
     >
-      <Tabs.Screen name="catalogo" options={{ title: "Catálogo", tabBarIcon: tabIcon("nutrition-outline") }} />
-      {/* O Painel fica no meio da ordem: a barra põe o botão Início entre a 2ª e a 3ª aba. */}
-      <Tabs.Screen name="painel" options={{ title: "Início", tabBarIcon: tabIcon("stats-chart-outline") }} />
+      <Tabs.Screen
+        name="catalogo"
+        options={{ title: "Catálogo", tabBarIcon: tabIcon("nutrition-outline", "nutrition") }}
+      />
       <Tabs.Screen
         name="ofertas"
         options={{
           title: "Ofertas",
-          tabBarIcon: tabIcon("checkmark-done-outline"),
+          tabBarIcon: tabIcon("checkmark-done-outline", "checkmark-done-circle"),
           // Quantos pedidos esperam resposta; some enquanto carrega ou quando não há nenhuma.
           tabBarBadge: waiting > 0 ? waiting : undefined,
           tabBarAccessibilityLabel: badgeLabel("Ofertas", waiting, "pedido para responder", "pedidos para responder"),
         }}
       />
+      {/* O Painel fica no meio da ordem: a barra põe o botão Início entre a 2ª e a 3ª aba. */}
+      <Tabs.Screen
+        name="painel"
+        options={{ title: "Início", tabBarIcon: tabIcon("stats-chart-outline", "stats-chart") }}
+      />
       <Tabs.Screen
         name="entregas"
         options={{
           title: "Entregas",
-          tabBarIcon: tabIcon("cube-outline"),
+          tabBarIcon: tabIcon("cube-outline", "cube"),
           // Quantos pedidos pedem ação até o próximo dia de entrega; some quando não há nenhum.
           tabBarBadge: pending > 0 ? pending : undefined,
           tabBarAccessibilityLabel: badgeLabel(
@@ -71,6 +78,13 @@ export default function TabsLayout() {
             "pedido para a próxima entrega",
             "pedidos para a próxima entrega",
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="mais"
+        options={{
+          title: "Mais",
+          tabBarIcon: tabIcon("ellipsis-horizontal-circle-outline", "ellipsis-horizontal-circle"),
         }}
       />
     </Tabs>

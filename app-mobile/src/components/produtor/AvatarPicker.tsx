@@ -54,5 +54,5 @@ const styles = StyleSheet.create({
   },
   selected: { borderColor: colors.primary, borderWidth: 3, backgroundColor: colors.primarySoft },
   content: { fontSize: 28 },
-  initials: { ...typography.label, fontSize: 20, fontWeight: "900", color: colors.primaryText },
+  initials: { ...typography.label, fontSize: 20, fontWeight: "700", color: colors.primaryText },
 });

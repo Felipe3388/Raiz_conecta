@@ -86,7 +86,12 @@ const SEEDS: OrderSeed[] = [
     status: "PENDENTE",
     receivedMinutesAgo: 6,
     minutesLeft: PROPOSAL_WINDOW_MINUTES - 6,
-    itens: [item("Banana", 4, "Caixas", 38, 0), item("Tomate", 3, "Caixas", 45, 0)],
+    // A Laranja o produtor de exemplo não vende: ela não aparece para ele (ver onlyMyProducts).
+    itens: [
+      item("Banana", 4, "Caixas", 38, 0),
+      item("Tomate", 3, "Caixas", 45, 0),
+      item("Laranja", 6, "Caixas", 30, 0),
+    ],
   },
   {
     id: "pr-2052",
@@ -96,7 +101,7 @@ const SEEDS: OrderSeed[] = [
     status: "PENDENTE",
     receivedMinutesAgo: 21,
     minutesLeft: PROPOSAL_WINDOW_MINUTES - 21,
-    itens: [item("Cenoura", 40, "Kg", 4.5, 4), item("Mandioca", 30, "Kg", 3, 2)],
+    itens: [item("Cenoura", 40, "Kg", 4.5, 4), item("Mandioca", 30, "Kg", 3, 2), item("Morango", 20, "Kg", 14, 1)],
   },
   {
     id: "pr-3062",

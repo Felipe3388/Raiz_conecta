@@ -44,8 +44,7 @@ export default function EmAnaliseScreen() {
           <Text style={styles.title}>Conta em Análise</Text>
           <Text style={styles.description}>
             Recebemos seus dados! Estamos conferindo seu documento. Fique de olho no seu{" "}
-            <Text style={styles.strong}>e-mail</Text>: avisaremos assim que seu acesso for
-            liberado.
+            <Text style={styles.strong}>e-mail</Text>: avisaremos assim que seu acesso for liberado.
           </Text>
         </Reveal>
         <Reveal delay={900} style={styles.action}>

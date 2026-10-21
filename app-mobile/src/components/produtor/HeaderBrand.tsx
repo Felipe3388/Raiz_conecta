@@ -18,7 +18,7 @@ export function HeaderBrand() {
 
 const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  tile: { padding: 6, backgroundColor: colors.primaryTint, borderRadius: radius.md - 2 },
-  wordmark: { fontSize: 22, fontWeight: "900", color: colors.text },
+  tile: { padding: 6, backgroundColor: colors.primaryTint, borderRadius: radius.sm + 2 },
+  wordmark: { fontSize: 20, fontWeight: "700", letterSpacing: -0.2, color: colors.text },
   accent: { color: colors.primary },
 });

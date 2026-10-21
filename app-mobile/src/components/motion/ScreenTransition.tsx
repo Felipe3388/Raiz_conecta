@@ -1,11 +1,7 @@
 import { useFocusEffect } from "expo-router";
 import { useCallback, useRef, type ReactNode } from "react";
 import { Animated, Easing, Platform, StyleSheet } from "react-native";
-import {
-  createTransitionTracker,
-  type AuthScreenName,
-  type TransitionDirection,
-} from "./screenTransition";
+import { createTransitionTracker, type AuthScreenName, type TransitionDirection } from "./screenTransition";
 import { USE_NATIVE_DRIVER } from "./timing";
 import { useReducedMotion } from "./useReducedMotion";
 

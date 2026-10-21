@@ -1,16 +1,24 @@
 import { badgeLabel, HOME_ROUTE, PRODUCER_TABS, splitTabs, visibleTabs } from "./tabs";
 
 describe("splitTabs (o botão Início fica no meio da barra)", () => {
-  it("três abas: Catálogo à esquerda; Ofertas e Entregas à direita, na ordem declarada", () => {
-    expect(splitTabs(["catalogo", "painel", "ofertas", "entregas"])).toEqual({
-      left: ["catalogo"],
-      right: ["ofertas", "entregas"],
+  it("as quatro abas do Produtor: Catálogo e Ofertas à esquerda; Entregas e Mais à direita", () => {
+    expect(splitTabs(["catalogo", "ofertas", "painel", "entregas", "mais"])).toEqual({
+      left: ["catalogo", "ofertas"],
+      right: ["entregas", "mais"],
       home: "painel",
     });
   });
 
   it("o Início não precisa estar no meio da lista de rotas", () => {
-    expect(splitTabs(["painel", "catalogo", "ofertas", "entregas"])).toEqual({
+    expect(splitTabs(["painel", "catalogo", "ofertas", "entregas", "mais"])).toEqual({
+      left: ["catalogo", "ofertas"],
+      right: ["entregas", "mais"],
+      home: "painel",
+    });
+  });
+
+  it("três abas: a que sobra vai para a direita", () => {
+    expect(splitTabs(["catalogo", "painel", "ofertas", "entregas"])).toEqual({
       left: ["catalogo"],
       right: ["ofertas", "entregas"],
       home: "painel",
@@ -57,11 +65,12 @@ describe("badgeLabel", () => {
 
 describe("visibleTabs", () => {
   it("só as telas da barra viram botão; uma tela antiga que sobrou (mural) fica de fora", () => {
-    expect(visibleTabs(["catalogo", "mural", "painel", "ofertas", "entregas"])).toEqual([
+    expect(visibleTabs(["catalogo", "mural", "ofertas", "painel", "entregas", "mais"])).toEqual([
       "catalogo",
-      "painel",
       "ofertas",
+      "painel",
       "entregas",
+      "mais",
     ]);
   });
 

@@ -2,7 +2,6 @@ import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import type { View } from "react-native";
 import type { UserMenuItemId } from "@/content/userMenu";
-import { useAssistant } from "./useAssistant";
 import { useSignOutConfirm } from "./useSignOutConfirm";
 
 // Altura aproximada do cabeçalho, usada só se o aparelho não souber dizer onde o botão está.
@@ -11,7 +10,6 @@ const FALLBACK_BOTTOM = 96;
 // Controller do menu do usuário: abre embaixo do ícone, leva às telas e pede confirmação para sair.
 export function useUserMenu() {
   const router = useRouter();
-  const assistant = useAssistant();
   const buttonRef = useRef<View>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [bottom, setBottom] = useState(FALLBACK_BOTTOM);
@@ -31,8 +29,6 @@ export function useUserMenu() {
   // Strategy por tabela: cada item do menu sabe o que fazer.
   const handlers: Record<UserMenuItemId, () => void> = {
     profile: () => router.push("/perfil"),
-    settings: () => router.push("/configuracoes"),
-    help: () => assistant.open("help"),
     signOut: signOut.request,
   };
 

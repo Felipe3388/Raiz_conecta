@@ -1,7 +1,7 @@
 import type { ScreenId } from "@/lib/assistant/fabActions";
 import { HELP_TOPICS, suggestionsFor, topicById } from "./helpTopics";
 
-const SCREENS: ScreenId[] = ["catalogo", "ofertas", "entregas", "painel", "perfil", "configuracoes"];
+const SCREENS: ScreenId[] = ["catalogo", "ofertas", "entregas", "painel", "mais", "perfil", "configuracoes", "balanca"];
 
 describe("HELP_TOPICS", () => {
   it("cada pergunta tem identificador único, pergunta e resposta", () => {

@@ -1,11 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 import { emptyAccount, emptyProfile } from "@/lib/registration/draft";
 import type { AccountFields, ProfileFields } from "@/types/registration";
 

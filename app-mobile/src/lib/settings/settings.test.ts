@@ -30,6 +30,8 @@ describe("parseSettings", () => {
       reduceMotion: true,
       avatars: { "ana@sitio.com": "🍅" },
       fabPlacement: { side: "left" as const, y: 0.4 },
+      autoWeigh: false,
+      voice: false,
     };
     expect(parseSettings(serializeSettings(saved))).toEqual(saved);
   });
@@ -46,6 +48,8 @@ describe("parseSettings", () => {
       reduceMotion: true,
       avatars: {},
       fabPlacement: DEFAULT_SETTINGS.fabPlacement,
+      autoWeigh: true,
+      voice: true,
     });
   });
 
@@ -54,6 +58,38 @@ describe("parseSettings", () => {
     expect(parseSettings(raw).avatars).toEqual({ "a@a.com": "🌱" });
     expect(parseSettings('{"avatars":[1,2]}').avatars).toEqual({});
     expect(parseSettings('{"avatars":"x"}').avatars).toEqual({});
+  });
+});
+
+describe("modo de pesagem", () => {
+  it("por padrão a pesagem é automática (modo rápido)", () => {
+    expect(DEFAULT_SETTINGS.autoWeigh).toBe(true);
+  });
+
+  it("guarda a escolha do modo manual", () => {
+    expect(parseSettings('{"autoWeigh":false}').autoWeigh).toBe(false);
+  });
+
+  it("valor estragado volta ao automático sem perder o resto", () => {
+    const parsed = parseSettings('{"reduceMotion":true,"autoWeigh":"não"}');
+    expect(parsed.reduceMotion).toBe(true);
+    expect(parsed.autoWeigh).toBe(true);
+  });
+});
+
+describe("voz da pesagem", () => {
+  it("por padrão a voz fica ligada", () => {
+    expect(DEFAULT_SETTINGS.voice).toBe(true);
+  });
+
+  it("lembra que o produtor desligou a voz", () => {
+    expect(parseSettings('{"voice":false}').voice).toBe(false);
+  });
+
+  it("valor estragado volta a ligada sem perder o resto", () => {
+    const parsed = parseSettings('{"autoWeigh":false,"voice":"não"}');
+    expect(parsed.autoWeigh).toBe(false);
+    expect(parsed.voice).toBe(true);
   });
 });
 

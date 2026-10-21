@@ -4,7 +4,7 @@ import { PressableScale } from "@/components/motion/PressableScale";
 import { usePresence } from "@/components/motion/usePresence";
 import { USER_MENU_ITEMS, type UserMenuItemId } from "@/content/userMenu";
 import { useProducerIdentity } from "@/hooks/useProducerIdentity";
-import { colors, radius, spacing, typography } from "@/theme";
+import { elevation, colors, radius, spacing, typography } from "@/theme";
 import { UserAvatar } from "./UserAvatar";
 
 export interface MenuAnchor {
@@ -31,7 +31,12 @@ export function UserMenu({ visible, anchor, onClose, onSelect }: UserMenuProps) 
   return (
     <Modal transparent statusBarTranslucent visible={mounted} animationType="none" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Fechar menu" style={StyleSheet.absoluteFill} onPress={onClose} />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Fechar menu"
+          style={StyleSheet.absoluteFill}
+          onPress={onClose}
+        />
         <Animated.View
           accessibilityViewIsModal
           style={[
@@ -66,7 +71,10 @@ export function UserMenu({ visible, anchor, onClose, onSelect }: UserMenuProps) 
                   accessibilityLabel={item.label}
                   onPress={() => onSelect(item.id)}
                   pressedScale={0.98}
-                  style={({ pressed }) => [styles.item, pressed && (danger ? styles.itemDangerPressed : styles.itemPressed)]}
+                  style={({ pressed }) => [
+                    styles.item,
+                    pressed && (danger ? styles.itemDangerPressed : styles.itemPressed),
+                  ]}
                 >
                   <Ionicons name={item.icon} size={22} color={danger ? colors.danger : colors.textStrong} />
                   <Text style={[styles.itemLabel, danger && styles.itemLabelDanger]}>{item.label}</Text>
@@ -88,9 +96,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: radius.lg,
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderMid,
-    boxShadow: "0px 8px 24px rgba(0, 0, 0, 0.2)",
+    boxShadow: elevation.raised,
   },
   identity: {
     flexDirection: "row",

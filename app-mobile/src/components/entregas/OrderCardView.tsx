@@ -6,10 +6,9 @@ import { STAGE_INFO } from "@/content/deliveryTexts";
 import type { OrderCard } from "@/lib/delivery/orderCard";
 import { formatBRL } from "@/lib/format/currency";
 import { formatKg } from "@/lib/format/weight";
-import { colors, radius, spacing, typography } from "@/theme";
+import { colors, elevation, radius, spacing, typography } from "@/theme";
 import { OrderItemRow } from "./OrderItemRow";
 import { StageBadge } from "./StageBadge";
-import { TONE_COLORS } from "./tones";
 
 interface OrderCardViewProps {
   card: OrderCard;
@@ -19,24 +18,23 @@ interface OrderCardViewProps {
   onSimulateReceipt?: () => void;
 }
 
-function weighLabel(card: OrderCard): string {
-  if (card.weighedItems === 0) return "Pesar pedido";
-  return card.weighedItems < card.itemCount ? "Continuar pesagem" : "Revisar pesagem";
+// A pesagem começa em Iniciar pesagem (no topo da tela). No cartão, o botão só serve para ajustar o que já foi pesado.
+function weighLabel(card: OrderCard): string | null {
+  return card.weighedItems === 0 ? null : "Ajustar pesagem";
 }
 
 // Um pedido a entregar: o mercado, a lista dos produtos dele, quanto já foi pesado e o que fazer agora.
 export function OrderCardView({ card, onWeigh, onHandOver, onSimulateReceipt }: OrderCardViewProps) {
   const { stage, actions } = card;
   const info = STAGE_INFO[stage];
-  const tone = TONE_COLORS[info.tone];
-  const canWeigh = actions.includes("WEIGH");
+  const adjustLabel = actions.includes("WEIGH") ? weighLabel(card) : null;
   const canHandOver = actions.includes("HAND_OVER");
   const waitingMarket = actions.includes("RECEIVE");
   const isDone = stage === "RECEBIDA" || stage === "DIVERGENTE";
   const allInRange = card.outOfRange.length === 0;
 
   return (
-    <View style={[styles.card, { borderColor: tone.border }]} accessibilityLabel={`Pedido de ${card.mercado}`}>
+    <View style={styles.card} accessibilityLabel={`Pedido de ${card.mercado}`}>
       <View style={styles.top}>
         <View style={styles.icon}>
           <Ionicons name="storefront-outline" size={26} color={colors.primaryPressed} />
@@ -82,14 +80,10 @@ export function OrderCardView({ card, onWeigh, onHandOver, onSimulateReceipt }: 
 
       <Text style={styles.hint}>{info.hint}</Text>
 
-      {(canWeigh || canHandOver || waitingMarket) && (
+      {(adjustLabel !== null || canHandOver || waitingMarket) && (
         <View style={styles.actions}>
-          {canWeigh && (
-            <Button
-              label={weighLabel(card)}
-              variant={canHandOver && allInRange ? "outline" : "primary"}
-              onPress={onWeigh}
-            />
+          {adjustLabel !== null && (
+            <Button label={adjustLabel} variant={canHandOver && allInRange ? "outline" : "primary"} onPress={onWeigh} />
           )}
           {canHandOver && (
             <Button
@@ -112,8 +106,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm + 4,
     padding: spacing.md + 2,
     backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderRadius: radius.lg + 4,
+    boxShadow: elevation.card,
+    borderRadius: radius.lg,
   },
   top: { flexDirection: "row", alignItems: "center", gap: spacing.sm + 4 },
   icon: {
@@ -127,12 +121,12 @@ const styles = StyleSheet.create({
     borderColor: colors.primaryBorder,
   },
   titleBlock: { flex: 1, gap: 2 },
-  market: { fontSize: 20, fontWeight: "900", color: colors.text },
+  market: { fontSize: 20, fontWeight: "700", color: colors.text },
   detail: { ...typography.hint, color: colors.textMuted },
   when: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", gap: spacing.sm },
-  day: { ...typography.hint, fontWeight: "800", color: colors.textStrong, flexShrink: 1 },
+  day: { ...typography.hint, fontWeight: "700", color: colors.textStrong, flexShrink: 1 },
   late: { color: colors.danger },
-  value: { fontSize: 17, fontWeight: "900", color: colors.primaryPressed },
+  value: { fontSize: 17, fontWeight: "700", color: colors.primaryPressed },
   valueNote: { fontSize: 12, fontWeight: "700", color: colors.textSubtle },
   items: { gap: spacing.xs + 2 },
   progress: { gap: 6 },

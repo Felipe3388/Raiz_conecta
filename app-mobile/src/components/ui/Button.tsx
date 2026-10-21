@@ -1,6 +1,6 @@
 import { ActivityIndicator, StyleSheet, Text, type ViewStyle } from "react-native";
 import { PressableScale } from "@/components/motion/PressableScale";
-import { colors, radius, spacing, typography } from "@/theme";
+import { colors, radius, spacing, TOUCH_TARGET, typography } from "@/theme";
 
 type Variant = "primary" | "outline" | "ghost" | "danger" | "amber" | "amberOutline";
 type Size = "sm" | "md" | "lg";
@@ -27,11 +27,11 @@ const variants: Record<Variant, VariantStyle> = {
     pressed: colors.primaryPressed,
     text: colors.primaryContrast,
   },
+  // "Tinted": fundo verde bem claro e texto verde escuro (7,5:1), no lugar de uma borda grossa.
   outline: {
-    background: "transparent",
-    pressed: colors.primarySoft,
-    text: colors.primaryPressed,
-    border: colors.primary,
+    background: colors.primaryTint,
+    pressed: colors.primaryBorder,
+    text: colors.primaryText,
   },
   ghost: {
     background: "transparent",
@@ -50,17 +50,16 @@ const variants: Record<Variant, VariantStyle> = {
     text: colors.primaryContrast,
   },
   amberOutline: {
-    background: colors.surface,
-    pressed: colors.warningSoft,
-    text: colors.warningText,
-    border: colors.warningBorderStrong,
+    background: colors.warningSoft,
+    pressed: colors.warningBorder,
+    text: colors.warningDark,
   },
 };
 
 const paddings: Record<Size, ViewStyle> = {
-  sm: { paddingVertical: 12, paddingHorizontal: spacing.md },
-  md: { paddingVertical: 14, paddingHorizontal: spacing.lg },
-  lg: { paddingVertical: 18, paddingHorizontal: spacing.xl },
+  sm: { minHeight: TOUCH_TARGET, paddingHorizontal: spacing.md },
+  md: { minHeight: 50, paddingHorizontal: spacing.lg },
+  lg: { minHeight: 56, paddingHorizontal: spacing.xl },
 };
 
 export function Button({

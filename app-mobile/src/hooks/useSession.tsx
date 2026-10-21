@@ -1,20 +1,10 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { getAuthService } from "@/services";
 import type { AuthGateway } from "@/services";
 import type { AuthUser } from "@/types/auth";
 
 export type SessionState =
-  | { status: "loading" }
-  | { status: "unauthenticated" }
-  | { status: "authenticated"; user: AuthUser };
+  { status: "loading" } | { status: "unauthenticated" } | { status: "authenticated"; user: AuthUser };
 
 interface SessionContextValue {
   state: SessionState;
@@ -29,10 +19,7 @@ interface SessionProviderProps {
   authService?: AuthGateway;
 }
 
-export function SessionProvider({
-  children,
-  authService = getAuthService(),
-}: SessionProviderProps) {
+export function SessionProvider({ children, authService = getAuthService() }: SessionProviderProps) {
   const [state, setState] = useState<SessionState>({ status: "loading" });
 
   useEffect(() => {

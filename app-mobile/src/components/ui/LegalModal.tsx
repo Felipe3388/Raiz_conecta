@@ -13,10 +13,12 @@ interface LegalModalProps {
   icon: IconName;
   visible: boolean;
   onClose: () => void;
+  // Com a pessoa já dentro do app, basta um "Voltar" simples (sem o botão grande do rodapé).
+  backLabel?: string;
 }
 
-// Documento legal em tela cheia, com letra grande e botão de fechar sempre à vista.
-export function LegalModal({ document, icon, visible, onClose }: LegalModalProps) {
+// Documento legal em tela cheia, com letra grande e botão de fechar (ou voltar) sempre à vista.
+export function LegalModal({ document, icon, visible, onClose, backLabel }: LegalModalProps) {
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
       <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
@@ -33,12 +35,12 @@ export function LegalModal({ document, icon, visible, onClose }: LegalModalProps
             </View>
             <PressableScale
               accessibilityRole="button"
-              accessibilityLabel="Fechar"
+              accessibilityLabel={backLabel ?? "Fechar"}
               onPress={onClose}
               style={styles.closeButton}
             >
-              <Ionicons name="close" size={22} color={colors.text} />
-              <Text style={styles.closeLabel}>Fechar</Text>
+              <Ionicons name={backLabel ? "chevron-back" : "close"} size={22} color={colors.text} />
+              <Text style={styles.closeLabel}>{backLabel ?? "Fechar"}</Text>
             </PressableScale>
           </View>
 
@@ -62,9 +64,11 @@ export function LegalModal({ document, icon, visible, onClose }: LegalModalProps
             ))}
           </ScrollView>
 
-          <View style={styles.footer}>
-            <Button label="Entendi, voltar ao cadastro" size="lg" onPress={onClose} />
-          </View>
+          {!backLabel && (
+            <View style={styles.footer}>
+              <Button label="Entendi, voltar ao cadastro" size="lg" onPress={onClose} />
+            </View>
+          )}
         </View>
       </SafeAreaView>
     </Modal>
@@ -103,10 +107,10 @@ const styles = StyleSheet.create({
   content: { padding: spacing.lg, gap: spacing.lg },
   updatedAt: { ...typography.hint, color: colors.textSubtle },
   section: { gap: spacing.sm },
-  sectionTitle: { fontSize: 19, fontWeight: "800", color: colors.text },
+  sectionTitle: { fontSize: 19, fontWeight: "700", color: colors.text },
   paragraph: { fontSize: 17, lineHeight: 27, color: colors.text },
   bulletRow: { flexDirection: "row", gap: spacing.sm },
-  bullet: { fontSize: 17, lineHeight: 27, color: colors.primary, fontWeight: "900" },
+  bullet: { fontSize: 17, lineHeight: 27, color: colors.primary, fontWeight: "700" },
   bulletText: { flex: 1 },
   footer: {
     padding: spacing.md,

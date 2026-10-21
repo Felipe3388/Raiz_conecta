@@ -7,9 +7,20 @@ export interface Settings {
   avatars: Record<string, string>;
   // Onde o botão flutuante de ajuda ficou depois de ser arrastado.
   fabPlacement: FabPlacement;
+  // Pesagem automática (modo rápido): o app passa ao próximo produto sozinho quando o peso estabiliza. Desligada, a
+  // pessoa registra cada produto e confirma cada pedido.
+  autoWeigh: boolean;
+  // Voz da pesagem: o celular fala o que pesar e de qual mercado. O produtor desliga e o app lembra da escolha.
+  voice: boolean;
 }
 
-export const DEFAULT_SETTINGS: Settings = { reduceMotion: false, avatars: {}, fabPlacement: DEFAULT_PLACEMENT };
+export const DEFAULT_SETTINGS: Settings = {
+  reduceMotion: false,
+  avatars: {},
+  fabPlacement: DEFAULT_PLACEMENT,
+  autoWeigh: true,
+  voice: true,
+};
 
 const MAX_AVATAR_LENGTH = 16;
 
@@ -44,11 +55,13 @@ export function parseSettings(raw: string | null): Settings {
   try {
     const data: unknown = JSON.parse(raw);
     if (typeof data !== "object" || data === null || Array.isArray(data)) return DEFAULT_SETTINGS;
-    const { reduceMotion, avatars, fabPlacement } = data as Record<string, unknown>;
+    const { reduceMotion, avatars, fabPlacement, autoWeigh, voice } = data as Record<string, unknown>;
     return {
       reduceMotion: typeof reduceMotion === "boolean" ? reduceMotion : DEFAULT_SETTINGS.reduceMotion,
       avatars: parseAvatars(avatars),
       fabPlacement: parsePlacement(fabPlacement),
+      autoWeigh: typeof autoWeigh === "boolean" ? autoWeigh : DEFAULT_SETTINGS.autoWeigh,
+      voice: typeof voice === "boolean" ? voice : DEFAULT_SETTINGS.voice,
     };
   } catch {
     return DEFAULT_SETTINGS;

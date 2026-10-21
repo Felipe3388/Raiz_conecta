@@ -35,7 +35,12 @@ export function SuggestionModal({ visible, onClose }: SuggestionModalProps) {
               <Text style={styles.title} accessibilityRole="header">
                 Sugerir Novo Produto
               </Text>
-              <PressableScale accessibilityRole="button" accessibilityLabel="Fechar" onPress={close} style={styles.close}>
+              <PressableScale
+                accessibilityRole="button"
+                accessibilityLabel="Fechar"
+                onPress={close}
+                style={styles.close}
+              >
                 <Ionicons name="close" size={22} color={colors.text} />
                 <Text style={styles.closeLabel}>Fechar</Text>
               </PressableScale>

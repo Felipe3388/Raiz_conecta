@@ -17,6 +17,6 @@ export function ScreenHeading({ title, count }: ScreenHeadingProps) {
 }
 
 const styles = StyleSheet.create({
-  title: { ...typography.title, fontSize: 24, color: colors.text },
-  count: { color: colors.primary },
+  title: { ...typography.largeTitle, color: colors.text },
+  count: { color: colors.textSubtle, fontWeight: "600" },
 });

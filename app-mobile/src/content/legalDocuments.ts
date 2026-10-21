@@ -57,7 +57,7 @@ export const TERMS_OF_USE: LegalDocument = {
     },
     {
       title: "7. Limitação de Responsabilidade",
-      body: "A Raiz Conecta não se responsabiliza por danos indiretos, incidentais ou consequenciais decorrentes do uso da plataforma, incluindo perda de dados, lucros cessantes ou interrupção do serviço. A plataforma é fornecida \"como está\", sem garantias expressas ou implícitas.",
+      body: 'A Raiz Conecta não se responsabiliza por danos indiretos, incidentais ou consequenciais decorrentes do uso da plataforma, incluindo perda de dados, lucros cessantes ou interrupção do serviço. A plataforma é fornecida "como está", sem garantias expressas ou implícitas.',
     },
     {
       title: "8. Modificações",

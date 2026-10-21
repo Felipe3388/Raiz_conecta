@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import type { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/motion/PressableScale";
-import { colors, spacing, typography } from "@/theme";
+import { colors, radius, spacing, typography } from "@/theme";
 import type { IconName } from "@/types/icon";
 
 interface SettingsRowProps {
@@ -20,7 +20,9 @@ export function SettingsRow({ icon, label, description, right, onPress, tone }: 
   const danger = tone === "danger";
   const content = (
     <>
-      <Ionicons name={icon} size={24} color={danger ? colors.danger : colors.textStrong} />
+      <View style={[styles.tile, danger && styles.tileDanger]}>
+        <Ionicons name={icon} size={20} color={danger ? colors.danger : colors.primaryText} />
+      </View>
       <View style={styles.text}>
         <Text style={[styles.label, danger && styles.danger]}>{label}</Text>
         {description && <Text style={styles.description}>{description}</Text>}
@@ -45,7 +47,16 @@ export function SettingsRow({ icon, label, description, right, onPress, tone }: 
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", gap: spacing.sm + 4, minHeight: 52 },
+  row: { flexDirection: "row", alignItems: "center", gap: spacing.sm + 4, minHeight: 56 },
+  tile: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.sm + 2,
+    backgroundColor: colors.primaryTint,
+  },
+  tileDanger: { backgroundColor: colors.dangerSoft },
   text: { flex: 1, gap: 2 },
   label: { ...typography.label, color: colors.text },
   description: { ...typography.hint, color: colors.textMuted },

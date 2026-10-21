@@ -15,8 +15,18 @@ interface SortControlProps<T extends string> {
 }
 
 const ACCENTS = {
-  green: { border: colors.borderStrong, activeBg: colors.primarySoft, activeBorder: colors.primary, text: colors.primaryText },
-  amber: { border: colors.warningBorder, activeBg: colors.warningTint, activeBorder: colors.warning, text: colors.warningText },
+  green: {
+    border: colors.borderStrong,
+    activeBg: colors.primarySoft,
+    activeBorder: colors.primary,
+    text: colors.primaryText,
+  },
+  amber: {
+    border: colors.warningBorder,
+    activeBg: colors.warningTint,
+    activeBorder: colors.warning,
+    text: colors.warningText,
+  },
 };
 
 // Botão "Ordenar": abre a lista de ordens. Fica destacado quando a lista não está na ordem padrão.
@@ -40,7 +50,10 @@ export function SortControl<T extends string>({
         onPress={() => setIsOpen(true)}
         style={[
           styles.button,
-          { borderColor: isActive ? tone.activeBorder : tone.border, backgroundColor: isActive ? tone.activeBg : colors.surface },
+          {
+            borderColor: isActive ? tone.activeBorder : tone.border,
+            backgroundColor: isActive ? tone.activeBg : colors.surface,
+          },
         ]}
       >
         <Ionicons name="swap-vertical-outline" size={20} color={isActive ? tone.text : colors.textMuted} />

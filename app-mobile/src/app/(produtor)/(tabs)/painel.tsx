@@ -16,7 +16,7 @@ import { useDashboardScreen } from "@/hooks/useDashboardScreen";
 import { deliveryDayLabel } from "@/lib/delivery/schedule";
 import { formatBRL } from "@/lib/format/currency";
 import { chartRows } from "@/lib/produtor/dashboard";
-import { colors, radius, spacing, typography } from "@/theme";
+import { colors, elevation, radius, spacing, typography } from "@/theme";
 
 const MAX_CHART_ROWS = 5;
 
@@ -170,15 +170,15 @@ const styles = StyleSheet.create({
   subtitle: { ...typography.body, color: colors.textMuted },
   hero: {
     gap: spacing.xs,
-    padding: spacing.md,
     borderRadius: radius.lg,
-    backgroundColor: colors.primarySoft,
-    borderWidth: 1,
-    borderColor: colors.primaryBorder,
+    padding: spacing.lg,
+    backgroundColor: colors.primary,
+    boxShadow: elevation.raised,
   },
-  heroLabel: { ...typography.label, color: colors.primaryText },
-  heroValue: { fontSize: 48, lineHeight: 56, fontWeight: "900", color: colors.text },
-  heroNote: { ...typography.hint, color: colors.textMuted },
+  // O número da receita é o destaque do Painel: verde da marca, letra grande, e o resto da tela fica quieto.
+  heroLabel: { ...typography.label, color: colors.primaryContrast },
+  heroValue: { fontSize: 44, lineHeight: 52, fontWeight: "700", ...typography.numeric, color: colors.primaryContrast },
+  heroNote: { ...typography.hint, color: colors.primaryContrast },
   deliveries: {
     flexDirection: "row",
     alignItems: "center",
@@ -186,10 +186,9 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: radius.lg,
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderStrong,
+    boxShadow: elevation.card,
   },
-  deliveriesDue: { backgroundColor: colors.warningTint, borderColor: colors.warningBorder },
+  deliveriesDue: { backgroundColor: colors.warningTint },
   deliveriesText: { flex: 1, gap: 2 },
   deliveriesTitle: { ...typography.label, color: colors.text },
   deliveriesNote: { ...typography.hint, color: colors.textMuted },
@@ -197,5 +196,5 @@ const styles = StyleSheet.create({
   list: { gap: spacing.sm },
   emptyBlock: { alignItems: "center", gap: spacing.sm + 4 },
   empty: { ...typography.body, color: colors.textMuted },
-  signalSummary: { ...typography.hint, fontWeight: "800", color: colors.textStrong },
+  signalSummary: { ...typography.hint, fontWeight: "700", color: colors.textStrong },
 });

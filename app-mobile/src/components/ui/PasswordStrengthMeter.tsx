@@ -15,16 +15,11 @@ export function PasswordStrengthMeter({ password }: { password: string }) {
       <View style={styles.container}>
         <View style={styles.bars}>
           {BARS.map((bar) => (
-            <View
-              key={bar}
-              style={[styles.bar, { backgroundColor: bar <= score ? color : colors.border }]}
-            />
+            <View key={bar} style={[styles.bar, { backgroundColor: bar <= score ? color : colors.border }]} />
           ))}
         </View>
         <Text style={[styles.label, { color }]}>{label}</Text>
-        {score < STRONG_ENOUGH && (
-          <Text style={styles.hint}>Use maiúsculas, números e símbolos (!@#$%)</Text>
-        )}
+        {score < STRONG_ENOUGH && <Text style={styles.hint}>Use maiúsculas, números e símbolos (!@#$%)</Text>}
       </View>
     </Collapse>
   );

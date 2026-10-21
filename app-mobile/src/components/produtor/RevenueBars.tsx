@@ -14,7 +14,12 @@ export function RevenueBars({ rows }: { rows: ChartRow[] }) {
   return (
     <View style={styles.list}>
       {rows.map((row) => (
-        <View key={row.produto} style={styles.row} accessible accessibilityLabel={`${row.produto}: ${formatBRL(row.revenue)}`}>
+        <View
+          key={row.produto}
+          style={styles.row}
+          accessible
+          accessibilityLabel={`${row.produto}: ${formatBRL(row.revenue)}`}
+        >
           <Text style={styles.name} numberOfLines={1}>
             {row.produto}
           </Text>
@@ -43,5 +48,5 @@ const styles = StyleSheet.create({
     borderTopRightRadius: BAR_END_RADIUS,
     borderBottomRightRadius: BAR_END_RADIUS,
   },
-  value: { ...typography.hint, fontWeight: "800", color: colors.text, minWidth: 92, textAlign: "right" },
+  value: { ...typography.hint, fontWeight: "700", color: colors.text, minWidth: 92, textAlign: "right" },
 });

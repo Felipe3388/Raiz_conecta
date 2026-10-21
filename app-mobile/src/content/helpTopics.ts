@@ -15,8 +15,8 @@ export const HELP_TOPICS: HelpTopic[] = [
     id: "visao-geral",
     question: "O que eu posso fazer no Raiz Conecta?",
     answer:
-      "O Raiz Conecta liga você a mercados da sua região. Aqui você escolhe o que produz (Catálogo), recebe e responde os pedidos dos mercados (Ofertas), separa e pesa os pedidos nos dias de entrega (Entregas) e vê o resumo no Painel, pelo botão Início.",
-    screens: ["painel", "ofertas", "entregas", "perfil", "configuracoes"],
+      "O Raiz Conecta liga você a mercados da sua região. Aqui você escolhe o que produz (Catálogo), recebe e responde os pedidos dos mercados (Ofertas), separa e pesa os pedidos nos dias de entrega (Entregas) e vê o resumo no Painel, pelo botão Início. Perfil, balança, configurações e ajuda ficam na aba Mais.",
+    screens: ["painel", "ofertas", "entregas", "mais", "perfil", "configuracoes"],
   },
   {
     id: "como-comecar",
@@ -29,7 +29,7 @@ export const HELP_TOPICS: HelpTopic[] = [
     id: "ofertas-vazio",
     question: "Por que não chegam pedidos?",
     answer:
-      "Os pedidos chegam quando um mercado pede um dos produtos do seu Catálogo. Abra o Catálogo, marque o que você produz e toque em Salvar Escolhas. Se já fez isso, volte mais tarde: os pedidos vão chegando conforme os mercados compram.",
+      "Os pedidos chegam quando um mercado pede um dos produtos do seu Catálogo, e cada pedido mostra só os produtos que você marcou. Abra o Catálogo, marque o que você produz e toque em Salvar Escolhas. Se já fez isso, volte mais tarde: os pedidos vão chegando conforme os mercados compram.",
     screens: ["ofertas", "painel"],
   },
   {
@@ -99,41 +99,42 @@ export const HELP_TOPICS: HelpTopic[] = [
     id: "reduzir-animacoes",
     question: "Como deixo o app com menos movimento?",
     answer:
-      "Em Configurações, na seção Acessibilidade, ligue Reduzir animações. As telas passam a aparecer sem deslizes nem movimentos.",
-    screens: ["configuracoes"],
+      "Em Mais, toque em Configurações e, na seção Acessibilidade, ligue Reduzir animações. As telas passam a aparecer sem deslizes nem movimentos.",
+    screens: ["configuracoes", "mais"],
   },
   {
     id: "sair",
     question: "Como saio da minha conta?",
-    answer: "Toque no seu ícone, no canto de cima, e escolha Sair da conta. Se mudar de ideia, toque em Ficar.",
-    screens: ["perfil", "configuracoes"],
+    answer:
+      "Toque no seu ícone, no canto de cima, e escolha Sair da conta; também dá para sair pela aba Mais. Se mudar de ideia, toque em Ficar.",
+    screens: ["perfil", "configuracoes", "mais"],
   },
   {
     id: "suporte",
     question: "Como falo com o suporte?",
-    answer: `Em Meu Perfil ou em Configurações, toque em Falar com Suporte. O chat de suporte chega em breve; para urgências, escreva para ${SUPPORT_EMAIL}.`,
-    screens: ["perfil", "configuracoes", "ofertas"],
+    answer: `Em Meu Perfil ou na aba Mais, toque em Falar com Suporte. O chat de suporte chega em breve; para urgências, escreva para ${SUPPORT_EMAIL}.`,
+    screens: ["perfil", "configuracoes", "mais", "ofertas"],
   },
   {
     id: "botao-ajuda",
     question: "Como escondo ou mostro este botão?",
     answer:
       "Abra o botão e toque em Esconder botão: ele fica na lateral da tela. Para ele voltar, toque na abinha que ficou na lateral.",
-    screens: ["catalogo", "ofertas", "entregas", "painel", "perfil", "configuracoes"],
+    screens: ["catalogo", "ofertas", "entregas", "painel", "mais", "perfil", "configuracoes", "balanca"],
   },
   {
     id: "mover-botao",
     question: "Posso mudar o botão de lugar?",
     answer:
       "Pode. Segure o botão verde e arraste para onde quiser; ao soltar, ele gruda na lateral mais próxima. Se você o esconder, ele fica só com uma abinha na lateral, e ainda dá para arrastar a abinha para outro ponto.",
-    screens: ["catalogo", "ofertas", "entregas", "painel", "perfil", "configuracoes"],
+    screens: ["catalogo", "ofertas", "entregas", "painel", "mais", "perfil", "configuracoes", "balanca"],
   },
   {
     id: "desfazer",
     question: "Fiz algo sem querer. Como desfaço?",
     answer:
       "Logo depois de salvar o catálogo, definir um preço, sugerir um produto ou mudar o perfil, aparece um aviso com o botão Desfazer. Se ele já sumiu, abra o botão verde e toque em Desfazer ação recente: você tem um minuto para voltar atrás.",
-    screens: ["catalogo", "ofertas", "entregas", "painel", "perfil", "configuracoes"],
+    screens: ["catalogo", "ofertas", "entregas", "painel", "mais", "perfil", "configuracoes", "balanca"],
   },
   {
     id: "preco-ofertado",
@@ -160,7 +161,7 @@ export const HELP_TOPICS: HelpTopic[] = [
     id: "como-entregar",
     question: "Como funcionam as entregas?",
     answer:
-      "Cada produto que você aceita entra no pedido do mercado, com entrega às terças e sextas. Em Entregas você vê o total a separar no dia e, em cada pedido, pesa os produtos um a um. Com tudo pesado, toque em Entregar pedido à logística; o mercado confere o peso ao receber.",
+      "Cada produto que você aceita entra no pedido do mercado, com entrega às terças e sextas. Em Entregas você vê o total a separar no dia e toca em Iniciar pesagem: o app mostra um produto por vez e o celular fala o que pesar. Com tudo pesado, toque em Entregar pedido à logística; o mercado confere o peso ao receber.",
     screens: ["entregas", "ofertas", "painel"],
   },
   {
@@ -181,8 +182,29 @@ export const HELP_TOPICS: HelpTopic[] = [
     id: "usar-balanca",
     question: "Como uso a balança?",
     answer:
-      "Toque em Pesar pedido. A tela mostra um produto de cada vez: ponha-o na balança e, quando o peso parar de oscilar, toque em Registrar; depois, em Próximo produto. Pedidos grandes podem ser pesados em lotes, que se somam. Sem balança, escolha Digitar peso.",
+      "Toque em Iniciar pesagem, em Entregas. O celular fala o produto e o peso; ponha na balança e, no modo rápido, o app registra e passa ao próximo sozinho quando o peso estabiliza. No modo manual, você toca em Registrar e confirma cada pedido. Sem balança, escolha Digitar peso.",
     screens: ["entregas"],
+  },
+  {
+    id: "modo-pesagem",
+    question: "O que é o modo rápido de pesagem?",
+    answer:
+      "Em Mais, toque em Configurações. A Pesagem automática vem ligada: o app registra o peso e passa ao próximo produto sozinho. Desligada, você registra cada produto e confirma cada pedido antes de seguir.",
+    screens: ["entregas", "configuracoes", "mais"],
+  },
+  {
+    id: "conectar-balanca",
+    question: "Como conecto a balança?",
+    answer:
+      "Abra Mais e toque em Minha balança. São 2 passos: escolha a balança que o celular encontrou e confirme o vínculo. Ela passa a valer só para a sua conta, e você pode desvincular quando quiser.",
+    screens: ["mais", "balanca", "entregas"],
+  },
+  {
+    id: "aba-mais",
+    question: "O que tem na aba Mais?",
+    answer:
+      "Seu perfil, a balança, as configurações, os termos de uso, a política de privacidade, a ajuda e a saída da conta. O seu ícone, no canto de cima, leva só ao perfil e à saída.",
+    screens: ["mais", "balanca", "configuracoes"],
   },
   {
     id: "botao-inicio",

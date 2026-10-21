@@ -4,7 +4,7 @@ import { formatBRL } from "@/lib/format/currency";
 import { formatDateBR } from "@/lib/format/date";
 import { suggestionStatusInfo } from "@/lib/produtor/suggestionStatus";
 import type { SuggestionRecord } from "@/types/produtor";
-import { colors, radius, spacing, typography } from "@/theme";
+import { elevation, colors, radius, spacing, typography } from "@/theme";
 
 // Uma sugestão de produto e em que pé ela está.
 export function SuggestionItem({ suggestion }: { suggestion: SuggestionRecord }) {
@@ -46,8 +46,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: radius.lg,
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderStrong,
+    boxShadow: elevation.card,
   },
   top: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: spacing.sm },
   name: { ...typography.label, flex: 1, color: colors.text },

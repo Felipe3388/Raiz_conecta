@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     minWidth: 40,
     textAlign: "center",
     fontSize: 20,
-    fontWeight: "900",
+    fontWeight: "700",
     color: colors.text,
     outlineWidth: 0,
   },

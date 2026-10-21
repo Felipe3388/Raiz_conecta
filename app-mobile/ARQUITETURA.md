@@ -46,10 +46,11 @@ O app é só do Produtor. Telas de Mercado não existem aqui.
 
 ```
 (produtor)/_layout.tsx      guarda de sessão + provedores + Stack + botão de ajuda (AssistantHost)
-  (tabs)/_layout.tsx        barra com três abas (Catálogo, Ofertas, Entregas) e o botão redondo Início no meio; ícone da conta no cabeçalho
-    painel (tela inicial) · catalogo · ofertas · entregas
+  (tabs)/_layout.tsx        barra com quatro abas (Catálogo, Ofertas, Entregas, Mais) e o botão redondo Início no meio; ícone da conta no cabeçalho
+    painel (tela inicial) · catalogo · ofertas · entregas · mais
   perfil.tsx                "Meu Perfil" (abre por cima das abas, com seta de voltar)
-  configuracoes.tsx         "Configurações" (idem)
+  configuracoes.tsx         "Configurações": modo de pesagem e acessibilidade (idem)
+  balanca.tsx               "Balança": conexão em 2 passos e chave do vínculo (idem)
 ```
 
 | Parte | Onde | O que faz |
@@ -73,7 +74,7 @@ Botão redondo, visível em **todas as telas do Produtor** (fica no layout, acim
 | Catálogo | Sugerir produto · Minhas sugestões · Ajuda |
 | Ofertas | Ajustar meu catálogo · Ajuda |
 | Entregas, Painel | Ver minhas ofertas · Ajuda |
-| Meu Perfil, Configurações | Ajuda |
+| Mais, Meu Perfil, Configurações, Balança | Ajuda |
 
 Em qualquer tela, enquanto houver algo para desfazer, entra **Desfazer ação recente** antes da Ajuda (ver "Desfazer"). Todas trazem "Mudar de lado" e "Esconder botão".
 
@@ -91,9 +92,12 @@ Cuidados que valem para o navegador (descobertos nos testes):
 ### Painel, menu do usuário e Configurações
 
 - **Painel** (tela inicial, botão Início): receita estimada do que foi aceito (quantidade aceita × preço fixo de cada produto), cartão "Próxima entrega" (quantos pedidos separar e entregar até o próximo dia de entrega) que leva à aba Entregas, três contadores (Para responder, Aceitos, No catálogo) que levam às outras telas, gráfico de barras de uma série (receita por produto, até 5 produtos + "Outros produtos"), **Preços e vendas** (ver "Ofertas, preço e leilão inverso") e **Responder primeiro**, com os 3 pedidos pendentes de prazo mais curto (mercado e produtos). A parte de preços e vendas usa os dados simulados do `PricingGateway`; o resto é calculado com o que o app já carregou.
-- **Menu do usuário:** o círculo no canto do cabeçalho das abas (onde ficava o "Sair") mostra as iniciais ou o ícone que o produtor escolheu e abre um menu suspenso logo abaixo dele: Meu Perfil, Configurações, Ajuda e Sair da conta (com confirmação). O atalho de Acessibilidade entra em `content/userMenu.ts` no futuro.
+- **Menu do usuário:** o círculo no canto do cabeçalho das abas (onde ficava o "Sair") mostra as iniciais ou o ícone que o produtor escolheu e abre um menu suspenso logo abaixo dele com **só Meu Perfil e Sair da conta** (com confirmação). Configurações, privacidade, termos e ajuda ficam na aba Mais.
 - **Ícone da conta:** escolhido em Meu Perfil, entre as iniciais e 10 desenhos. Fica guardado no aparelho, por e-mail (`Settings.avatars`); o site ainda não tem esse campo.
-- **Configurações:** Acessibilidade ("Reduzir animações", somado ao que o aparelho já pede), Privacidade (Termos de Uso e Política), Conta (Meu Perfil, Suporte, Sair).
+- **Mais** (`(tabs)/mais.tsx`, `content/moreMenu.ts`, `hooks/useMoreScreen.ts`), no estilo da aba Mais do Mercado Livre: cartão da conta (leva ao perfil), destaque "Conecte sua balança" enquanto não há balança vinculada, e as seções Minha conta (Meu Perfil, Minha balança), Preferências (Configurações), Privacidade (Termos de Uso, Política de Privacidade), Ajuda (Ajuda, Falar com Suporte) e Sair da conta. Cada linha é uma ação numa tabela (Strategy), sem `if` em cadeia.
+- **Configurações** (grupos em `SettingsGroup`, no estilo lista agrupada): **Pesagem** ("Pesagem automática (modo rápido)", ligada por padrão, `Settings.autoWeigh`; "Voz na pesagem", ligada por padrão, `Settings.voice`, lembrada entre as aberturas do app) e Acessibilidade ("Reduzir animações", somado ao que o aparelho já pede).
+- **Balança** (`balanca.tsx`, `useScaleSetup`, `ScaleLinkGateway`, `lib/delivery/scaleLink`): passo 1 procura e escolhe a balança, passo 2 confirma o vínculo. A **chave do vínculo** junta o código do produtor e o código da balança (MAC normalizado): `P{produtor}-B{balança}`; ela existe só por baixo (`buildLinkKey`) e **não aparece para o produtor**, que vê apenas o nome da balança conectada. Hoje é o `MockScaleLinkService` (RC-01 e RC-02). Quando houver backend: `GET/POST /api/produtor/balancas` e `DELETE /api/produtor/balancas/{id}`; o método seguro final da chave ainda será decidido. Pode virar token enviado junto com o peso.
+- **Ofertas só com o que o produtor vende** (`onlyMyProducts` em `lib/produtor/proposals`, aplicado em `useProdutorData`): o mercado aparece, mas só com os produtos que estão no catálogo salvo do produtor; salvou o catálogo, a lista de Ofertas se atualiza. Hoje o filtro é no app; o servidor fará o mesmo depois.
 
 ### Ofertas, preço e leilão inverso
 
@@ -128,7 +132,7 @@ O antigo **Simulador de preço**, a negociação com pausa e o cruzamento "preç
 
 ### Navegação: barra com o botão Início (`ProducerTabBar`)
 
-O login sempre cai no **Painel** (`app/index.tsx` e o redirecionamento do `(auth)/_layout` apontam para `/painel`; `initialRouteName="painel"`). A barra tem as três abas, uma à esquerda (Catálogo) e duas à direita (Ofertas, Entregas), e no meio um **botão redondo Início**, um pouco acima das outras, que leva ao Painel. `lib/produtor/tabs.ts` (`splitTabs`) decide quais ficam à esquerda e à direita (com número ímpar, sobra para a direita) e qual é a "casa" (`HOME_ROUTE`). Cada metade da barra ocupa metade da largura, então o botão fica sempre no centro da tela. Voltar (`backBehavior="initialRoute"`) leva ao Painel.
+O login sempre cai no **Painel** (`app/index.tsx` e o redirecionamento do `(auth)/_layout` apontam para `/painel`; `initialRouteName="painel"`). A barra tem quatro abas, duas à esquerda (Catálogo, Ofertas) e duas à direita (Entregas, Mais), e no meio um **botão redondo Início**, um pouco acima das outras, que leva ao Painel. `lib/produtor/tabs.ts` (`splitTabs`) decide quais ficam à esquerda e à direita (com número ímpar, sobra para a direita) e qual é a "casa" (`HOME_ROUTE`). Cada metade da barra ocupa metade da largura, então o botão fica sempre no centro da tela. Voltar (`backBehavior="initialRoute"`) leva ao Painel.
 
 Cuidados descobertos nos testes: o toque só chega a um botão que está **dentro da área do pai**, então a barra é uma view alta (faixa transparente de 20 px + 70 px de barra) e o botão é filho direto dela, em vez de "vazar" para fora. No navegador a seleção vai em `aria-selected` (o `accessibilityState` não vira atributo). A aba Entregas mostra quantos pedidos ainda pedem ação até o próximo dia de entrega (`pendingCount`) e a Ofertas quantos pedidos esperam resposta, com nomes completos para leitor de tela e singular/plural certos (`badgeLabel`: "Entregas, 1 pedido para a próxima entrega"). O botão de ajuda considera só os 70 px da barra (`TAB_BAR_CONTENT_HEIGHT`).
 
@@ -138,7 +142,16 @@ Cuidados descobertos nos testes: o toque só chega a um botão que está **dentr
 
 **A unidade é o pedido (um mercado), não o produto.** Cada produto aceito gera uma entrega (`Delivery`, com `propostaId`, `mercado`, a quantidade aceita e o preço fixo), e `groupOrders` junta as do mesmo mercado e do mesmo dia num **pedido**, de 1 ou vários produtos. O cartão do pedido (`OrderCardView`, dados de `describeOrder`) mostra o mercado, quantos produtos e kg, o valor, **a lista de itens** (cada um com sua situação: "A pesar", o peso, "Entregue", "Mercado: x kg") e quanto já foi pesado (ex.: Mercado Teste: 30 kg de morango e 40 kg de abacaxi = 70 kg).
 
-**Pesar o pedido, produto por produto.** "Pesar pedido" abre a folha de pesagem (`WeighSheet`) no primeiro produto que falta; ela diz qual produto separar na balança ("Pesar Abacaxi", "Mercado Teste · produto 1 de 2"), o peso esperado e a faixa aceita. Depois de registrar o peso, **Próximo produto** passa ao seguinte, **Anterior** volta, e no último o botão vira **Concluir pesagem**. Na mesma folha a lista "Produtos do pedido" mostra todos os itens com a situação de cada um e permite pular para qualquer um (regras em `lib/delivery/orderFlow`).
+**Iniciar pesagem (botão único).** No topo de Entregas, "Iniciar pesagem" abre a pesagem em tela cheia (`WeighRunScreen`, `useWeighRun`, máquina de estados em `lib/delivery/session`) e percorre todos os produtos do dia, pedido por pedido. Há dois modos, escolhidos em Configurações (padrão: automático):
+- **Automático (modo rápido):** quando o peso estabiliza **dentro da faixa**, o app registra e passa ao próximo produto sozinho; fora da faixa nunca registra sozinho e espera a pessoa. A trava só solta quando a balança esvazia (o simulador espera 1,5 s para tirar e colocar o próximo).
+- **Manual (por pedido):** a pessoa toca em Registrar em cada produto e, ao fim do pedido, em **Confirmar pedido** antes de ir ao seguinte.
+O celular **fala** o mercado e o que pesar ("Empório São José. Coloque na balança 8 quilos de alface."; `expo-speech`, `pt-BR`, `lib/speech`); o botão de voz da tela liga e desliga e **a escolha fica guardada** (`Settings.voice`). A troca de produto usa uma transição suave (`StepTransition`, sai em 140 ms e entra em 280 ms; sem movimento quando "reduzir animações" está ligado).
+
+**Entre um pedido e outro** (fase `between` em `lib/delivery/session`): ao pesar o último produto de um pedido (no modo manual, ao confirmar o pedido), se ainda há outro pedido, a pesagem pausa por **5 segundos** (`BETWEEN_ORDERS_SECONDS`) mostrando o mercado seguinte, quantos produtos e a contagem. "Pesar agora" segue de imediato; "Deixar para depois" (`skipNextOrder`) pula aquele pedido, que continua pendente em Entregas, e vai ao próximo; sem mais pedidos, a pesagem termina. Ao zerar a contagem segue sozinho. A voz anuncia a pausa (`betweenPrompt`).
+
+**Filtro por situação** (`lib/delivery/statusFilter`, segunda linha de chips em Entregas, excludente): **Todos**, **Falta pesar** (tem produto sem peso e ainda não foi à logística) e **Para a logística** (todos os produtos pesados e ainda com o produtor). Vale para a lista, para o total "Separar hoje" e para o que o "Iniciar pesagem" percorre. "Ajustar pesagem" no cartão (só depois de pesar) abre a folha de um pedido.
+
+**Pesar o pedido, produto por produto (folha de ajuste).** "Ajustar pesagem" abre a folha de pesagem (`WeighSheet`) no primeiro produto que falta; ela diz qual produto separar na balança ("Pesar Abacaxi", "Mercado Teste · produto 1 de 2"), o peso esperado e a faixa aceita. Depois de registrar o peso, **Próximo produto** passa ao seguinte, **Anterior** volta, e no último o botão vira **Concluir pesagem**. Na mesma folha a lista "Produtos do pedido" mostra todos os itens com a situação de cada um e permite pular para qualquer um (regras em `lib/delivery/orderFlow`).
 
 **O total do dia fica na mesma tela:** acima dos pedidos, a lista "Separar hoje" (`buildPickList`) soma por produto quanto precisa ser separado no dia (ex.: Abacaxi 40 kg, Morango 30 kg...), com quantos pedidos e quanto falta pesar, para o produtor separar o total e depois distribuir por pedido.
 
@@ -152,7 +165,7 @@ Cuidados descobertos nos testes: o toque só chega a um botão que está **dentr
 
 **Balança (IoT).** `ScaleGateway` entrega leituras (`subscribe(onReading, onConnection)`); o app é que decide se o peso está **estável** (`lib/delivery/scale.ts`: últimas 5 leituras com variação de no máximo 0,02 kg ou 0,2%, e o valor usado é a mediana) e se a balança está **vazia** (abaixo de 50 g). Depois de registrar um lote, o botão fica travado até a balança esvaziar, para o mesmo peso não entrar duas vezes. A `MockScaleService` simula uma balança que oscila e assenta, e a folha de pesagem tem um painel "Simulador de balança" (colocar e tirar peso) que só aparece no modo simulado. O módulo real (ESP32 com célula de carga) **não foi feito**: bastaria uma implementação de `ScaleGateway` (por Bluetooth ou rede), sem mexer nas telas. Bluetooth precisa de build de desenvolvimento (não roda no Expo Go).
 
-**Ainda a fazer: tela de conexão com a balança/módulo (não construída nesta versão).** Pelo que foi combinado, o módulo será ligado por **Wi‑Fi a um microsserviço**, para o **celular e o site usarem o mesmo caminho** (e não só Bluetooth em cada aparelho). Isso pede, no backend: APIs para o módulo, **vinculadas ao usuário e ao pedido** (qual produtor está pesando qual pedido/produto), e uma **reestruturação do banco de dados** para guardar módulos, sessões de pesagem e leituras. No app bastará outra implementação de `ScaleGateway` (por HTTP/WebSocket) e uma tela para escolher e conectar o módulo; as telas de pesagem não mudam.
+**Tela de conexão: feita só no app, com dados simulados (ver "Balança" acima). O que falta é o backend.** Pelo que foi combinado, o módulo será ligado por **Wi‑Fi a um microsserviço**, para o **celular e o site usarem o mesmo caminho** (e não só Bluetooth em cada aparelho). Isso pede, no backend: APIs para o módulo, **vinculadas ao usuário e ao pedido** (qual produtor está pesando qual pedido/produto), e uma **reestruturação do banco de dados** para guardar módulos, sessões de pesagem e leituras. No app bastará outra implementação de `ScaleGateway` (por HTTP/WebSocket) e uma tela para escolher e conectar o módulo; as telas de pesagem não mudam.
 
 ### Desfazer
 
@@ -206,6 +219,17 @@ O que foi conferido: o app exporta para web, Android e iOS, e um teste de navega
 
 A logo do time está em `assets/logo` (`logo.svg`, `logocor.svg`, `logo1.png`, `logo1.jpg`, mais `logo-verde.png` e `logo-branca.png`, com fundo transparente, derivadas do `logo1.png`). Dentro do app a marca é desenhada como **vetor** (`components/brand/BrandMark`, caminho em `logoPaths.ts`, tirado do `logo.svg`) com `react-native-svg`: nítida em qualquer tamanho e com a cor do tema (verde, branco sobre fundo verde etc.). Ela substituiu todas as folhas que vinham da biblioteca de ícones (cabeçalho, botão Início, passos do cadastro, folhas flutuantes, assistente, logo animada da entrada). Os arquivos de ícone do aplicativo (`icon.png`, `splash-icon.png`, `favicon.png`, ícone adaptativo do Android em primeiro plano, monocromático e fundo `#357C3A`) foram refeitos a partir dela. O favicon da aba do navegador (`favicon.png`) tem cantos arredondados e fundo transparente nos cantos; os ícones do app continuam quadrados, porque iOS e Android aplicam a própria máscara. No cadastro a logo aparece sem o fundo verde-claro (`BrandHeader framed={false}`); no login e na tela "em análise" ela continua com o fundo. O ícone do Catálogo e o do botão de ajuda "Ajustar meu catálogo" agora são `nutrition-outline` (uma fruta), já que a folha virou a logo.
 
+## Visual (estilo Apple, `theme/`)
+
+O visual segue as regras do skill apple-design (só o texto do skill estava disponível; as páginas de referência da HIG não, então não há citação de página):
+- **Cor:** verde da marca `#15803D` (contraste 5,0:1 com branco) para ação principal e para o destaque do Painel (o cartão verde com a receita, único elemento de destaque); âmbar só para atenção; texto secundário com contraste mínimo de 4,5:1. Uma cor significa uma coisa.
+- **Tipografia:** corpo de 17 pt, título grande nas abas (`ScreenHeading`), pesos até 700, números em `tabular-nums` (`typography.numeric`).
+- **Alvos:** no mínimo 44 pt (botões, chips, linhas de lista, ícone de voz).
+- **Superfícies:** sombras suaves (`elevation.card/raised`, `boxShadow`) no lugar de bordas; filetes finos só como separador de lista e rodapé; listas agrupadas (`SettingsGroup`, `SettingsRow`); folhas com alça (`BottomSheet`).
+- **Barra de abas:** ícone preenchido na aba ativa.
+- **Movimento:** curto e cancelável, respeita "reduzir animações".
+- **Ainda não feito:** modo escuro (as cores são constantes; falta um provedor de tema).
+
 ## Animações (`components/motion`)
 
 | Componente | O que faz |
@@ -217,6 +241,7 @@ A logo do time está em `assets/logo` (`logo.svg`, `logocor.svg`, `logo1.png`, `
 | `StepProgress` | A folhinha caminha pela barra até o passo atual. |
 | `ScreenTransition` | No navegador, a tela entra deslizando do lado certo ao avançar ou voltar. |
 | `usePresence` | Faz algo aparecer e sumir com animação (opções do botão de ajuda, menu do usuário), tirando-o da tela só depois da saída. |
+| `StepTransition` | Troca suave entre os itens da pesagem (sai e entra com leve deslize), chaveada pelo passo. |
 | `Collapse` | Abre e fecha um bloco animando altura e transparência, para o que vem abaixo descer e subir sem salto (checklist e medidor de senha, "Senhas conferem!"). Roda no JavaScript porque altura não funciona com o driver nativo. |
 
 Nas telas do Produtor, os cartões entram em sequência (`Reveal`), o selo de "marcado" do catálogo estoura com mola e a barra "Salvar Escolhas" sobe do rodapé.

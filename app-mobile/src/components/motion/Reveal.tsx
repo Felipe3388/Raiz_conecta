@@ -38,9 +38,7 @@ export function Reveal({ children, delay = 0, offset = 18, style }: RevealProps)
         style,
         {
           opacity: progress,
-          transform: [
-            { translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [offset, 0] }) },
-          ],
+          transform: [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [offset, 0] }) }],
         },
       ]}
     >

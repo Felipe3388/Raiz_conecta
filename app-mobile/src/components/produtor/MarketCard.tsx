@@ -5,7 +5,7 @@ import { PressableScale } from "@/components/motion/PressableScale";
 import { Badge } from "@/components/ui/Badge";
 import { URGENT_SECONDS } from "@/content/proposalTexts";
 import { countdownLabel } from "@/lib/produtor/proposals";
-import { colors, radius, spacing, typography } from "@/theme";
+import { colors, elevation, radius, spacing, typography } from "@/theme";
 
 interface MarketCardProps {
   mercado: string;
@@ -33,7 +33,7 @@ export function MarketCard({
   const orders = orderCount === 1 ? "1 pedido" : `${orderCount} pedidos`;
 
   return (
-    <View style={[styles.card, pendingCount > 0 && styles.cardPending]}>
+    <View style={styles.card}>
       <PressableScale
         accessibilityRole="button"
         accessibilityLabel={`${mercado}, ${orders}`}
@@ -81,11 +81,9 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.md,
     backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.borderMid,
-    borderRadius: radius.lg + 4,
+    boxShadow: elevation.card,
+    borderRadius: radius.lg,
   },
-  cardPending: { borderColor: colors.warningBorderStrong },
   header: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: spacing.sm, minHeight: 56 },
   symbol: {
     width: 52,
@@ -98,7 +96,7 @@ const styles = StyleSheet.create({
     borderColor: colors.primaryBorder,
   },
   titleBlock: { flex: 1, minWidth: 140, gap: 2 },
-  name: { fontSize: 20, fontWeight: "900", color: colors.text },
+  name: { fontSize: 20, fontWeight: "700", color: colors.text },
   count: { ...typography.hint, fontWeight: "700", color: colors.textMuted },
   status: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: spacing.sm },
   time: {
@@ -115,7 +113,7 @@ const styles = StyleSheet.create({
     borderColor: colors.warningBorder,
   },
   timeUrgent: { backgroundColor: colors.dangerSoft, borderColor: colors.dangerBorder },
-  timeText: { ...typography.hint, fontWeight: "800", color: colors.warningDark },
+  timeText: { ...typography.hint, fontWeight: "700", color: colors.warningDark },
   timeTextUrgent: { color: colors.dangerText },
   orders: { gap: spacing.md },
 });
