@@ -37,8 +37,12 @@ describe("stageOf (em que etapa está a entrega)", () => {
     expect(stageOf(makeDelivery({ weighings: [weighing(11)] }))).toBe("PRONTA");
   });
 
-  it("passou da faixa: volta a separar (tem de tirar um pouco)", () => {
-    expect(stageOf(makeDelivery({ weighings: [weighing(12)] }))).toBe("A_SEPARAR");
+  it("passou do pedido: continua pronta (o excedente é por conta do produtor, não é pago)", () => {
+    expect(stageOf(makeDelivery({ weighings: [weighing(12)] }))).toBe("PRONTA");
+  });
+
+  it("abaixo do mínimo: continua a separar", () => {
+    expect(stageOf(makeDelivery({ weighings: [weighing(9.7)] }))).toBe("A_SEPARAR");
   });
 
   it("entregou à logística", () => {

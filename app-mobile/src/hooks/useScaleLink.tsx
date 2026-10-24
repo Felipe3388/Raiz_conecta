@@ -1,18 +1,28 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { cleanScaleName, scaleDisplayName } from "@/lib/delivery/scaleLink";
 import { getScaleLinkService, type ScaleLinkGateway } from "@/services";
-import type { ScaleDevice, ScaleLink } from "@/types/scaleLink";
+import type { ScaleDevice, ScaleLink, ScaleState } from "@/types/scaleLink";
 
 type LoadStatus = "loading" | "ready" | "error";
 
 interface ScaleLinkData {
   status: LoadStatus;
-  // A balança vinculada ao produtor, ou null.
+  // Todas as balanças do produtor.
+  scales: ScaleLink[];
+  // A balança conectada (a que a pesagem usa), ou null.
   link: ScaleLink | null;
+  // O nome da balança conectada, como aparece na tela (o do produtor ou o original), ou null.
+  activeName: string | null;
   findDevices: () => Promise<ScaleDevice[]>;
-  linkScale: (deviceId: string) => Promise<ScaleLink>;
-  unlinkScale: () => Promise<void>;
+  addScale: (deviceId: string) => Promise<ScaleLink>;
+  activateScale: (deviceId: string) => Promise<void>;
+  // O nome que o produtor escolheu; vazio volta ao nome original.
+  renameScale: (deviceId: string, text: string) => Promise<void>;
+  removeScale: (deviceId: string) => Promise<void>;
   reload: () => Promise<void>;
 }
+
+const EMPTY: ScaleState = { scales: [], activeDeviceId: null };
 
 const ScaleLinkContext = createContext<ScaleLinkData | null>(null);
 
@@ -22,15 +32,16 @@ interface ProviderProps {
   gateway?: ScaleLinkGateway;
 }
 
-// A balança vinculada ao produtor, compartilhada pelas telas (a aba Mais mostra o estado; a tela Balança vincula).
+// As balanças do produtor, compartilhadas pelas telas: a aba Mais e a pesagem mostram a conectada; a tela Balança
+// adiciona, conecta e remove; as Configurações dão o nome.
 export function ScaleLinkProvider({ email, children, gateway = getScaleLinkService() }: ProviderProps) {
   const [status, setStatus] = useState<LoadStatus>("loading");
-  const [link, setLink] = useState<ScaleLink | null>(null);
+  const [state, setState] = useState<ScaleState>(EMPTY);
 
   const reload = useCallback(async () => {
     setStatus("loading");
     try {
-      setLink(await gateway.getLink(email));
+      setState(await gateway.getState(email));
       setStatus("ready");
     } catch {
       setStatus("error");
@@ -41,24 +52,57 @@ export function ScaleLinkProvider({ email, children, gateway = getScaleLinkServi
     reload();
   }, [reload]);
 
-  const linkScale = useCallback(
+  // Depois de cada mudança o estado volta do serviço, para a tela nunca mostrar algo que o serviço não guardou.
+  const refresh = useCallback(async () => setState(await gateway.getState(email)), [gateway, email]);
+
+  const addScale = useCallback(
     async (deviceId: string) => {
-      const created = await gateway.link(email, deviceId);
-      setLink(created);
-      return created;
+      const added = await gateway.add(email, deviceId);
+      await refresh();
+      return added;
     },
-    [gateway, email],
+    [gateway, email, refresh],
   );
 
-  const unlinkScale = useCallback(async () => {
-    await gateway.unlink(email);
-    setLink(null);
-  }, [gateway, email]);
-
-  const value = useMemo<ScaleLinkData>(
-    () => ({ status, link, findDevices: () => gateway.findDevices(), linkScale, unlinkScale, reload }),
-    [status, link, gateway, linkScale, unlinkScale, reload],
+  const activateScale = useCallback(
+    async (deviceId: string) => {
+      await gateway.activate(email, deviceId);
+      await refresh();
+    },
+    [gateway, email, refresh],
   );
+
+  const renameScale = useCallback(
+    async (deviceId: string, text: string) => {
+      await gateway.rename(email, deviceId, cleanScaleName(text));
+      await refresh();
+    },
+    [gateway, email, refresh],
+  );
+
+  const removeScale = useCallback(
+    async (deviceId: string) => {
+      await gateway.remove(email, deviceId);
+      await refresh();
+    },
+    [gateway, email, refresh],
+  );
+
+  const value = useMemo<ScaleLinkData>(() => {
+    const link = state.scales.find((scale) => scale.deviceId === state.activeDeviceId) ?? null;
+    return {
+      status,
+      scales: state.scales,
+      link,
+      activeName: link ? scaleDisplayName(link) : null,
+      findDevices: () => gateway.findDevices(),
+      addScale,
+      activateScale,
+      renameScale,
+      removeScale,
+      reload,
+    };
+  }, [status, state, gateway, addScale, activateScale, renameScale, removeScale, reload]);
 
   return <ScaleLinkContext.Provider value={value}>{children}</ScaleLinkContext.Provider>;
 }

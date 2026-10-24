@@ -37,6 +37,9 @@ const SIZE = 60;
 const EDGE = spacing.md;
 // Quanto do botão aparece quando ele está escondido na lateral (o resto sai da tela).
 const PEEK = 30;
+// A setinha do botão escondido: um pouco maior que a antiga, centralizada na parte que aparece.
+const TUCKED_ICON = 28;
+const TUCKED_PADDING = (PEEK - TUCKED_ICON) / 2;
 // Quanto o dedo precisa andar para contar como arrastar (e não como um toque).
 const DRAG_THRESHOLD = 6;
 const MENU_GAP = spacing.sm + 4;
@@ -297,7 +300,7 @@ export function AssistantFab({ screen, onAction }: AssistantFabProps) {
             style={[styles.main, tucked && (onLeft ? styles.mainTuckedLeft : styles.mainTuckedRight)]}
           >
             {tucked ? (
-              <Ionicons name={tuckedIcon} size={22} color={colors.primaryContrast} />
+              <Ionicons name={tuckedIcon} size={TUCKED_ICON} color={colors.primaryContrast} />
             ) : (
               <Animated.View style={{ transform: [{ rotate: turn }] }}>
                 <Ionicons name="add" size={36} color={colors.primaryContrast} />
@@ -342,7 +345,8 @@ const styles = StyleSheet.create({
     boxShadow: elevation.raised,
   },
   handleTucked: { opacity: TUCKED_OPACITY },
-  // Escondido, só a borda do botão aparece: a setinha vai para esse lado para ser vista.
-  mainTuckedRight: { justifyContent: "flex-start", paddingLeft: 4 },
-  mainTuckedLeft: { justifyContent: "flex-end", paddingRight: 4 },
+  // Escondido, só metade do botão aparece (PEEK): a setinha fica no meio dessa parte, na horizontal e na vertical.
+  // `row` é o que faz o justifyContent mexer na horizontal (na coluna ele a levaria para o alto do botão).
+  mainTuckedRight: { flexDirection: "row", justifyContent: "flex-start", paddingLeft: TUCKED_PADDING },
+  mainTuckedLeft: { flexDirection: "row", justifyContent: "flex-end", paddingRight: TUCKED_PADDING },
 });

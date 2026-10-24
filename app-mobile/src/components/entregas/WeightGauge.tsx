@@ -12,15 +12,17 @@ interface WeightGaugeProps {
   registeredKg: number;
   pendingKg: number;
   tone: StageTone;
+  // Produtor: só há mínimo; a faixa sombreada vai do mínimo até o fim da régua e não há "máx.".
+  openEnded?: boolean;
 }
 
 const percent = (value: number, max: number) => `${Math.min(100, Math.max(0, (value / max) * 100))}%` as const;
 
 // Régua do peso: a faixa aceita aparece sombreada e o preenchimento mostra onde o peso está.
-export function WeightGauge({ range, expectedKg, registeredKg, pendingKg, tone }: WeightGaugeProps) {
+export function WeightGauge({ range, expectedKg, registeredKg, pendingKg, tone, openEnded = false }: WeightGaugeProps) {
   const total = registeredKg + pendingKg;
   // A régua vai um pouco além do máximo aceito, para dar para ver quando o peso passa dele.
-  const axisMax = Math.max(range.maxKg * 1.25, total * 1.05, 0.001);
+  const axisMax = Math.max((openEnded ? expectedKg : range.maxKg) * 1.25, total * 1.05, 0.001);
   const color = TONE_COLORS[tone];
 
   return (
@@ -34,7 +36,10 @@ export function WeightGauge({ range, expectedKg, registeredKg, pendingKg, tone }
         <View
           style={[
             styles.zone,
-            { left: percent(range.minKg, axisMax), width: percent(range.maxKg - range.minKg, axisMax) },
+            {
+              left: percent(range.minKg, axisMax),
+              width: percent((openEnded ? axisMax : range.maxKg) - range.minKg, axisMax),
+            },
           ]}
         />
         <View style={[styles.fill, { width: percent(registeredKg, axisMax), backgroundColor: color.strong }]} />
@@ -56,7 +61,7 @@ export function WeightGauge({ range, expectedKg, registeredKg, pendingKg, tone }
       <View style={styles.legend}>
         <Text style={styles.legendText}>mín. {formatKg(range.minKg)}</Text>
         <Text style={[styles.legendText, styles.legendStrong]}>ideal {formatKg(expectedKg)}</Text>
-        <Text style={styles.legendText}>máx. {formatKg(range.maxKg)}</Text>
+        {!openEnded && <Text style={styles.legendText}>máx. {formatKg(range.maxKg)}</Text>}
       </View>
     </View>
   );

@@ -142,10 +142,45 @@ interface AutoRegisterInput {
   // Como fica o produto com esse peso somado ao que já foi registrado.
   verdict: WeightVerdict;
   saving: boolean;
+  // O peso já ficou parado pelo tempo todo (STABLE_HOLD_SECONDS).
+  held: boolean;
 }
 
-// No modo automático o app registra sozinho quando o peso parou e está dentro da faixa. Peso fora da faixa nunca é
-// registrado sozinho: quem decide é a pessoa.
-export function shouldAutoRegister({ autoWeigh, source, candidateKg, verdict, saving }: AutoRegisterInput): boolean {
-  return autoWeigh && source === "BALANCA" && !saving && candidateKg !== null && verdict === "NA_FAIXA";
+// No modo automático o app registra sozinho quando o peso parou (e ficou firme por 5 segundos) e está dentro da faixa.
+// Peso fora da faixa nunca é registrado sozinho: quem decide é a pessoa.
+export function shouldAutoRegister({
+  autoWeigh,
+  source,
+  candidateKg,
+  verdict,
+  saving,
+  held,
+}: AutoRegisterInput): boolean {
+  return autoWeigh && source === "BALANCA" && !saving && held && candidateKg !== null && verdict === "NA_FAIXA";
+}
+
+// A confirmação verde ao passar de produto (ou de pedido): aparece por 3 segundos, e o conteúdo de baixo troca no meio
+// desse tempo, escondido por ela. Assim o próximo produto nunca aparece de repente.
+export const CELEBRATION_MS = 3000;
+export const CELEBRATION_SWAP_MS = 1500;
+
+export type CelebrationKind = "item" | "order";
+
+// O que a confirmação celebra ao seguir adiante: o produto pesado ou o pedido que fechou. Na pausa entre pedidos não
+// há confirmação (ela já é uma tela própria). No modo manual o último produto leva à confirmação do pedido, que é
+// quem fecha o pedido; no rápido, o último produto já fecha.
+export function celebrationKind(state: RunState, autoWeigh: boolean): CelebrationKind | null {
+  if (state.phase === "between") return null;
+  if (state.phase === "confirm") return "order";
+  return autoWeigh && runPosition(state.steps, state.index).isLastOfOrder ? "order" : "item";
+}
+
+// O passo que vem depois da confirmação, para ela dizer "em seguida": o próximo produto do mesmo pedido (produto) ou o
+// primeiro do pedido seguinte (pedido). Null quando não há mais nada para pesar.
+export function celebrationNext(state: RunState, kind: CelebrationKind): RunStep | null {
+  const current = state.steps[state.index];
+  const next = state.steps[state.index + 1];
+  if (!current || !next) return null;
+  const sameOrder = next.orderKey === current.orderKey;
+  return (kind === "item") === sameOrder ? next : null;
 }

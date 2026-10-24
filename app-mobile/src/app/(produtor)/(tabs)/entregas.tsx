@@ -12,6 +12,7 @@ import { FilterChips } from "@/components/ui/FilterChips";
 import { ListScreen } from "@/components/ui/ListScreen";
 import { LoadError } from "@/components/ui/LoadError";
 import { PageLoader } from "@/components/ui/PageLoader";
+import { SCALE_CONFIG_NOTE } from "@/content/scaleTexts";
 import { orderHandOverText, pickListTitle, RUN_TEXTS } from "@/content/deliveryTexts";
 import { useEntregasScreen } from "@/hooks/useEntregasScreen";
 import { DONE_FILTER } from "@/lib/delivery/plan";
@@ -49,6 +50,10 @@ export default function EntregasScreen() {
           <Text style={styles.runHint}>
             {!screen.run.canStart ? RUN_TEXTS.nothing : screen.run.isAuto ? RUN_TEXTS.startAuto : RUN_TEXTS.startManual}
           </Text>
+          <View style={styles.scaleNote}>
+            <Ionicons name="scale-outline" size={18} color={colors.textMuted} />
+            <Text style={styles.runHint}>{SCALE_CONFIG_NOTE}</Text>
+          </View>
         </View>
       )}
 
@@ -149,6 +154,7 @@ const styles = StyleSheet.create({
   top: { gap: spacing.xs },
   subtitle: { ...typography.body, color: colors.textMuted },
   run: { gap: spacing.xs },
-  runHint: { ...typography.hint, color: colors.textMuted },
+  runHint: { ...typography.hint, color: colors.textMuted, flexShrink: 1 },
+  scaleNote: { flexDirection: "row", alignItems: "flex-start", gap: spacing.xs + 2, paddingTop: spacing.xs },
   section: { ...typography.heading, fontSize: 18, color: colors.text, marginTop: spacing.xs },
 });

@@ -1,4 +1,11 @@
-import { buildLinkKey, normalizeDeviceId, producerRef } from "./scaleLink";
+import {
+  buildLinkKey,
+  cleanScaleName,
+  MAX_SCALE_NAME_LENGTH,
+  normalizeDeviceId,
+  producerRef,
+  scaleDisplayName,
+} from "./scaleLink";
 
 describe("normalizeDeviceId", () => {
   it("tira os separadores e põe em maiúsculas", () => {
@@ -29,5 +36,21 @@ describe("producerRef", () => {
   it("tem 6 caracteres e muda de uma conta para outra", () => {
     expect(producerRef("ana@sitio.com")).toHaveLength(6);
     expect(producerRef("ana@sitio.com")).not.toBe(producerRef("bia@sitio.com"));
+  });
+});
+
+describe("nome da balança", () => {
+  it("arruma o que foi digitado", () => {
+    expect(cleanScaleName("  Balança   da   horta ")).toBe("Balança da horta");
+    expect(cleanScaleName("x".repeat(50))).toBe("x".repeat(MAX_SCALE_NAME_LENGTH));
+  });
+
+  it("vazio volta ao nome original", () => {
+    expect(cleanScaleName("   ")).toBeNull();
+  });
+
+  it("mostra o nome do produtor ou, sem ele, o da balança", () => {
+    expect(scaleDisplayName({ deviceName: "Balança RC-01", nickname: "Da horta" })).toBe("Da horta");
+    expect(scaleDisplayName({ deviceName: "Balança RC-01", nickname: null })).toBe("Balança RC-01");
   });
 });

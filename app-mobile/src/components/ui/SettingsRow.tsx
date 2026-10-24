@@ -47,17 +47,17 @@ export function SettingsRow({ icon, label, description, right, onPress, tone }: 
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", gap: spacing.sm + 4, minHeight: 56 },
+  row: { flexDirection: "row", alignItems: "center", gap: spacing.md, minHeight: 64, paddingVertical: spacing.sm + 4 },
   tile: {
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.sm + 2,
     backgroundColor: colors.primaryTint,
   },
   tileDanger: { backgroundColor: colors.dangerSoft },
-  text: { flex: 1, gap: 2 },
+  text: { flex: 1, gap: 4 },
   label: { ...typography.label, color: colors.text },
   description: { ...typography.hint, color: colors.textMuted },
   danger: { color: colors.danger },

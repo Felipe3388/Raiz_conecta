@@ -15,9 +15,7 @@ interface ViaCepResponse {
 // Consulta o endereço no ViaCEP (serviço público, independente da nossa API).
 export class CepService implements CepGateway {
   // O fetch é chamado por uma função própria: guardá-lo direto na classe quebra no navegador.
-  constructor(
-    private readonly fetchImpl: typeof fetch = (input, init) => fetch(input, init),
-  ) {}
+  constructor(private readonly fetchImpl: typeof fetch = (input, init) => fetch(input, init)) {}
 
   async lookup(cep: string): Promise<CepLookup> {
     const digits = digitsOnly(cep);

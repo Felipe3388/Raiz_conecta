@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { WEIGH_ERRORS } from "@/content/deliveryTexts";
 import { keepLocked, scaleStatus } from "@/lib/delivery/scale";
 import { deliveryExpectedKg, totalWeighedKg } from "@/lib/delivery/stage";
-import { judgeWeight, parseKg, roundKg, toleranceFor } from "@/lib/delivery/weight";
+import { judgeProducerWeight, judgeWeight, parseKg, roundKg, toleranceFor } from "@/lib/delivery/weight";
+import { minimumAlert, type MinimumAlert } from "@/content/deliveryTexts";
 import type { Delivery, WeigherRole, WeighingInput, WeighingSource } from "@/types/delivery";
 import { useScale } from "./useScale";
 
@@ -52,17 +53,28 @@ export function useWeighSheet({ visible, delivery, role, onRegister, keepScaleBe
   const already = role === "PRODUTOR" && delivery ? totalWeighedKg(delivery) : 0;
   const projectedKg = roundKg(already + (candidate ?? 0));
   const expectedKg = delivery ? deliveryExpectedKg(delivery) : 0;
-  const judgement = judgeWeight(
-    expectedKg,
-    projectedKg > 0 ? projectedKg : null,
-    toleranceFor(delivery?.produto ?? ""),
-  );
+  const tolerance = toleranceFor(delivery?.produto ?? "");
+  // O produtor tem mínimo obrigatório e nenhum máximo; o mercado confere dentro da faixa dos dois lados.
+  const judge = role === "PRODUTOR" ? judgeProducerWeight : judgeWeight;
+  const judgement = judge(expectedKg, projectedKg > 0 ? projectedKg : null, tolerance);
+  // Aviso "abaixo do mínimo": enquanto aberto, o produtor continua no mesmo produto.
+  const [alert, setAlert] = useState<MinimumAlert | null>(null);
+
+  // Barra o que ficaria abaixo do mínimo e abre o aviso. Devolve true quando pode seguir.
+  function allow(totalKg: number): boolean {
+    if (role !== "PRODUTOR" || !delivery) return true;
+    const result = judgeProducerWeight(expectedKg, totalKg > 0 ? totalKg : null, tolerance);
+    if (result.verdict === "NA_FAIXA") return true;
+    setAlert(minimumAlert(delivery.produto, result));
+    return false;
+  }
 
   async function register() {
     if (candidate === null) {
       setError(source === "BALANCA" ? WEIGH_ERRORS.nothing : WEIGH_ERRORS.manual);
       return;
     }
+    if (!allow(projectedKg)) return;
     setIsSaving(true);
     setError(null);
     try {
@@ -74,6 +86,13 @@ export function useWeighSheet({ visible, delivery, role, onRegister, keepScaleBe
     } finally {
       setIsSaving(false);
     }
+  }
+
+  // Antes de ir ao próximo produto: o que já foi registrado precisa ter chegado ao mínimo.
+  function canLeave(): boolean {
+    // Enquanto o último peso ainda está sendo salvo, espera: um novo toque segue.
+    if (isSaving) return false;
+    return allow(already);
   }
 
   function changeSource(next: WeighingSource) {
@@ -94,6 +113,9 @@ export function useWeighSheet({ visible, delivery, role, onRegister, keepScaleBe
     error,
     isSaving,
     register,
+    alert,
+    dismissAlert: () => setAlert(null),
+    canLeave,
     candidate,
     projectedKg,
     expectedKg,
@@ -101,6 +123,7 @@ export function useWeighSheet({ visible, delivery, role, onRegister, keepScaleBe
     scale: {
       kg: scale.kg,
       stableKg: scale.stableKg,
+      spread: scale.spread,
       simulator: scale.simulator,
       status: scaleStatus({ connection: scale.connection, kg: scale.kg, stableKg: scale.stableKg, locked }),
     },

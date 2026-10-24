@@ -4,17 +4,23 @@ import { Modal, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { PressableScale } from "@/components/motion/PressableScale";
 import { StepTransition } from "@/components/motion/StepTransition";
+import { AlertModal } from "@/components/ui/AlertModal";
 import { Button } from "@/components/ui/Button";
+import { ConfirmationPopup } from "./ConfirmationPopup";
+import { StabilityNotice } from "./StabilityNotice";
 import { Input } from "@/components/ui/Input";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import {
   RUN_TEXTS,
   runProgressLabel,
   SCALE_TEXTS,
+  STABILITY_TEXTS,
   VERDICT_TONES,
-  verdictSummary,
+  producerVerdictSummary,
   type StageTone,
 } from "@/content/deliveryTexts";
+import { SCALE_CONFIG_NOTE, scaleChipLabel } from "@/content/scaleTexts";
+import { useScaleLink } from "@/hooks/useScaleLink";
 import type { useWeighRun } from "@/hooks/useWeighRun";
 import type { ScaleStatusKey } from "@/lib/delivery/scale";
 import { formatKg } from "@/lib/format/weight";
@@ -43,6 +49,7 @@ const RELEASE_MS = 1500;
 // No modo automático não há botão para tocar: o celular fala o que pesar e o app segue sozinho quando o peso estabiliza.
 export function WeighRunScreen({ run }: { run: WeighRun }) {
   const { sheet, order, card, position } = run;
+  const { activeName } = useScaleLink();
   const simulator = sheet.scale.simulator;
   const locked = sheet.scale.status === "locked";
 
@@ -67,6 +74,13 @@ export function WeighRunScreen({ run }: { run: WeighRun }) {
   const statusTone = TONE_COLORS[STATUS_TONES[sheet.scale.status]];
   const progress = ((position.step - 1) / position.steps) * 100;
   const inRange = card?.weighing.verdict === "NA_FAIXA";
+
+  const { stability, celebration } = run;
+  const onScale = sheet.source === "BALANCA";
+  // Carga irregular: tem peso na balança, mas ele ainda oscila. Parado: a contagem de 5 s. Firme: já pode registrar.
+  const irregular = onScale && sheet.scale.status === "settling";
+  const holding = onScale && sheet.scale.status === "stable" && !stability.held;
+  const ready = onScale && sheet.scale.status === "stable" && stability.held;
 
   const nextLabel = position.isLastOfOrder && !run.isAuto ? RUN_TEXTS.finishOrder : RUN_TEXTS.next;
   const registerLabel = sheet.candidate !== null ? `Registrar ${formatKg(sheet.candidate)}` : RUN_TEXTS.register;
@@ -102,6 +116,20 @@ export function WeighRunScreen({ run }: { run: WeighRun }) {
         </View>
         <View style={styles.progress}>
           <ProgressBar value={progress} />
+          {/* A balança em uso, no canto. O nome é o que o produtor escolheu nas Configurações. */}
+          <View
+            accessibilityLabel={activeName ? `Balança conectada: ${activeName}` : "Nenhuma balança conectada"}
+            style={styles.scaleChip}
+          >
+            <Ionicons
+              name={activeName ? "scale" : "scale-outline"}
+              size={16}
+              color={activeName ? colors.primaryText : colors.textMuted}
+            />
+            <Text numberOfLines={1} style={[styles.scaleChipText, !activeName && styles.scaleChipMuted]}>
+              {scaleChipLabel(activeName)}
+            </Text>
+          </View>
         </View>
 
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
@@ -150,9 +178,7 @@ export function WeighRunScreen({ run }: { run: WeighRun }) {
                         <View style={styles.product}>
                           <Text style={styles.productName}>{card.delivery.produto}</Text>
                           <Text style={styles.toWeigh}>{RUN_TEXTS.weigh(formatKg(sheet.expectedKg))}</Text>
-                          <Text style={styles.hint}>
-                            {RUN_TEXTS.range(formatKg(range.minKg), formatKg(range.maxKg))}
-                          </Text>
+                          <Text style={styles.hint}>{RUN_TEXTS.minimum(formatKg(range.minKg))}</Text>
                         </View>
 
                         {sheet.source === "BALANCA" ? (
@@ -164,18 +190,23 @@ export function WeighRunScreen({ run }: { run: WeighRun }) {
                             >
                               {formatKg(sheet.scale.kg)}
                             </Text>
-                            <View style={styles.status}>
-                              <Ionicons
-                                name={sheet.scale.status === "stable" ? "checkmark-circle" : "radio-outline"}
-                                size={20}
-                                color={statusTone.strong}
+                            {irregular || holding || ready ? (
+                              <StabilityNotice
+                                state={irregular ? "irregular" : holding ? "holding" : "ready"}
+                                secondsLeft={stability.secondsLeft}
+                                spread={stability.spread}
+                                auto={run.isAuto}
                               />
-                              <Text style={[styles.statusText, { color: statusTone.text }]}>
-                                {sheet.scale.status === "locked" ? RUN_TEXTS.locked : SCALE_TEXTS[sheet.scale.status]}
-                              </Text>
-                            </View>
+                            ) : (
+                              <View style={styles.status}>
+                                <Ionicons name="radio-outline" size={20} color={statusTone.strong} />
+                                <Text style={[styles.statusText, { color: statusTone.text }]}>
+                                  {sheet.scale.status === "locked" ? RUN_TEXTS.locked : SCALE_TEXTS[sheet.scale.status]}
+                                </Text>
+                              </View>
+                            )}
                             <Text style={[styles.verdict, { color: tone.text }]}>
-                              {verdictSummary(sheet.judgement)}
+                              {producerVerdictSummary(sheet.judgement)}
                             </Text>
                           </View>
                         ) : (
@@ -210,6 +241,8 @@ export function WeighRunScreen({ run }: { run: WeighRun }) {
                         {sheet.source === "BALANCA" && panelSimulator && (
                           <ScaleSimulatorPanel simulator={panelSimulator} suggestKg={sheet.expectedKg} />
                         )}
+
+                        <Text style={styles.hint}>{SCALE_CONFIG_NOTE}</Text>
                       </>
                     )
                   )}
@@ -232,13 +265,32 @@ export function WeighRunScreen({ run }: { run: WeighRun }) {
             </>
           ) : (
             <>
-              {(!run.isAuto || sheet.candidate !== null) && (
+              {irregular ? (
+                // Laranja e bloqueado: não dá para registrar enquanto a carga oscila.
                 <Button
-                  label={registerLabel}
-                  isLoading={sheet.isSaving}
-                  disabled={sheet.candidate === null}
+                  label={STABILITY_TEXTS.blockedButton}
+                  variant="amber"
+                  icon="lock-closed"
+                  disabled
+                  onPress={run.next}
+                />
+              ) : holding ? (
+                <Button
+                  label={STABILITY_TEXTS.holdingButton(stability.secondsLeft)}
+                  variant="outline"
+                  icon="time-outline"
+                  disabled
                   onPress={sheet.register}
                 />
+              ) : (
+                (!run.isAuto || sheet.candidate !== null) && (
+                  <Button
+                    label={registerLabel}
+                    isLoading={sheet.isSaving}
+                    disabled={sheet.candidate === null}
+                    onPress={sheet.register}
+                  />
+                )
               )}
               <View style={styles.steps}>
                 {position.step > 1 && (
@@ -253,6 +305,16 @@ export function WeighRunScreen({ run }: { run: WeighRun }) {
             </>
           )}
         </View>
+        {celebration && <ConfirmationPopup celebration={celebration} />}
+        {sheet.alert && (
+          <AlertModal
+            visible
+            title={sheet.alert.title}
+            message={sheet.alert.message}
+            button={sheet.alert.button}
+            onClose={sheet.dismissAlert}
+          />
+        )}
       </SafeAreaView>
     </Modal>
   );
@@ -265,7 +327,20 @@ const styles = StyleSheet.create({
   headerTitle: { ...typography.label, color: colors.text },
   headerHint: { ...typography.hint, color: colors.textMuted },
   iconButton: { width: 48, height: 48, alignItems: "center", justifyContent: "center" },
-  progress: { paddingHorizontal: spacing.md },
+  progress: { gap: spacing.sm, paddingHorizontal: spacing.md },
+  scaleChip: {
+    alignSelf: "flex-end",
+    maxWidth: "70%",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 4,
+    paddingHorizontal: spacing.sm + 2,
+    borderRadius: radius.full,
+    backgroundColor: colors.primaryTint,
+  },
+  scaleChipText: { ...typography.caption, fontWeight: "700", color: colors.primaryText, flexShrink: 1 },
+  scaleChipMuted: { color: colors.textMuted },
   stepContent: { gap: spacing.md },
   between: { alignItems: "center", gap: spacing.md, paddingTop: spacing.lg },
   betweenTitle: { ...typography.heading, fontSize: 24, color: colors.text, textAlign: "center" },

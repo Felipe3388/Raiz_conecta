@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { deliveryDayLabel } from "@/lib/delivery/schedule";
+import { demandByProduct } from "@/lib/produtor/demand";
 import {
   canAnswer,
   filterProposals,
@@ -44,6 +45,8 @@ export function useOffersScreen() {
   const [opened, setOpened] = useState<Record<string, boolean>>({});
   const [asking, setAsking] = useState<Asking | null>(null);
   const [isResponding, setIsResponding] = useState(false);
+  // O resumo da demanda por produto começa fechado (só o total).
+  const [demandOpen, setDemandOpen] = useState(false);
 
   // O relógio só corre enquanto há um pedido pendente: é ele que atualiza as contagens regressivas.
   const hasPending = data.proposals.some((proposal) => proposal.status === "PENDENTE");
@@ -53,6 +56,8 @@ export function useOffersScreen() {
   const visible = sortProposals(filterProposals(searched, filter, now), sort, now);
   const markets = groupByMarket(visible);
   const counts = proposalCounts(searched, now);
+  // A demanda considera todos os pedidos (não só os da busca) e o que está sendo escolhido agora.
+  const demand = demandByProduct(data.proposals, choices, now);
 
   const isOpen = (marketKey: string): boolean => opened[marketKey] ?? false;
 
@@ -144,6 +149,9 @@ export function useOffersScreen() {
     setFilter,
     sort,
     setSort,
+    demand,
+    demandOpen,
+    toggleDemand: () => setDemandOpen((open) => !open),
     isOpen,
     toggleMarket,
     quantitiesOf,

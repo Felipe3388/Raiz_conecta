@@ -1,13 +1,15 @@
 import { describeDelivery } from "@/lib/delivery/card";
 import { makeDelivery, weighing } from "@/lib/delivery/fixtures";
-import { DEFAULT_TOLERANCE, judgeWeight } from "@/lib/delivery/weight";
+import { DEFAULT_TOLERANCE, judgeProducerWeight, judgeWeight } from "@/lib/delivery/weight";
 import { DELIVERY_STAGES } from "@/lib/delivery/stage";
 import { describeOrder } from "@/lib/delivery/orderCard";
 import { groupOrders } from "@/lib/delivery/orders";
 import {
   itemStatus,
+  minimumAlert,
   orderHandOverText,
   pickListTitle,
+  producerVerdictSummary,
   SCALE_TEXTS,
   STAGE_INFO,
   VERDICT_LABELS,
@@ -114,5 +116,27 @@ describe("itemStatus", () => {
       label: "Mercado: 9,9 kg",
       tone: "success",
     });
+  });
+});
+
+describe("peso do produtor (mínimo obrigatório)", () => {
+  const judge = (kg: number | null) => judgeProducerWeight(10, kg, DEFAULT_TOLERANCE);
+
+  it("diz quanto falta para o mínimo", () => {
+    expect(producerVerdictSummary(judge(9.3))).toBe("Faltam 0,5 kg para o mínimo");
+  });
+
+  it("no mínimo ou mais: suficiente; acima do pedido avisa que o excedente não é pago", () => {
+    expect(producerVerdictSummary(judge(9.8))).toBe("Peso suficiente");
+    expect(producerVerdictSummary(judge(10))).toBe("Peso suficiente");
+    expect(producerVerdictSummary(judge(12))).toBe("2 kg acima do pedido: o que passa não é pago");
+  });
+
+  it("o aviso de abaixo do mínimo diz o produto, quanto falta e o mínimo", () => {
+    const alert = minimumAlert("Alface", judge(9));
+    expect(alert.title).toBe("Peso abaixo do mínimo");
+    expect(alert.message).toContain("Alface: faltam 0,8 kg para o mínimo de 9,8 kg");
+    expect(alert.message).toContain("o que passa não é pago");
+    expect(alert.button).toBe("Entendi");
   });
 });

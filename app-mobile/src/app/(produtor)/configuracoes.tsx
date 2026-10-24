@@ -1,8 +1,12 @@
-import { StyleSheet, Switch, Text } from "react-native";
+import { StyleSheet, Switch, Text, View } from "react-native";
+import { Button } from "@/components/ui/Button";
 import { FormScreen } from "@/components/ui/FormScreen";
+import { Input } from "@/components/ui/Input";
 import { SettingsGroup } from "@/components/ui/SettingsGroup";
 import { SettingsRow } from "@/components/ui/SettingsRow";
 import { WEIGH_MODE_TEXTS } from "@/content/deliveryTexts";
+import { MAX_SCALE_NAME_LENGTH } from "@/lib/delivery/scaleLink";
+import { SCALE_SETTINGS } from "@/content/scaleTexts";
 import { useSettingsScreen } from "@/hooks/useSettingsScreen";
 import { colors, spacing, typography } from "@/theme";
 
@@ -15,6 +19,40 @@ export default function ConfiguracoesScreen() {
 
   return (
     <FormScreen edges={["bottom"]} centered={false} animated={false} bottomSpace={BOTTOM_SPACE}>
+      {settings.scale.isReady && (
+        <SettingsGroup title={SCALE_SETTINGS.title}>
+          {settings.scale.isConnected ? (
+            <View style={styles.nameBox}>
+              <Input
+                label={SCALE_SETTINGS.nameLabel}
+                icon="scale-outline"
+                value={settings.scale.name}
+                onChangeText={settings.scale.setName}
+                placeholder={SCALE_SETTINGS.namePlaceholder}
+                maxLength={MAX_SCALE_NAME_LENGTH}
+                autoCapitalize="sentences"
+                onSubmitEditing={settings.scale.save}
+              />
+              <Button
+                label={SCALE_SETTINGS.save}
+                variant="outline"
+                isLoading={settings.scale.isSaving}
+                disabled={!settings.scale.canSave}
+                onPress={settings.scale.save}
+              />
+            </View>
+          ) : (
+            <SettingsRow
+              icon="scale-outline"
+              label={SCALE_SETTINGS.connectNow}
+              description={SCALE_SETTINGS.noneConnected}
+              onPress={settings.scale.manage}
+            />
+          )}
+          <SettingsRow icon="swap-horizontal-outline" label={SCALE_SETTINGS.manage} onPress={settings.scale.manage} />
+        </SettingsGroup>
+      )}
+
       <SettingsGroup title="Pesagem" footer={`${WEIGH_MODE_TEXTS.hint}`}>
         <SettingsRow
           icon="flash-outline"
@@ -69,5 +107,6 @@ export default function ConfiguracoesScreen() {
 }
 
 const styles = StyleSheet.create({
+  nameBox: { gap: spacing.sm + 4, paddingVertical: spacing.md },
   version: { ...typography.caption, color: colors.textSubtle, textAlign: "center", marginTop: spacing.sm },
 });

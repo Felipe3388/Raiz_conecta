@@ -25,7 +25,7 @@ export const MORE_SECTIONS: MoreSection[] = [
     title: "Minha conta",
     icon: "person-circle-outline",
     items: [
-      { id: "profile", label: "Meu Perfil", description: "Dados, endereço, senha e ícone.", icon: "person-outline" },
+      { id: "profile", label: "Meu Perfil", icon: "person-outline" },
       { id: "scale", label: "Minha balança", icon: "scale-outline" },
     ],
   },
@@ -33,14 +33,7 @@ export const MORE_SECTIONS: MoreSection[] = [
     id: "preferences",
     title: "Preferências",
     icon: "options-outline",
-    items: [
-      {
-        id: "settings",
-        label: "Configurações",
-        description: "Acessibilidade e modo de pesagem.",
-        icon: "settings-outline",
-      },
-    ],
+    items: [{ id: "settings", label: "Configurações", icon: "settings-outline" }],
   },
   {
     id: "privacy",
@@ -56,7 +49,7 @@ export const MORE_SECTIONS: MoreSection[] = [
     title: "Ajuda",
     icon: "help-buoy-outline",
     items: [
-      { id: "help", label: "Ajuda", description: "Tire dúvidas sobre o app.", icon: "chatbubble-ellipses-outline" },
+      { id: "help", label: "Ajuda", icon: "chatbubble-ellipses-outline" },
       { id: "support", label: "Falar com Suporte", icon: "mail-outline" },
     ],
   },

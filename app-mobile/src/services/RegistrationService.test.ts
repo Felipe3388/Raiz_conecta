@@ -54,8 +54,8 @@ describe("RegistrationService", () => {
   it("propaga o erro da API", async () => {
     const api = { postForm: jest.fn().mockRejectedValue(new Error("Este e-mail já está cadastrado.")) };
 
-    await expect(
-      new RegistrationService(api, jest.fn().mockResolvedValue(undefined)).register(data),
-    ).rejects.toThrow("Este e-mail já está cadastrado.");
+    await expect(new RegistrationService(api, jest.fn().mockResolvedValue(undefined)).register(data)).rejects.toThrow(
+      "Este e-mail já está cadastrado.",
+    );
   });
 });

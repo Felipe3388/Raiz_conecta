@@ -1,6 +1,8 @@
+import { Ionicons } from "@expo/vector-icons";
 import { ActivityIndicator, StyleSheet, Text, type ViewStyle } from "react-native";
 import { PressableScale } from "@/components/motion/PressableScale";
 import { colors, radius, spacing, TOUCH_TARGET, typography } from "@/theme";
+import type { IconName } from "@/types/icon";
 
 type Variant = "primary" | "outline" | "ghost" | "danger" | "amber" | "amberOutline";
 type Size = "sm" | "md" | "lg";
@@ -12,6 +14,8 @@ interface ButtonProps {
   size?: Size;
   isLoading?: boolean;
   disabled?: boolean;
+  // Ícone antes do texto (ex.: o cadeado de um botão bloqueado).
+  icon?: IconName;
 }
 
 interface VariantStyle {
@@ -69,6 +73,7 @@ export function Button({
   size = "md",
   isLoading = false,
   disabled = false,
+  icon,
 }: ButtonProps) {
   const style = variants[variant];
   const isDisabled = disabled || isLoading;
@@ -92,6 +97,7 @@ export function Button({
       ]}
     >
       {isLoading && <ActivityIndicator color={style.text} size="small" />}
+      {icon && !isLoading && <Ionicons name={icon} size={20} color={style.text} />}
       <Text style={[styles.label, { color: style.text }]}>{label}</Text>
     </PressableScale>
   );

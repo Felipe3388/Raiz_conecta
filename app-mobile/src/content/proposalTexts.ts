@@ -22,8 +22,6 @@ export const PROPOSAL_CLOSED_NOTES: Partial<Record<ProposalStatus, string>> = {
   EXPIRADA: "O prazo acabou sem resposta. O pedido seguiu para outro produtor.",
 };
 
-export const PROPOSAL_ACCEPTED_NOTE = "Você aceitou. O que aceitou já está planejado em Entregas.";
-
 // O aviso de que o prazo está acabando (menos de 2 minutos).
 export const URGENT_SECONDS = 120;
 
@@ -50,3 +48,28 @@ export const ASK_TEXTS = {
   accept: { title: "Confirmar quantidades?", confirm: "Aceitar pedido", cancel: "Voltar" },
   refuse: { title: "Recusar este pedido?", confirm: "Recusar pedido", cancel: "Voltar" },
 };
+
+// O que o produtor vê em cada produto do pedido: o que o mercado pediu e o que ele oferece.
+export const OFFER_TEXTS = {
+  asked: "PEDIDO",
+  offered: "VOCÊ OFERECE",
+  progress: (percent: number, kind: "none" | "partial" | "full"): string =>
+    kind === "none"
+      ? "Arraste a barra ou digite a quantidade"
+      : kind === "full"
+        ? "Você atende 100% deste pedido"
+        : `Você atende ${percent}% deste pedido`,
+} as const;
+
+// A demanda dos mercados por produto (resumo no topo de Ofertas).
+export const DEMAND_TEXTS = {
+  title: "Demanda dos mercados",
+  hint: "Quanto cada produto é pedido, somando os mercados, e quanto você já cobre.",
+  summary: (percent: number, products: number): string =>
+    `${products} ${products === 1 ? "produto" : "produtos"} · você cobre ${percent}%`,
+  asked: "pedidos",
+  offered: "você oferece",
+  markets: (count: number): string => `${count} ${count === 1 ? "mercado" : "mercados"}`,
+  show: "Ver demanda por produto",
+  hide: "Esconder demanda",
+} as const;

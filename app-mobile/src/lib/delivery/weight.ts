@@ -84,6 +84,13 @@ export function judgeWeight(expected: number, actual: number | null, tolerance: 
   return { verdict, expectedKg: expected, actualKg: weight, diffKg, diffPercent, range };
 }
 
+// Pesagem do produtor: o mínimo é obrigatório, mas não há máximo. O que passa do pedido é aceito (o produtor
+// pode mandar a mais por conta própria), só não é pago. Por isso "acima" também conta como dentro.
+export function judgeProducerWeight(expected: number, actual: number | null, tolerance: Tolerance): WeightJudgement {
+  const judgement = judgeWeight(expected, actual, tolerance);
+  return judgement.verdict === "ACIMA" ? { ...judgement, verdict: "NA_FAIXA" } : judgement;
+}
+
 // Quanto vale o peso conferido: o preço é por unidade do pedido, então o peso volta a ser unidades.
 export function valueForKg(kg: number, unit: string, price: number | null): number {
   if (price === null || !(kg > 0)) return 0;

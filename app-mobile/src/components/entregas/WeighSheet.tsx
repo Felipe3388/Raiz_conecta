@@ -1,11 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/motion/PressableScale";
+import { AlertModal } from "@/components/ui/AlertModal";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { Input } from "@/components/ui/Input";
-import { SCALE_TEXTS, VERDICT_TONES, verdictSummary, type StageTone } from "@/content/deliveryTexts";
+import {
+  producerVerdictSummary,
+  SCALE_TEXTS,
+  VERDICT_TONES,
+  verdictSummary,
+  type StageTone,
+} from "@/content/deliveryTexts";
 import { useWeighSheet } from "@/hooks/useWeighSheet";
 import type { DeliveryCard } from "@/lib/delivery/card";
 import type { OrderCard } from "@/lib/delivery/orderCard";
@@ -103,7 +110,7 @@ export function WeighSheet({
                 <Button
                   label={isLast ? "Concluir pesagem" : "Próximo produto"}
                   variant={inRange ? "outline" : "ghost"}
-                  onPress={onNext}
+                  onPress={() => sheet.canLeave() && onNext()}
                 />
               </View>
             </View>
@@ -176,7 +183,10 @@ export function WeighSheet({
 
           <View style={[styles.summary, { backgroundColor: tone.soft, borderColor: tone.border }]}>
             <Text style={styles.expected}>
-              Esperado {formatKg(sheet.expectedKg)} · aceita de {formatKg(range.minKg)} a {formatKg(range.maxKg)}
+              Esperado {formatKg(sheet.expectedKg)} ·{" "}
+              {isProducer
+                ? `mínimo ${formatKg(range.minKg)}`
+                : `aceita de ${formatKg(range.minKg)} a ${formatKg(range.maxKg)}`}
             </Text>
             <WeightGauge
               range={range}
@@ -184,6 +194,7 @@ export function WeighSheet({
               registeredKg={registered}
               pendingKg={sheet.candidate ?? 0}
               tone={VERDICT_TONES[sheet.judgement.verdict]}
+              openEnded={isProducer}
             />
             {isProducer && (
               <View style={styles.sumRow}>
@@ -203,7 +214,7 @@ export function WeighSheet({
               </Text>
             </View>
             <Text style={[styles.verdict, { color: tone.text }]} accessibilityLiveRegion="polite">
-              {verdictSummary(sheet.judgement)}
+              {isProducer ? producerVerdictSummary(sheet.judgement) : verdictSummary(sheet.judgement)}
               {isProducer && sheet.judgement.verdict === "ABAIXO" && missing > 0
                 ? ` · faltam ${formatKg(missing)} para o ideal`
                 : ""}
@@ -237,6 +248,15 @@ export function WeighSheet({
             </View>
           )}
         </ScrollView>
+      )}
+      {sheet.alert && (
+        <AlertModal
+          visible
+          title={sheet.alert.title}
+          message={sheet.alert.message}
+          button={sheet.alert.button}
+          onClose={sheet.dismissAlert}
+        />
       )}
     </BottomSheet>
   );

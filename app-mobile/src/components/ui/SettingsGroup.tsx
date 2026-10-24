@@ -35,11 +35,15 @@ export function SettingsGroup({ title, footer, children }: SettingsGroupProps) {
 }
 
 const styles = StyleSheet.create({
-  group: { gap: spacing.sm },
+  group: { gap: spacing.sm + 4, marginTop: spacing.sm },
   title: { ...typography.sectionHeader, color: colors.textMuted, paddingHorizontal: spacing.md },
   card: { backgroundColor: colors.surface, borderRadius: radius.lg, boxShadow: elevation.card, overflow: "hidden" },
   row: { paddingHorizontal: spacing.md },
-  // Começa depois do ícone (16 de margem + 36 do ícone + 12 de espaço).
-  separator: { height: 1, marginLeft: spacing.md + 36 + spacing.sm + 4, backgroundColor: colors.borderMid },
+  // Começa depois do ícone (16 de margem + 40 do ícone + 16 de espaço).
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    marginLeft: spacing.md + 40 + spacing.md,
+    backgroundColor: colors.borderStrong,
+  },
   footer: { ...typography.hint, color: colors.textMuted, paddingHorizontal: spacing.md },
 });

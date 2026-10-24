@@ -5,10 +5,7 @@ import type { RegistrationData } from "@/types/registration";
 const PRODUCER_ROLE = "produtor";
 
 // Campos de texto no formato esperado por POST /api/auth/cadastro (o arquivo vai à parte).
-export function buildRegistrationFields({
-  account,
-  profile,
-}: RegistrationData): Record<string, string> {
+export function buildRegistrationFields({ account, profile }: RegistrationData): Record<string, string> {
   return {
     tipoUsuario: PRODUCER_ROLE,
     nome: account.nome.trim(),

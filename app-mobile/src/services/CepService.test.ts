@@ -6,9 +6,9 @@ function jsonResponse(body: unknown, ok = true): Response {
 
 describe("CepService", () => {
   it("consulta o ViaCEP só com os dígitos e devolve o endereço", async () => {
-    const fetchMock = jest.fn().mockResolvedValue(
-      jsonResponse({ logradouro: "Rua A", bairro: "Centro", localidade: "Votorantim", uf: "SP" }),
-    );
+    const fetchMock = jest
+      .fn()
+      .mockResolvedValue(jsonResponse({ logradouro: "Rua A", bairro: "Centro", localidade: "Votorantim", uf: "SP" }));
 
     const result = await new CepService(fetchMock).lookup("18110-000");
 
@@ -35,17 +35,13 @@ describe("CepService", () => {
   it("falha com mensagem clara quando a consulta não funciona", async () => {
     const fetchMock = jest.fn().mockRejectedValue(new TypeError("offline"));
 
-    await expect(new CepService(fetchMock).lookup("18110000")).rejects.toThrow(
-      "Não foi possível consultar o CEP.",
-    );
+    await expect(new CepService(fetchMock).lookup("18110000")).rejects.toThrow("Não foi possível consultar o CEP.");
   });
 
   it("falha quando o ViaCEP responde com status de erro", async () => {
     const fetchMock = jest.fn().mockResolvedValue(jsonResponse({}, false));
 
-    await expect(new CepService(fetchMock).lookup("18110000")).rejects.toThrow(
-      "Não foi possível consultar o CEP.",
-    );
+    await expect(new CepService(fetchMock).lookup("18110000")).rejects.toThrow("Não foi possível consultar o CEP.");
   });
 
   it("usa o fetch global sem perder o contexto (no navegador isso evita 'Illegal invocation')", async () => {

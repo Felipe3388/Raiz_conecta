@@ -6,6 +6,7 @@ import { ProductRow } from "@/components/produtor/ProductRow";
 import { SaveBar } from "@/components/produtor/SaveBar";
 import { ScreenHeading } from "@/components/produtor/ScreenHeading";
 import { Banner } from "@/components/ui/Banner";
+import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { ListScreen } from "@/components/ui/ListScreen";
@@ -15,6 +16,7 @@ import { SearchBar } from "@/components/ui/SearchBar";
 import { SortControl } from "@/components/ui/SortControl";
 import { ViewToggle, type ViewOption } from "@/components/ui/ViewToggle";
 import { CATALOG_FILTER_LABELS, CATALOG_SORT_OPTIONS } from "@/content/listOptions";
+import { useAssistant } from "@/hooks/useAssistant";
 import { useCatalogScreen } from "@/hooks/useCatalogScreen";
 import type { CatalogFilter, CatalogLayout } from "@/lib/produtor/catalogView";
 import { colors, spacing, typography } from "@/theme";
@@ -37,6 +39,7 @@ function plural(count: number, one: string, many: string) {
 // Meu Catálogo: o produtor marca o que planta; as propostas dos mercados chegam para esses produtos.
 export default function CatalogoScreen() {
   const catalog = useCatalogScreen();
+  const assistant = useAssistant();
 
   if (catalog.status === "loading") return <PageLoader />;
   if (catalog.status === "error") return <LoadError onRetry={catalog.reload} />;
@@ -46,12 +49,21 @@ export default function CatalogoScreen() {
   const header = (
     <View style={styles.header}>
       <ScreenHeading title="Meu Catálogo" />
-      {!isDetails && (
-        <Banner tone="amber" icon="nutrition-outline" title="Selecione o que você produz">
-          Marque os produtos que você tem capacidade de vender. Os pedidos dos mercados em Ofertas chegam para os
-          produtos que você marcar aqui.
-        </Banner>
-      )}
+      <Banner
+        tone="amber"
+        icon="nutrition-outline"
+        title="Selecione o que você produz"
+        actions={
+          <Button
+            label="Sugerir novo produto"
+            variant="amberOutline"
+            size="sm"
+            onPress={() => assistant.open("suggest")}
+          />
+        }
+      >
+        Marque o que você vende: os pedidos em Ofertas chegam só para esses produtos. Não achou o seu? Sugira um novo.
+      </Banner>
       <SearchBar
         accent="amber"
         value={catalog.query}

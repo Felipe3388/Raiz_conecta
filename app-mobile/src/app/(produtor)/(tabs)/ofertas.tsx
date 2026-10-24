@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, View } from "react-native";
+import { DemandSummary } from "@/components/produtor/DemandSummary";
 import { MarketCard } from "@/components/produtor/MarketCard";
 import { OrderBlock } from "@/components/produtor/OrderBlock";
 import { ScreenHeading } from "@/components/produtor/ScreenHeading";
@@ -37,6 +38,7 @@ export default function OfertasScreen() {
       {offers.totalCount > 0 && (
         <>
           <Text style={styles.intro}>{OFFERS_INTRO}</Text>
+          <DemandSummary lines={offers.demand} open={offers.demandOpen} onToggle={offers.toggleDemand} />
           <SearchBar
             value={offers.query}
             onChangeText={offers.setQuery}

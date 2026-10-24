@@ -18,3 +18,17 @@ export function producerRef(email: string): string {
   for (const char of email.trim().toLowerCase()) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
   return hash.toString(36).toUpperCase().padStart(6, "0").slice(0, 6);
 }
+
+// O nome mais longo que o produtor pode dar à balança.
+export const MAX_SCALE_NAME_LENGTH = 30;
+
+// O nome que o produtor digitou, arrumado: sem espaços sobrando e no máximo 30 letras. Vazio volta ao nome original.
+export function cleanScaleName(text: string): string | null {
+  const cleaned = text.replace(/\s+/g, " ").trim().slice(0, MAX_SCALE_NAME_LENGTH).trim();
+  return cleaned === "" ? null : cleaned;
+}
+
+// O nome que aparece na tela: o que o produtor escolheu ou, sem ele, o da balança.
+export function scaleDisplayName(scale: { deviceName: string; nickname: string | null }): string {
+  return scale.nickname ?? scale.deviceName;
+}

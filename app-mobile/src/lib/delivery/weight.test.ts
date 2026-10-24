@@ -2,6 +2,7 @@ import {
   acceptedRange,
   DEFAULT_TOLERANCE,
   expectedKg,
+  judgeProducerWeight,
   judgeWeight,
   kgPerUnit,
   MAX_WEIGHING_KG,
@@ -126,6 +127,22 @@ describe("judgeWeight (o peso está certo?)", () => {
   it("não se perde com gramas fracionadas da balança", () => {
     expect(judge(10.0004).verdict).toBe("NA_FAIXA");
     expect(judge(10.0004).diffKg).toBe(0);
+  });
+});
+
+describe("judgeProducerWeight (produtor: só o mínimo é obrigatório)", () => {
+  it("abaixo do mínimo continua abaixo", () => {
+    expect(judgeProducerWeight(10, 9.7, DEFAULT_TOLERANCE).verdict).toBe("ABAIXO");
+  });
+
+  it("no mínimo, no ideal e acima do pedido, tudo vale", () => {
+    expect(judgeProducerWeight(10, 9.8, DEFAULT_TOLERANCE).verdict).toBe("NA_FAIXA");
+    expect(judgeProducerWeight(10, 10, DEFAULT_TOLERANCE).verdict).toBe("NA_FAIXA");
+    expect(judgeProducerWeight(10, 15, DEFAULT_TOLERANCE).verdict).toBe("NA_FAIXA");
+  });
+
+  it("sem peso, nada pesado", () => {
+    expect(judgeProducerWeight(10, null, DEFAULT_TOLERANCE).verdict).toBe("SEM_PESO");
   });
 });
 

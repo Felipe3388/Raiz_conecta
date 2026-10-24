@@ -1,4 +1,14 @@
-import { EMPTY_KG, isEmptyScale, keepLocked, scaleStatus, STABLE_SAMPLES, stableReading } from "./scale";
+import {
+  EMPTY_KG,
+  holdTick,
+  isEmptyScale,
+  keepLocked,
+  readingSpread,
+  scaleStatus,
+  STABLE_HOLD_SECONDS,
+  STABLE_SAMPLES,
+  stableReading,
+} from "./scale";
 
 const steady = (kg: number, times = STABLE_SAMPLES) => Array.from({ length: times }, () => kg);
 
@@ -98,5 +108,40 @@ describe("scaleStatus (o que dizer sobre a balança)", () => {
 
   it("travada e já vazia volta a pedir o produto", () => {
     expect(scaleStatus({ ...base, kg: 0, stableKg: null, locked: true })).toBe("empty");
+  });
+});
+
+describe("holdTick (o peso precisa ficar parado por 5 segundos)", () => {
+  it("o peso parado precisa ficar 5 segundos", () => {
+    expect(STABLE_HOLD_SECONDS).toBe(5);
+  });
+
+  it("conta de 5 até 0 enquanto o peso está estável", () => {
+    let left = STABLE_HOLD_SECONDS;
+    const seen: number[] = [];
+    for (let second = 0; second < 6; second += 1) {
+      left = holdTick(left, true);
+      seen.push(left);
+    }
+    expect(seen).toEqual([4, 3, 2, 1, 0, 0]);
+  });
+
+  it("se o peso volta a oscilar, a contagem recomeça dos 5 segundos", () => {
+    expect(holdTick(2, false)).toBe(STABLE_HOLD_SECONDS);
+  });
+});
+
+describe("readingSpread (quanto o peso está oscilando)", () => {
+  it("mostra a variação das últimas leituras e o limite aceito", () => {
+    expect(readingSpread([9.5, 9.9, 9.7, 9.8, 9.6])).toEqual({ spreadKg: 0.4, allowedKg: 0.02 });
+  });
+
+  it("o limite cresce com o peso (0,2%), pois balanças grandes oscilam mais", () => {
+    expect(readingSpread([100, 100, 100, 100, 100]).allowedKg).toBe(0.2);
+  });
+
+  it("sem leituras suficientes, não há variação para mostrar", () => {
+    expect(readingSpread([9.5, 9.9])).toEqual({ spreadKg: 0, allowedKg: 0.02 });
+    expect(readingSpread([])).toEqual({ spreadKg: 0, allowedKg: 0.02 });
   });
 });

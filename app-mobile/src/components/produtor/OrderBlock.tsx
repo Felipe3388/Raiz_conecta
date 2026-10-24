@@ -6,7 +6,6 @@ import {
   ORDER_ACTIONS,
   PARTIAL_NOTE,
   PRICE_NOTE,
-  PROPOSAL_ACCEPTED_NOTE,
   PROPOSAL_CLOSED_NOTES,
   PROPOSAL_STATUS_INFO,
   URGENT_SECONDS,
@@ -61,7 +60,7 @@ export function OrderBlock({
   return (
     <View
       accessibilityLabel={`Pedido ${proposal.numero} de ${proposal.mercado}`}
-      style={[styles.block, status === "ACEITA" && styles.blockAccepted, pending && styles.blockPending]}
+      style={[styles.block, status === "ACEITA" && styles.blockAccepted]}
     >
       <View style={styles.top}>
         <View style={styles.titleBlock}>
@@ -130,7 +129,10 @@ export function OrderBlock({
             <Text style={styles.totalLabel}>Você recebe</Text>
             <Text style={styles.total}>{formatBRL(acceptedTotal(proposal))}</Text>
           </View>
-          <Text style={styles.noteAccepted}>{PROPOSAL_ACCEPTED_NOTE}</Text>
+          <View style={styles.planned}>
+            <Ionicons name="cube-outline" size={16} color={colors.primaryText} />
+            <Text style={styles.noteAccepted}>Já está em Entregas</Text>
+          </View>
         </View>
       )}
 
@@ -151,15 +153,14 @@ const styles = StyleSheet.create({
     boxShadow: elevation.card,
     borderRadius: radius.lg,
   },
-  blockAccepted: { borderColor: colors.primaryBorder, backgroundColor: colors.primarySoft },
-  blockPending: { borderColor: colors.warningBorder },
+  blockAccepted: { backgroundColor: colors.primarySoft },
   top: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   titleBlock: { flex: 1, gap: 2 },
   title: { fontSize: 18, fontWeight: "700", color: colors.text },
   metaItem: { flexDirection: "row", alignItems: "center", gap: 6 },
   metaText: { ...typography.hint, fontWeight: "700", color: colors.textStrong, flexShrink: 1 },
   items: { gap: spacing.sm },
-  footer: { gap: spacing.sm, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.border },
+  footer: { gap: spacing.sm, paddingTop: spacing.md },
   countdown: {
     flexDirection: "row",
     alignItems: "center",
@@ -179,6 +180,7 @@ const styles = StyleSheet.create({
   totalLabel: { ...typography.label, color: colors.textStrong, flexShrink: 1 },
   total: { fontSize: 20, fontWeight: "700", color: colors.primaryPressed },
   note: { ...typography.hint, color: colors.textMuted },
+  planned: { flexDirection: "row", alignItems: "center", gap: spacing.xs + 2 },
   noteAccepted: { ...typography.hint, fontWeight: "700", color: colors.primaryText },
   actions: { flexDirection: "row", gap: spacing.sm },
   action: { flex: 1 },

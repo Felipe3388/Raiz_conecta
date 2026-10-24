@@ -5,11 +5,16 @@ import {
   backRun,
   betweenInfo,
   buildRunSteps,
+  celebrationKind,
+  celebrationNext,
+  CELEBRATION_MS,
+  CELEBRATION_SWAP_MS,
   runPosition,
   shouldAutoRegister,
   skipNextOrder,
   startRun,
   type RunPhase,
+  type RunState,
   type RunStep,
 } from "./session";
 import type { Delivery } from "@/types/delivery";
@@ -207,6 +212,7 @@ describe("shouldAutoRegister", () => {
     candidateKg: 10,
     verdict: "NA_FAIXA" as const,
     saving: false,
+    held: true,
   };
 
   it("registra sozinho quando o peso parou e está na faixa", () => {
@@ -220,7 +226,44 @@ describe("shouldAutoRegister", () => {
     ["abaixo da faixa", { verdict: "ABAIXO" as const }],
     ["acima da faixa", { verdict: "ACIMA" as const }],
     ["já está salvando", { saving: true }],
+    ["o peso ainda não ficou estável pelo tempo todo", { held: false }],
   ])("não registra sozinho: %s", (_name, change) => {
     expect(shouldAutoRegister({ ...base, ...change })).toBe(false);
+  });
+});
+
+describe("celebração ao passar de produto", () => {
+  const steps = [step("A", "a1"), step("A", "a2"), step("B", "b1")];
+  const at = (index: number, phase: RunPhase = "weigh"): RunState => ({ steps, index, phase, skipped: 0 });
+
+  it("dura 3 segundos e troca o conteúdo no meio, escondida pela confirmação", () => {
+    expect(CELEBRATION_MS).toBe(3000);
+    expect(CELEBRATION_SWAP_MS).toBeGreaterThan(0);
+    expect(CELEBRATION_SWAP_MS).toBeLessThan(CELEBRATION_MS);
+  });
+
+  it("no modo rápido, o produto do meio do pedido confirma o produto", () => {
+    expect(celebrationKind(at(0), true)).toBe("item");
+  });
+
+  it("no modo rápido, o último produto do pedido confirma o pedido", () => {
+    expect(celebrationKind(at(1), true)).toBe("order");
+    expect(celebrationKind(at(2), true)).toBe("order");
+  });
+
+  it("no modo manual, o último produto confirma só o produto e quem fecha o pedido é a confirmação dele", () => {
+    expect(celebrationKind(at(1), false)).toBe("item");
+    expect(celebrationKind(at(1, "confirm"), false)).toBe("order");
+  });
+
+  it("na pausa entre pedidos não há confirmação", () => {
+    expect(celebrationKind(at(1, "between"), true)).toBeNull();
+  });
+
+  it("diz o que vem em seguida: o próximo produto do pedido ou o primeiro do pedido seguinte", () => {
+    expect(celebrationNext(at(0), "item")?.itemId).toBe("a2");
+    expect(celebrationNext(at(1), "item")).toBeNull();
+    expect(celebrationNext(at(1), "order")?.itemId).toBe("b1");
+    expect(celebrationNext(at(2), "order")).toBeNull();
   });
 });

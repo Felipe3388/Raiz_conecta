@@ -39,7 +39,6 @@ export default function MaisScreen() {
           <Text style={styles.email} numberOfLines={1}>
             {identity.email}
           </Text>
-          <Text style={styles.link}>Ver meu perfil</Text>
         </View>
         <Ionicons name="chevron-forward" size={20} color={colors.textSubtle} />
       </PressableScale>
@@ -97,14 +96,13 @@ const styles = StyleSheet.create({
   identity: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm + 4,
-    padding: spacing.md,
+    gap: spacing.md,
+    padding: spacing.md + 4,
     backgroundColor: colors.surface,
     boxShadow: elevation.card,
     borderRadius: radius.lg,
   },
-  identityText: { flex: 1, gap: 2 },
+  identityText: { flex: 1, gap: 4 },
   name: { ...typography.button, fontSize: 18, color: colors.text },
   email: { ...typography.hint, color: colors.textMuted },
-  link: { ...typography.hint, fontWeight: "700", color: colors.primaryPressed },
 });

@@ -44,6 +44,8 @@ export default function TabsLayout() {
         headerRight: () => <UserMenuButton />,
         headerStyle: { backgroundColor: colors.surface },
         sceneStyle: { backgroundColor: colors.background },
+        // A tela nova desliza de leve e aparece, em vez de trocar de repente.
+        animation: "shift",
       }}
     >
       <Tabs.Screen

@@ -23,11 +23,37 @@ export function stableReading(samples: number[]): number | null {
   const average = recent.reduce((sum, value) => sum + value, 0) / recent.length;
   if (isEmptyScale(average)) return null;
 
-  // Em gramas, para 9,89 - 9,87 não virar 0,02000000000000002 e passar do limite por um resto de decimal.
-  const spread = roundKg(Math.max(...recent) - Math.min(...recent));
-  const allowed = roundKg(Math.max(SPREAD_ABSOLUTE_KG, average * SPREAD_RELATIVE));
+  const { spreadKg, allowedKg } = readingSpread(samples);
   const median = [...recent].sort((a, b) => a - b)[Math.floor(recent.length / 2)];
-  return spread <= allowed ? roundKg(median) : null;
+  return spreadKg <= allowedKg ? roundKg(median) : null;
+}
+
+export interface ReadingSpread {
+  // Quanto as últimas leituras diferem entre si e quanto a regra aceita (20 g ou 0,2% do peso, o que for maior).
+  spreadKg: number;
+  allowedKg: number;
+}
+
+// A variação das últimas leituras, para dizer à pessoa o quanto o peso está oscilando ("carga irregular"). Em gramas,
+// para 9,89 - 9,87 não virar 0,02000000000000002 e passar do limite por um resto de decimal.
+export function readingSpread(samples: number[]): ReadingSpread {
+  if (samples.length < STABLE_SAMPLES) return { spreadKg: 0, allowedKg: SPREAD_ABSOLUTE_KG };
+
+  const recent = samples.slice(-STABLE_SAMPLES);
+  const average = recent.reduce((sum, value) => sum + value, 0) / recent.length;
+  return {
+    spreadKg: roundKg(Math.max(...recent) - Math.min(...recent)),
+    allowedKg: roundKg(Math.max(SPREAD_ABSOLUTE_KG, average * SPREAD_RELATIVE)),
+  };
+}
+
+// Depois que o peso fica estável, ele precisa continuar parado por 5 segundos antes de o app aceitar (e, no modo
+// rápido, registrar sozinho). Se voltar a oscilar, a contagem recomeça.
+export const STABLE_HOLD_SECONDS = 5;
+
+// Um segundo se passou: quanto falta para o peso "ficar firme". `stable` é se o peso está parado agora.
+export function holdTick(secondsLeft: number, stable: boolean): number {
+  return stable ? Math.max(secondsLeft - 1, 0) : STABLE_HOLD_SECONDS;
 }
 
 // Depois de registrar um peso, o botão fica travado até a balança esvaziar: o mesmo lote não pode ser contado duas vezes,

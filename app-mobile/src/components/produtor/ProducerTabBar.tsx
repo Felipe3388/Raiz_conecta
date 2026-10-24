@@ -1,10 +1,12 @@
 import { Tabs } from "expo-router";
 import type { ComponentProps } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, StyleSheet, Text, View } from "react-native";
 import { BrandMark } from "@/components/brand/BrandMark";
 import { PressableScale } from "@/components/motion/PressableScale";
+import { useFocusAnimation } from "@/components/motion/useFocusAnimation";
 import { splitTabs, visibleTabs } from "@/lib/produtor/tabs";
 import { colors, elevation, radius, typography } from "@/theme";
+import { TabBarItem } from "./TabBarItem";
 import {
   HOME_BUTTON_RAISE,
   HOME_BUTTON_SIZE,
@@ -38,37 +40,24 @@ export function ProducerTabBar({ state, descriptors, navigation, insets }: TabBa
     if (!route) return null;
     const options = descriptors[route.key].options;
     const focused = focusedName === name;
-    const color = focused ? colors.primary : colors.textMuted;
     const title = options.title ?? name;
-    const badge = options.tabBarBadge;
 
     return (
-      <Pressable
+      <TabBarItem
         key={route.key}
-        accessibilityRole="tab"
-        aria-selected={focused}
+        title={title}
         accessibilityLabel={options.tabBarAccessibilityLabel ?? title}
+        focused={focused}
+        badge={options.tabBarBadge}
         onPress={() => press(name)}
-        style={styles.tab}
-      >
-        <View>
-          {options.tabBarIcon?.({ focused, color, size: 26 })}
-          {badge !== undefined && badge !== "" && (
-            <View style={styles.badge}>
-              <Text maxFontSizeMultiplier={TAB_LABEL_MAX_FONT_SCALE} style={styles.badgeText}>
-                {badge}
-              </Text>
-            </View>
-          )}
-        </View>
-        <Text numberOfLines={1} maxFontSizeMultiplier={TAB_LABEL_MAX_FONT_SCALE} style={[styles.label, { color }]}>
-          {title}
-        </Text>
-      </Pressable>
+        renderIcon={(color) => options.tabBarIcon?.({ focused, color, size: 26 })}
+      />
     );
   }
 
   const homeFocused = split.home !== null && focusedName === split.home;
+  const homeFocus = useFocusAnimation(homeFocused);
+  const homeLift = { transform: [{ scale: homeFocus.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] }) }] };
 
   return (
     <View
@@ -93,16 +82,18 @@ export function ProducerTabBar({ state, descriptors, navigation, insets }: TabBa
 
       {split.home !== null && (
         <View style={styles.homeWrap}>
-          <PressableScale
-            accessibilityRole="tab"
-            aria-selected={homeFocused}
-            accessibilityLabel={HOME_LABEL}
-            accessibilityHint="Abre o painel, a tela inicial"
-            onPress={() => press(split.home as string)}
-            style={[styles.home, homeFocused ? styles.homeOn : styles.homeOff]}
-          >
-            <BrandMark size={36} color={homeFocused ? colors.primaryContrast : colors.primary} />
-          </PressableScale>
+          <Animated.View style={homeLift}>
+            <PressableScale
+              accessibilityRole="tab"
+              aria-selected={homeFocused}
+              accessibilityLabel={HOME_LABEL}
+              accessibilityHint="Abre o painel, a tela inicial"
+              onPress={() => press(split.home as string)}
+              style={[styles.home, homeFocused ? styles.homeOn : styles.homeOff]}
+            >
+              <BrandMark size={36} color={homeFocused ? colors.primaryContrast : colors.primary} />
+            </PressableScale>
+          </Animated.View>
         </View>
       )}
     </View>
@@ -131,22 +122,8 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   half: { flex: 1, flexDirection: "row", alignItems: "flex-start" },
-  tab: { flex: 1, alignItems: "center", gap: 2, paddingTop: 4, paddingBottom: 2 },
   label: { ...typography.caption, fontSize: 12, lineHeight: 16, fontWeight: "600" },
   homeSlot: { width: HOME_SLOT_WIDTH, alignSelf: "stretch", alignItems: "center", justifyContent: "flex-end" },
-  badge: {
-    position: "absolute",
-    top: -4,
-    right: -12,
-    minWidth: 18,
-    height: 18,
-    paddingHorizontal: 5,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.full,
-    backgroundColor: colors.danger,
-  },
-  badgeText: { fontSize: 11, fontWeight: "700", color: colors.primaryContrast },
   // Linha no topo, centralizada: o botão fica no meio da largura, um pouco acima da barra.
   homeWrap: { position: "absolute", top: 0, left: 0, right: 0, alignItems: "center", pointerEvents: "box-none" },
   home: {
