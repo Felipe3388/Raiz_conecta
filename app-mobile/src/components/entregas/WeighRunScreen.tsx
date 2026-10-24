@@ -1,12 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo } from "react";
-import { Modal, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Modal, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Collapse } from "@/components/motion/Collapse";
+import { FadeSwap } from "@/components/motion/FadeSwap";
 import { PressableScale } from "@/components/motion/PressableScale";
 import { StepTransition } from "@/components/motion/StepTransition";
+import { useAnimatedColor } from "@/components/motion/useAnimatedColor";
 import { AlertModal } from "@/components/ui/AlertModal";
 import { Button } from "@/components/ui/Button";
 import { ConfirmationPopup } from "./ConfirmationPopup";
+import { RegisterButton } from "./RegisterButton";
 import { StabilityNotice } from "./StabilityNotice";
 import { Input } from "@/components/ui/Input";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -19,9 +23,10 @@ import {
   producerVerdictSummary,
   type StageTone,
 } from "@/content/deliveryTexts";
-import { SCALE_CONFIG_NOTE, scaleChipLabel } from "@/content/scaleTexts";
+import { scaleChipLabel } from "@/content/scaleTexts";
 import { useScaleLink } from "@/hooks/useScaleLink";
 import type { useWeighRun } from "@/hooks/useWeighRun";
+import { canRegister, registerState, type RegisterState } from "@/lib/delivery/registerState";
 import type { ScaleStatusKey } from "@/lib/delivery/scale";
 import { formatKg } from "@/lib/format/weight";
 import type { ScaleSimulator } from "@/services";
@@ -45,6 +50,23 @@ const STATUS_TONES: Record<ScaleStatusKey, StageTone> = {
 // verdade (a balança só libera o próximo peso depois de esvaziar).
 const RELEASE_MS = 1500;
 
+function registerLabelFor(state: RegisterState, candidate: number | null, secondsLeft: number): string {
+  switch (state) {
+    case "irregular":
+      return STABILITY_TEXTS.blockedButton;
+    case "holding":
+      return STABILITY_TEXTS.holdingButton(secondsLeft);
+    case "below":
+      return STABILITY_TEXTS.belowButton;
+    case "above":
+      return STABILITY_TEXTS.aboveButton;
+    case "ready":
+      return `Registrar ${formatKg(candidate ?? 0)}`;
+    default:
+      return RUN_TEXTS.register;
+  }
+}
+
 // A pesagem em tela cheia, um produto por vez: o mercado no topo, o que pesar em letra grande e a leitura da balança.
 // No modo automático não há botão para tocar: o celular fala o que pesar e o app segue sozinho quando o peso estabiliza.
 export function WeighRunScreen({ run }: { run: WeighRun }) {
@@ -65,12 +87,15 @@ export function WeighRunScreen({ run }: { run: WeighRun }) {
     };
   }, [simulator, locked]);
 
+  const verdictTone = TONE_COLORS[VERDICT_TONES[sheet.judgement.verdict]];
+  const scaleBackground = useAnimatedColor(verdictTone.soft);
+
   if (!position) return null;
 
   const confirming = run.phase === "confirm";
   const between = run.between;
   const range = sheet.judgement.range;
-  const tone = TONE_COLORS[VERDICT_TONES[sheet.judgement.verdict]];
+  const tone = verdictTone;
   const statusTone = TONE_COLORS[STATUS_TONES[sheet.scale.status]];
   const progress = ((position.step - 1) / position.steps) * 100;
   const inRange = card?.weighing.verdict === "NA_FAIXA";
@@ -80,10 +105,20 @@ export function WeighRunScreen({ run }: { run: WeighRun }) {
   // Carga irregular: tem peso na balança, mas ele ainda oscila. Parado: a contagem de 5 s. Firme: já pode registrar.
   const irregular = onScale && sheet.scale.status === "settling";
   const holding = onScale && sheet.scale.status === "stable" && !stability.held;
-  const ready = onScale && sheet.scale.status === "stable" && stability.held;
 
   const nextLabel = position.isLastOfOrder && !run.isAuto ? RUN_TEXTS.finishOrder : RUN_TEXTS.next;
-  const registerLabel = sheet.candidate !== null ? `Registrar ${formatKg(sheet.candidate)}` : RUN_TEXTS.register;
+  const state = registerState({
+    hasWeight: sheet.candidate !== null,
+    irregular,
+    holding,
+    verdict: sheet.judgement.verdict,
+  });
+  // "Peso firme" só quando o peso também está na faixa: abaixo do mínimo ou acima do pedido o botão avisa e nada é registrado.
+  const ready = onScale && sheet.scale.status === "stable" && stability.held && canRegister(state);
+  const registerLabel = registerLabelFor(state, sheet.candidate, stability.secondsLeft);
+  // No modo rápido o botão só aparece quando há algo a dizer (peso na balança); no manual fica sempre.
+  const showRegister = !run.isAuto || sheet.candidate !== null || irregular;
+  const noticeKey = irregular ? "irregular" : holding ? "holding" : ready ? "ready" : "status";
 
   return (
     <Modal visible animationType="slide" presentationStyle="fullScreen" onRequestClose={run.close}>
@@ -178,11 +213,13 @@ export function WeighRunScreen({ run }: { run: WeighRun }) {
                         <View style={styles.product}>
                           <Text style={styles.productName}>{card.delivery.produto}</Text>
                           <Text style={styles.toWeigh}>{RUN_TEXTS.weigh(formatKg(sheet.expectedKg))}</Text>
-                          <Text style={styles.hint}>{RUN_TEXTS.minimum(formatKg(range.minKg))}</Text>
+                          <Text style={styles.hint}>
+                            {RUN_TEXTS.accepted(formatKg(range.minKg), formatKg(range.maxKg))}
+                          </Text>
                         </View>
 
                         {sheet.source === "BALANCA" ? (
-                          <View style={[styles.scale, { backgroundColor: tone.soft, borderColor: tone.border }]}>
+                          <Animated.View style={[styles.scale, { backgroundColor: scaleBackground }]}>
                             <Text
                               style={styles.reading}
                               accessibilityLabel={`Leitura da balança: ${formatKg(sheet.scale.kg)}`}
@@ -190,25 +227,29 @@ export function WeighRunScreen({ run }: { run: WeighRun }) {
                             >
                               {formatKg(sheet.scale.kg)}
                             </Text>
-                            {irregular || holding || ready ? (
-                              <StabilityNotice
-                                state={irregular ? "irregular" : holding ? "holding" : "ready"}
-                                secondsLeft={stability.secondsLeft}
-                                spread={stability.spread}
-                                auto={run.isAuto}
-                              />
-                            ) : (
-                              <View style={styles.status}>
-                                <Ionicons name="radio-outline" size={20} color={statusTone.strong} />
-                                <Text style={[styles.statusText, { color: statusTone.text }]}>
-                                  {sheet.scale.status === "locked" ? RUN_TEXTS.locked : SCALE_TEXTS[sheet.scale.status]}
-                                </Text>
-                              </View>
-                            )}
+                            <FadeSwap swapKey={noticeKey} animateHeight>
+                              {irregular || holding || ready ? (
+                                <StabilityNotice
+                                  state={irregular ? "irregular" : holding ? "holding" : "ready"}
+                                  secondsLeft={stability.secondsLeft}
+                                  spread={stability.spread}
+                                  auto={run.isAuto}
+                                />
+                              ) : (
+                                <View style={styles.status}>
+                                  <Ionicons name="radio-outline" size={20} color={statusTone.strong} />
+                                  <Text style={[styles.statusText, { color: statusTone.text }]}>
+                                    {sheet.scale.status === "locked"
+                                      ? RUN_TEXTS.locked
+                                      : SCALE_TEXTS[sheet.scale.status]}
+                                  </Text>
+                                </View>
+                              )}
+                            </FadeSwap>
                             <Text style={[styles.verdict, { color: tone.text }]}>
                               {producerVerdictSummary(sheet.judgement)}
                             </Text>
-                          </View>
+                          </Animated.View>
                         ) : (
                           <Input
                             label="Peso do lote (kg)"
@@ -241,8 +282,6 @@ export function WeighRunScreen({ run }: { run: WeighRun }) {
                         {sheet.source === "BALANCA" && panelSimulator && (
                           <ScaleSimulatorPanel simulator={panelSimulator} suggestKg={sheet.expectedKg} />
                         )}
-
-                        <Text style={styles.hint}>{SCALE_CONFIG_NOTE}</Text>
                       </>
                     )
                   )}
@@ -265,33 +304,14 @@ export function WeighRunScreen({ run }: { run: WeighRun }) {
             </>
           ) : (
             <>
-              {irregular ? (
-                // Laranja e bloqueado: não dá para registrar enquanto a carga oscila.
-                <Button
-                  label={STABILITY_TEXTS.blockedButton}
-                  variant="amber"
-                  icon="lock-closed"
-                  disabled
-                  onPress={run.next}
-                />
-              ) : holding ? (
-                <Button
-                  label={STABILITY_TEXTS.holdingButton(stability.secondsLeft)}
-                  variant="outline"
-                  icon="time-outline"
-                  disabled
+              <Collapse visible={showRegister}>
+                <RegisterButton
+                  state={state}
+                  label={registerLabel}
+                  isLoading={sheet.isSaving}
                   onPress={sheet.register}
                 />
-              ) : (
-                (!run.isAuto || sheet.candidate !== null) && (
-                  <Button
-                    label={registerLabel}
-                    isLoading={sheet.isSaving}
-                    disabled={sheet.candidate === null}
-                    onPress={sheet.register}
-                  />
-                )
-              )}
+              </Collapse>
               <View style={styles.steps}>
                 {position.step > 1 && (
                   <View style={styles.step}>

@@ -7,6 +7,7 @@ import {
   buildRunSteps,
   celebrationKind,
   celebrationNext,
+  CELEBRATION_FADE_OUT_MS,
   CELEBRATION_MS,
   CELEBRATION_SWAP_MS,
   runPosition,
@@ -236,10 +237,10 @@ describe("celebração ao passar de produto", () => {
   const steps = [step("A", "a1"), step("A", "a2"), step("B", "b1")];
   const at = (index: number, phase: RunPhase = "weigh"): RunState => ({ steps, index, phase, skipped: 0 });
 
-  it("dura 3 segundos e troca o conteúdo no meio, escondida pela confirmação", () => {
-    expect(CELEBRATION_MS).toBe(3000);
+  it("dura 10 segundos, troca o conteúdo cedo (escondida) e some devagar no fim", () => {
+    expect(CELEBRATION_MS).toBe(10000);
     expect(CELEBRATION_SWAP_MS).toBeGreaterThan(0);
-    expect(CELEBRATION_SWAP_MS).toBeLessThan(CELEBRATION_MS);
+    expect(CELEBRATION_SWAP_MS).toBeLessThan(CELEBRATION_MS - CELEBRATION_FADE_OUT_MS);
   });
 
   it("no modo rápido, o produto do meio do pedido confirma o produto", () => {

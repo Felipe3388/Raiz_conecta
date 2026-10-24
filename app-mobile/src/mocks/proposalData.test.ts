@@ -51,7 +51,7 @@ describe("pedidos de exemplo", () => {
 
   it("há um pedido aceito pela metade: o resto segue para outros produtores", () => {
     const alface = items.find((entry) => entry.produto === "Alface" && entry.aceita !== null && entry.aceita > 0);
-    expect(alface).toMatchObject({ quantidade: 30, aceita: 20 });
+    expect(alface).toMatchObject({ quantidade: 12, aceita: 8 });
   });
 
   it("pendentes têm até 30 minutos e prazo no futuro; só as aceitas e recusadas têm hora de resposta", () => {

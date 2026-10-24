@@ -129,7 +129,6 @@ export default function CatalogoScreen() {
       <PriceSheet
         visible={editor.target !== null}
         produto={editor.target?.produto ?? ""}
-        unidade={editor.target?.unidade}
         currentPrice={editor.currentPrice}
         suggested={editor.suggested}
         onSave={editor.save}
@@ -146,7 +145,7 @@ function emptyState(filter: CatalogFilter, query: string) {
       <EmptyState
         icon={<Ionicons name="nutrition-outline" size={40} color={colors.primary} />}
         title="Você ainda não marcou nenhum produto"
-        description="Toque nos produtos que você planta para marcá-los."
+        description="Toque nos produtos que você planta."
       />
     );
   }
@@ -155,7 +154,7 @@ function emptyState(filter: CatalogFilter, query: string) {
       <EmptyState
         icon={<Ionicons name="checkmark-done-outline" size={40} color={colors.primary} />}
         title="Você marcou todos os produtos"
-        description="Não sobrou nenhum para marcar."
+        description="Não sobrou nenhum."
       />
     );
   }
@@ -163,7 +162,7 @@ function emptyState(filter: CatalogFilter, query: string) {
     <EmptyState
       icon={<Ionicons name="search-outline" size={40} color={colors.primary} />}
       title="Nenhum produto encontrado"
-      description="Não achou o que planta? Toque no botão verde de ajuda e escolha Sugerir produto."
+      description="Não achou? Toque no + e escolha Sugerir produto."
     />
   );
 }

@@ -1,18 +1,7 @@
-import type { MarketData } from "@/lib/pricing/insights";
 import type { PriceSignal } from "@/lib/pricing/suggestion";
 import { MockPricingService } from "./MockPricingService";
 
 const ME = "maria@sitio.com";
-
-const market: MarketData[] = [
-  {
-    produto: "Tomate",
-    unidade: "Caixa",
-    askedPrices: [],
-    sales: [{ price: 44, units: 100 }],
-    previousUnits: 80,
-  },
-];
 
 const signals: Record<string, PriceSignal[]> = {
   tomate: [
@@ -23,7 +12,7 @@ const signals: Record<string, PriceSignal[]> = {
 };
 
 function create(seedMyPrices: Record<string, number> = {}) {
-  return new MockPricingService({ market, signals, seedMyPrices: () => seedMyPrices, latencyMs: 0 });
+  return new MockPricingService({ signals, seedMyPrices: () => seedMyPrices, latencyMs: 0 });
 }
 
 describe("MockPricingService", () => {
@@ -82,13 +71,5 @@ describe("MockPricingService", () => {
     const after = (await service.getSuggestedPrices()).tomate;
     expect(after.price).toBeGreaterThan(before);
     expect(after.samples).toBe(4);
-  });
-
-  it("os dados do mercado trazem os preços pedidos de agora, e as vendas do período", async () => {
-    const service = create();
-    await service.setMyPrice(ME, "Tomate", 52);
-    const [data] = await service.getMarketData();
-    expect(data.askedPrices.sort()).toEqual([40, 44, 48, 52]);
-    expect(data.sales).toEqual(market[0].sales);
   });
 });

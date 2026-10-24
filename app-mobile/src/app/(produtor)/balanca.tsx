@@ -45,7 +45,6 @@ export default function BalancaScreen() {
               onRemove={() => screen.remove.ask(item.deviceId)}
             />
           ))}
-          <Text style={styles.hint}>{SCALE_SETUP.renameHint}</Text>
         </View>
       )}
 

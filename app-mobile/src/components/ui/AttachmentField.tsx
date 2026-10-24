@@ -13,8 +13,7 @@ interface AttachmentFieldProps {
   onPick: (source: ImageSource) => void;
 }
 
-const DOCUMENT_HINT =
-  "Coloque o documento sobre uma mesa, com boa luz, e tire a foto sem cortar as bordas. Tamanho máximo: 5 MB.";
+const DOCUMENT_HINT = "Foto nítida, sem cortar as bordas. Máx. 5 MB.";
 
 export function AttachmentField({ attachment, title, hint = DOCUMENT_HINT, onPick }: AttachmentFieldProps) {
   return (

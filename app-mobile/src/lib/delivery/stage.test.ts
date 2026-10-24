@@ -34,11 +34,11 @@ describe("stageOf (em que etapa está a entrega)", () => {
   it("pesou o suficiente (dentro da faixa): pronta", () => {
     expect(stageOf(makeDelivery({ weighings: [weighing(9.88)] }))).toBe("PRONTA");
     expect(stageOf(makeDelivery({ weighings: [weighing(5), weighing(5, "b")] }))).toBe("PRONTA");
-    expect(stageOf(makeDelivery({ weighings: [weighing(11)] }))).toBe("PRONTA");
+    expect(stageOf(makeDelivery({ weighings: [weighing(10.2)] }))).toBe("PRONTA");
   });
 
-  it("passou do pedido: continua pronta (o excedente é por conta do produtor, não é pago)", () => {
-    expect(stageOf(makeDelivery({ weighings: [weighing(12)] }))).toBe("PRONTA");
+  it("passou do máximo do pedido: não fica pronta", () => {
+    expect(stageOf(makeDelivery({ weighings: [weighing(12)] }))).toBe("A_SEPARAR");
   });
 
   it("abaixo do mínimo: continua a separar", () => {
@@ -66,7 +66,7 @@ describe("weighingJudgement e receiptJudgement", () => {
   it("julgam o total do produtor e a pesagem do mercado contra o mesmo esperado", () => {
     const delivery = makeDelivery({
       weighings: [weighing(9)],
-      receipt: { kg: 10.5, source: "BALANCA", at: "x" },
+      receipt: { kg: 10.1, source: "BALANCA", at: "x" },
     });
     expect(weighingJudgement(delivery).verdict).toBe("ABAIXO");
     expect(receiptJudgement(delivery)?.verdict).toBe("NA_FAIXA");
@@ -76,10 +76,10 @@ describe("weighingJudgement e receiptJudgement", () => {
     expect(receiptJudgement(makeDelivery())).toBeNull();
   });
 
-  it("caixas: 40 caixas esperam 800 kg", () => {
-    const delivery = makeDelivery({ unidade: "Caixas", quantidade: 40, weighings: [weighing(790)] });
+  it("40 kg esperam 40 kg, com faixa de 39,2 a 40,8", () => {
+    const delivery = makeDelivery({ quantidade: 40, weighings: [weighing(39.5)] });
     expect(weighingJudgement(delivery).verdict).toBe("NA_FAIXA");
-    expect(weighingJudgement(delivery).range.minKg).toBe(784);
+    expect(weighingJudgement(delivery).range).toEqual({ minKg: 39.2, maxKg: 40.8 });
   });
 });
 

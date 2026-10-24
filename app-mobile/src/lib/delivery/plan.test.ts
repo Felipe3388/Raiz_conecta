@@ -100,27 +100,14 @@ describe("filterOrders", () => {
 describe("buildPickList (o que separar)", () => {
   it("junta os pedidos do mesmo produto e soma os quilos", () => {
     const items = buildPickList([
-      makeDelivery({ id: "a", produto: "Tomate", unidade: "Caixas", quantidade: 40 }),
-      makeDelivery({ id: "b", produto: "tomate", unidade: "Caixas", quantidade: 10 }),
-      makeDelivery({ id: "c", produto: "Alface", unidade: "Maços", quantidade: 30 }),
+      makeDelivery({ id: "a", produto: "Tomate", quantidade: 40 }),
+      makeDelivery({ id: "b", produto: "tomate", quantidade: 10 }),
+      makeDelivery({ id: "c", produto: "Alface", quantidade: 12 }),
     ]);
     expect(items.map((item) => item.produto)).toEqual(["Alface", "Tomate"]);
     const tomate = items[1];
     expect(tomate.orders).toBe(2);
-    expect(tomate.expectedKg).toBe(1000);
-    expect(tomate.units).toEqual([{ unidade: "Caixas", quantidade: 50 }]);
-  });
-
-  it("unidades diferentes do mesmo produto ficam lado a lado", () => {
-    const [item] = buildPickList([
-      makeDelivery({ id: "a", unidade: "Caixas", quantidade: 2 }),
-      makeDelivery({ id: "b", unidade: "Kg", quantidade: 5 }),
-    ]);
-    expect(item.units).toEqual([
-      { unidade: "Caixas", quantidade: 2 },
-      { unidade: "Kg", quantidade: 5 },
-    ]);
-    expect(item.expectedKg).toBe(45);
+    expect(tomate.expectedKg).toBe(50);
   });
 
   it("mostra quanto já foi pesado e quanto falta", () => {

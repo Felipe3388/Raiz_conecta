@@ -10,8 +10,6 @@ import { colors, radius, spacing, typography } from "@/theme";
 interface PriceSheetProps {
   visible: boolean;
   produto: string;
-  // Unidade do produto (ex.: "Caixas"), para dizer "por caixa".
-  unidade?: string;
   // O preço que o produtor pede hoje, ou null.
   currentPrice: number | null;
   // A média da plataforma: só uma referência, nunca vira o preço dele sozinha.
@@ -22,7 +20,7 @@ interface PriceSheetProps {
 }
 
 // Folha para o produtor sugerir o preço de um produto (o preço ofertado). Só a equipe usa: o preço dos pedidos é fixo.
-export function PriceSheet({ visible, produto, unidade, currentPrice, suggested, onSave, onClose }: PriceSheetProps) {
+export function PriceSheet({ visible, produto, currentPrice, suggested, onSave, onClose }: PriceSheetProps) {
   const form = usePriceForm(visible, currentPrice, onSave);
 
   return (
@@ -31,7 +29,7 @@ export function PriceSheet({ visible, produto, unidade, currentPrice, suggested,
       onClose={onClose}
       icon="pricetag-outline"
       title={`Preço de ${produto}`}
-      subtitle={unidade ? `Quanto você pede por unidade (${unidade.toLowerCase()})` : "Quanto você pede por unidade"}
+      subtitle="Quanto você pede por kg"
       footer={
         <View style={styles.footer}>
           <Button label="Salvar preço" variant="amber" isLoading={form.isSaving} onPress={form.submit} />
@@ -66,8 +64,7 @@ export function PriceSheet({ visible, produto, unidade, currentPrice, suggested,
             <Text style={styles.referenceNote}>Ainda não temos uma média para este produto.</Text>
           )}
           <Text style={styles.referenceNote}>
-            É só uma sugestão: ela ajuda a nossa equipe a montar os preços dos pedidos. O preço dos pedidos em Ofertas é
-            fixo e não muda por causa dele.
+            Só informa a nossa equipe. O preço dos pedidos em Ofertas é fixo.
           </Text>
         </View>
       </View>

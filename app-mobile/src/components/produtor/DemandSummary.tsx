@@ -41,7 +41,6 @@ export function DemandSummary({ lines, open, onToggle }: DemandSummaryProps) {
 
       {open && (
         <View style={styles.lines}>
-          <Text style={styles.hint}>{DEMAND_TEXTS.hint}</Text>
           {lines.map((line) => (
             <DemandRow key={line.produto} line={line} />
           ))}

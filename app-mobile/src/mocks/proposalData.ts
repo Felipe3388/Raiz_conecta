@@ -55,7 +55,7 @@ const SEEDS: OrderSeed[] = [
     status: "ACEITA",
     receivedMinutesAgo: 180,
     minutesLeft: -150,
-    itens: [item("Morango", 30, "Kg", 14, 1, 30), item("Abacaxi", 40, "Kg", 5, 1, 40)],
+    itens: [item("Morango", 30, "kg", 14, 1, 30), item("Abacaxi", 40, "kg", 5, 1, 40)],
   },
   {
     id: "pr-2051",
@@ -65,7 +65,7 @@ const SEEDS: OrderSeed[] = [
     status: "ACEITA",
     receivedMinutesAgo: 300,
     minutesLeft: -270,
-    itens: [item("Tomate", 5, "Caixas", 45, 0, 5), item("Alface", 30, "Maços", 3.2, 2, 20)],
+    itens: [item("Tomate", 50, "kg", 4.5, 0, 50), item("Alface", 12, "kg", 8, 2, 8)],
   },
   {
     id: "pr-3061",
@@ -75,7 +75,7 @@ const SEEDS: OrderSeed[] = [
     status: "ACEITA",
     receivedMinutesAgo: 600,
     minutesLeft: -570,
-    itens: [item("Cenoura", 60, "Kg", 4.5, 3, 60), item("Mandioca", 80, "Kg", 3, 1, 80)],
+    itens: [item("Cenoura", 60, "kg", 4.5, 3, 60), item("Mandioca", 80, "kg", 3, 1, 80)],
   },
   // Pendentes: esperam resposta, cada uma com o seu prazo.
   {
@@ -87,11 +87,7 @@ const SEEDS: OrderSeed[] = [
     receivedMinutesAgo: 6,
     minutesLeft: PROPOSAL_WINDOW_MINUTES - 6,
     // A Laranja o produtor de exemplo não vende: ela não aparece para ele (ver onlyMyProducts).
-    itens: [
-      item("Banana", 4, "Caixas", 38, 0),
-      item("Tomate", 3, "Caixas", 45, 0),
-      item("Laranja", 6, "Caixas", 30, 0),
-    ],
+    itens: [item("Banana", 40, "kg", 3.8, 0), item("Tomate", 30, "kg", 4.5, 0), item("Laranja", 60, "kg", 3, 0)],
   },
   {
     id: "pr-2052",
@@ -101,7 +97,7 @@ const SEEDS: OrderSeed[] = [
     status: "PENDENTE",
     receivedMinutesAgo: 21,
     minutesLeft: PROPOSAL_WINDOW_MINUTES - 21,
-    itens: [item("Cenoura", 40, "Kg", 4.5, 4), item("Mandioca", 30, "Kg", 3, 2), item("Morango", 20, "Kg", 14, 1)],
+    itens: [item("Cenoura", 40, "kg", 4.5, 4), item("Mandioca", 30, "kg", 3, 2), item("Morango", 20, "kg", 14, 1)],
   },
   {
     id: "pr-3062",
@@ -111,7 +107,7 @@ const SEEDS: OrderSeed[] = [
     status: "PENDENTE",
     receivedMinutesAgo: 1,
     minutesLeft: PROPOSAL_WINDOW_MINUTES - 1,
-    itens: [item("Alface", 30, "Maços", 3.2, 0)],
+    itens: [item("Alface", 12, "kg", 8, 0)],
   },
   // Encerrados: recusado pelo produtor e expirado sem resposta.
   {
@@ -122,7 +118,7 @@ const SEEDS: OrderSeed[] = [
     status: "RECUSADA",
     receivedMinutesAgo: 1500,
     minutesLeft: -1470,
-    itens: [item("Tomate", 3, "Caixas", 45, 0)],
+    itens: [item("Tomate", 30, "kg", 4.5, 0)],
   },
   {
     id: "pr-2053",
@@ -132,7 +128,7 @@ const SEEDS: OrderSeed[] = [
     status: "EXPIRADA",
     receivedMinutesAgo: 2000,
     minutesLeft: -1970,
-    itens: [item("Mandioca", 50, "Kg", 3, 0)],
+    itens: [item("Mandioca", 50, "kg", 3, 0)],
   },
 ];
 

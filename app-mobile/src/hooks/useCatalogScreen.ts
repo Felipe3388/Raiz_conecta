@@ -69,7 +69,7 @@ export function useCatalogScreen() {
     toggleProduct: data.toggleProduct,
     // Preço que o produtor pede por um produto, e a folha para editá-lo.
     priceOf: (product: CatalogProduct) => prices.priceOf(product.nome),
-    editPrice: (product: CatalogProduct) => prices.edit({ produto: product.nome, unidade: product.unidadePadrao }),
+    editPrice: (product: CatalogProduct) => prices.edit({ produto: product.nome }),
     priceEditor: prices,
     hasUnsavedSelection: data.hasUnsavedSelection,
     isSaving,

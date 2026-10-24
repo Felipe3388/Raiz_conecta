@@ -37,7 +37,7 @@ export function describeDelivery(delivery: Delivery, today: Date): DeliveryCard 
   const receipt = receiptJudgement(delivery);
   const confirmed = delivery.receipt !== null;
   const value = confirmed
-    ? valueForKg(delivery.receipt?.kg ?? 0, delivery.unidade, delivery.preco)
+    ? valueForKg(delivery.receipt?.kg ?? 0, delivery.preco)
     : Math.round(delivery.quantidade * delivery.preco * 100) / 100;
 
   return {

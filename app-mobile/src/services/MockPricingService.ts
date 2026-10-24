@@ -1,12 +1,9 @@
-import type { MarketData } from "@/lib/pricing/insights";
 import { priceKey } from "@/lib/pricing/price";
 import { suggestPrice, type PriceSignal, type SuggestedPrice } from "@/lib/pricing/suggestion";
 import type { PriceResponse, PricingGateway } from "./PricingGateway";
 import { DEFAULT_MOCK_LATENCY_MS, wait } from "./mockLatency";
 
 interface MockPricingOptions {
-  // Dados do mercado por produto (vendas e período anterior). Os preços pedidos vêm dos sinais.
-  market: MarketData[];
   // O que se sabe de cada produto antes do uso (preços pedidos por outros produtores e respostas), por chave.
   signals: Record<string, PriceSignal[]>;
   // Preços de exemplo de quem entra (opcional).
@@ -19,7 +16,6 @@ const OTHERS = "__outros__";
 // Preços guardados em memória. O preço de cada produtor entra na média dos produtos dele, e cada resposta
 // a uma proposta ajusta o preço sugerido, como o sistema real fará com a base de dados.
 export class MockPricingService implements PricingGateway {
-  private readonly market: MarketData[];
   private readonly latencyMs: number;
   private readonly seedMyPrices: (email: string) => Record<string, number>;
   // Preços pedidos: produto -> (produtor -> preço). Os do seed ficam sob um produtor "outros" por preço.
@@ -27,8 +23,7 @@ export class MockPricingService implements PricingGateway {
   private readonly responses = new Map<string, PriceSignal[]>();
   private readonly mine = new Map<string, Record<string, number>>();
 
-  constructor({ market, signals, seedMyPrices = () => ({}), latencyMs = DEFAULT_MOCK_LATENCY_MS }: MockPricingOptions) {
-    this.market = market;
+  constructor({ signals, seedMyPrices = () => ({}), latencyMs = DEFAULT_MOCK_LATENCY_MS }: MockPricingOptions) {
     this.latencyMs = latencyMs;
     this.seedMyPrices = seedMyPrices;
 
@@ -105,13 +100,5 @@ export class MockPricingService implements PricingGateway {
     await wait(this.latencyMs);
     const key = priceKey(produto);
     this.responses.set(key, [...(this.responses.get(key) ?? []), { kind: answer, price }]);
-  }
-
-  async getMarketData(): Promise<MarketData[]> {
-    await wait(this.latencyMs);
-    return this.market.map((item) => ({
-      ...item,
-      askedPrices: [...this.askedFor(priceKey(item.produto)).values()],
-    }));
   }
 }

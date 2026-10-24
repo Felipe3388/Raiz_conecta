@@ -53,7 +53,7 @@ export default function ConfiguracoesScreen() {
         </SettingsGroup>
       )}
 
-      <SettingsGroup title="Pesagem" footer={`${WEIGH_MODE_TEXTS.hint}`}>
+      <SettingsGroup title="Pesagem">
         <SettingsRow
           icon="flash-outline"
           label={WEIGH_MODE_TEXTS.label}
@@ -84,11 +84,11 @@ export default function ConfiguracoesScreen() {
         />
       </SettingsGroup>
 
-      <SettingsGroup title="Acessibilidade" footer="Mais opções de acessibilidade chegam em breve.">
+      <SettingsGroup title="Acessibilidade">
         <SettingsRow
           icon="film-outline"
           label="Reduzir animações"
-          description="As telas aparecem sem deslizes nem movimentos."
+          description="Sem movimentos nas telas."
           right={
             <Switch
               accessibilityLabel="Reduzir animações"

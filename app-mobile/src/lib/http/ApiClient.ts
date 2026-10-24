@@ -1,6 +1,6 @@
 import { ApiError } from "./ApiError";
 
-type HttpMethod = "GET" | "POST" | "PATCH";
+type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 interface ApiClientOptions {
   baseUrl: string;
@@ -19,6 +19,14 @@ export class ApiClient {
     return this.request<T>("POST", path, toJsonPayload(body));
   }
 
+  put<T>(path: string, body?: unknown): Promise<T> {
+    return this.request<T>("PUT", path, toJsonPayload(body));
+  }
+
+  delete<T>(path: string): Promise<T> {
+    return this.request<T>("DELETE", path);
+  }
+
   patch<T>(path: string, body?: unknown): Promise<T> {
     return this.request<T>("PATCH", path, toJsonPayload(body));
   }
@@ -28,11 +36,7 @@ export class ApiClient {
     return this.request<T>("POST", path, { body: form });
   }
 
-  private async request<T>(
-    method: HttpMethod,
-    path: string,
-    payload?: Payload,
-  ): Promise<T> {
+  private async request<T>(method: HttpMethod, path: string, payload?: Payload): Promise<T> {
     const headers: Record<string, string> = { Accept: "application/json" };
 
     const token = await this.options.getToken();
@@ -47,10 +51,7 @@ export class ApiClient {
 
     const data = await readJson(response);
     if (!response.ok) {
-      throw new ApiError(
-        errorMessageFrom(data) ?? `Erro inesperado (${response.status}).`,
-        response.status,
-      );
+      throw new ApiError(errorMessageFrom(data) ?? `Erro inesperado (${response.status}).`, response.status);
     }
     return data as T;
   }

@@ -23,10 +23,10 @@ export interface Delivery {
   propostaId: string;
   mercado: string;
   produto: string;
-  // Unidade do pedido (Kg, Caixas, Maços) e quanto foi pedido nela.
+  // Unidade do pedido (sempre "kg": 1 unidade = 1 kg) e quanto foi pedido.
   unidade: string;
   quantidade: number;
-  // Preço fixo por unidade da proposta aceita.
+  // Preço fixo por kg da proposta aceita.
   preco: number;
   // Dia da entrega, no formato "2026-10-08".
   dueDate: string;

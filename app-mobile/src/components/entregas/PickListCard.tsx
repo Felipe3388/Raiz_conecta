@@ -11,17 +11,10 @@ interface PickListCardProps {
   items: PickItem[];
 }
 
-const unitsText = (item: PickItem) =>
-  item.units.map((unit) => `${unit.quantidade} ${unit.unidade.toLowerCase()}`).join(" + ");
-
 // "Separar hoje": cada produto com o que precisa estar separado, somando todos os pedidos dele.
 export function PickListCard({ title, items }: PickListCardProps) {
   return (
-    <SectionCard
-      title={title}
-      description="Some tudo o que vai sair neste dia, produto por produto."
-      icon="basket-outline"
-    >
+    <SectionCard title={title} icon="basket-outline">
       <View style={styles.list}>
         {items.map((item) => (
           <View
@@ -40,7 +33,7 @@ export function PickListCard({ title, items }: PickListCardProps) {
                 <Text style={styles.kg}>{formatKg(item.expectedKg)}</Text>
               </View>
               <Text style={styles.detail}>
-                {unitsText(item)} · {item.orders} {item.orders === 1 ? "pedido" : "pedidos"}
+                {item.orders} {item.orders === 1 ? "pedido" : "pedidos"}
               </Text>
               <ProgressBar value={item.percent} />
               <Text style={item.remainingKg > 0 ? styles.missing : styles.done}>

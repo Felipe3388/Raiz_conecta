@@ -151,13 +151,6 @@ export const HELP_TOPICS: HelpTopic[] = [
     screens: ["ofertas", "catalogo", "painel"],
   },
   {
-    id: "preco-vendas-painel",
-    question: "O que é Preços e vendas no Painel?",
-    answer:
-      "É a média do mercado para cada produto seu: quanto os produtores pedem, a que preço vendeu e se as vendas subiram ou caíram. Serve para você ver se o seu preço está acima ou abaixo da média.",
-    screens: ["painel"],
-  },
-  {
     id: "como-entregar",
     question: "Como funcionam as entregas?",
     answer:
@@ -175,14 +168,14 @@ export const HELP_TOPICS: HelpTopic[] = [
     id: "faixa-de-peso",
     question: "Quanto o peso pode variar?",
     answer:
-      "O peso do pedido aceita uma pequena variação: até 2% a menos e até 10% a mais. Para 10 kg, vale de 9,8 a 11 kg. Dentro da faixa a entrega segue; fora dela o app avisa quanto falta ou passou, e o mercado é avisado da diferença.",
+      "Todo produto é vendido por kg e o peso aceita 2% a menos e 2% a mais (nunca menos de 1 kg). Para 10 kg, vale de 9,8 a 10,2 kg. Abaixo do mínimo você não passa ao próximo produto, e acima do máximo o app não registra.",
     screens: ["entregas"],
   },
   {
     id: "usar-balanca",
     question: "Como uso a balança?",
     answer:
-      "Toque em Iniciar pesagem, em Entregas. O celular fala o produto e o peso; ponha na balança e, no modo rápido, o app registra e passa ao próximo sozinho quando o peso estabiliza. No modo manual, você toca em Registrar e confirma cada pedido. Sem balança, escolha Digitar peso.",
+      "Toque em Iniciar pesagem, em Entregas. O celular fala o produto e o peso; ponha na balança: o peso precisa ficar parado por 5 segundos. No modo rápido, o app registra e, após a confirmação verde de 10 segundos, passa ao próximo. No modo manual, você toca em Registrar e confirma cada pedido. Sem balança, escolha Digitar peso.",
     screens: ["entregas"],
   },
   {

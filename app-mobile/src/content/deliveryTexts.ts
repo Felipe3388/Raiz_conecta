@@ -21,31 +21,31 @@ export const STAGE_INFO: Record<DeliveryStage, StageInfo> = {
     label: "A separar",
     tone: "warning",
     icon: "basket-outline",
-    hint: "Separe os produtos do pedido e use Iniciar pesagem, no topo da tela.",
+    hint: "Separe e pese os produtos.",
   },
   PRONTA: {
     label: "Pronta",
     tone: "success",
     icon: "checkmark-circle-outline",
-    hint: "Todos os produtos pesados. Entregue o pedido à logística quando ela chegar.",
+    hint: "Tudo pesado. Entregue à logística.",
   },
   COM_LOGISTICA: {
     label: "Com a logística",
     tone: "info",
     icon: "bus-outline",
-    hint: "A logística está levando. O mercado confere o peso ao receber.",
+    hint: "A logística está levando.",
   },
   RECEBIDA: {
     label: "Recebida",
     tone: "success",
     icon: "shield-checkmark-outline",
-    hint: "O mercado recebeu e o peso de todos os produtos bateu.",
+    hint: "O mercado recebeu e o peso bateu.",
   },
   DIVERGENTE: {
     label: "Divergente",
     tone: "danger",
     icon: "alert-circle-outline",
-    hint: "O mercado mediu algum produto fora da faixa.",
+    hint: "O mercado mediu fora da faixa.",
   },
 };
 
@@ -67,16 +67,18 @@ export const VERDICT_TONES: Record<WeightVerdict, StageTone> = {
 
 export const SCALE_TEXTS = {
   connecting: "Conectando à balança...",
-  lost: "A balança perdeu a conexão. Digite o peso ou tente de novo.",
+  lost: "Balança sem conexão. Digite o peso.",
   empty: "Coloque o produto na balança.",
   settling: "Aguarde o peso parar de oscilar...",
   stable: "Peso estável. Pode registrar.",
-  locked: "Peso registrado. Tire o produto da balança para pesar o próximo lote.",
+  locked: "Peso registrado. Tire da balança.",
 };
 
 export const WEIGH_ERRORS = {
-  manual: "Informe um peso válido, por exemplo 9,88.",
-  nothing: "Ainda não há um peso estável para registrar.",
+  manual: "Informe um peso válido, ex.: 9,88.",
+  nothing: "Ainda não há peso estável.",
+  above: (max: string) => `Passa do pedido. Máximo ${max}.`,
+  below: (min: string) => `Abaixo do mínimo de ${min}.`,
 };
 
 // "Separar hoje", "Separar para sex, 16/10".
@@ -97,17 +99,16 @@ export function verdictSummary({ verdict, actualKg, range }: WeightJudgement): s
   }
 }
 
-// A frase curta sobre o peso do produtor: só há mínimo. O que passa do pedido é aceito, mas não é pago.
-export function producerVerdictSummary({ verdict, actualKg, expectedKg, range }: WeightJudgement): string {
+// A frase curta sobre o peso do produtor: mínimo e máximo, a mesma faixa do pedido.
+export function producerVerdictSummary({ verdict, actualKg, range }: WeightJudgement): string {
   switch (verdict) {
     case "SEM_PESO":
-      return VERDICT_LABELS.SEM_PESO;
+    case "NA_FAIXA":
+      return VERDICT_LABELS[verdict];
     case "ABAIXO":
       return `Faltam ${formatKg(roundKg(range.minKg - actualKg))} para o mínimo`;
-    default:
-      return actualKg > expectedKg
-        ? `${formatKg(roundKg(actualKg - expectedKg))} acima do pedido: o que passa não é pago`
-        : "Peso suficiente";
+    case "ACIMA":
+      return `${formatKg(roundKg(actualKg - range.maxKg))} acima do máximo`;
   }
 }
 
@@ -118,11 +119,10 @@ export interface MinimumAlert {
 }
 
 // O aviso de que o produto não chegou ao mínimo: o produtor fica no mesmo item até completar.
-export function minimumAlert(produto: string, { actualKg, expectedKg, range }: WeightJudgement): MinimumAlert {
-  const missing = formatKg(roundKg(range.minKg - actualKg));
+export function minimumAlert(produto: string, { actualKg, range }: WeightJudgement): MinimumAlert {
   return {
-    title: "Peso abaixo do mínimo",
-    message: `${produto}: faltam ${missing} para o mínimo de ${formatKg(range.minKg)} (o pedido é de ${formatKg(expectedKg)}). Coloque mais produto na balança. Passar do pedido pode, mas o que passa não é pago.`,
+    title: "Abaixo do mínimo",
+    message: `${produto}: faltam ${formatKg(roundKg(range.minKg - actualKg))} para o mínimo de ${formatKg(range.minKg)}.`,
     button: "Entendi",
   };
 }
@@ -139,16 +139,16 @@ export function orderHandOverText(card: OrderCard): ConfirmText {
   const count = card.itemCount === 1 ? "1 produto" : `${card.itemCount} produtos`;
   if (card.outOfRange.length === 0) {
     return {
-      title: "Entregar o pedido à logística?",
-      description: `${card.mercado}: ${count}, ${formatKg(card.weighedKg)} pesados, todos dentro da faixa. Depois de entregar, os pesos não podem mais ser mudados.`,
+      title: "Entregar à logística?",
+      description: `${card.mercado}: ${count}, ${formatKg(card.weighedKg)}. Depois, os pesos não mudam.`,
       warning: false,
     };
   }
 
   const names = card.outOfRange.map((item) => item.delivery.produto).join(", ");
   return {
-    title: "Há peso fora da faixa. Entregar mesmo assim?",
-    description: `Fora da faixa aceita: ${names}. O mercado será avisado da diferença. Depois de entregar, os pesos não podem mais ser mudados.`,
+    title: "Peso fora da faixa. Entregar mesmo assim?",
+    description: `Fora da faixa: ${names}. O mercado será avisado.`,
     warning: true,
   };
 }
@@ -174,12 +174,11 @@ export function itemStatus(card: DeliveryCard): ItemStatus {
 // Configurações > Pesagem: o modo rápido (automático) ou o manual (por pedido).
 export const WEIGH_MODE_TEXTS = {
   label: "Pesagem automática (modo rápido)",
-  autoOn: "Ligada: ao pesar, o app passa ao próximo produto sozinho assim que o peso estabiliza.",
-  autoOff: "Desligada: você registra cada produto e confirma cada pedido antes de seguir.",
-  hint: "Muda como funciona o botão Iniciar pesagem, em Entregas.",
+  autoOn: "Registra e segue sozinho.",
+  autoOff: "Você registra e confirma.",
   voiceLabel: "Voz na pesagem",
-  voiceOn: "Ligada: o celular fala o mercado e o que pesar a cada produto.",
-  voiceOff: "Desligada: a pesagem fica em silêncio.",
+  voiceOn: "Fala o mercado e o que pesar.",
+  voiceOff: "Em silêncio.",
 } as const;
 
 // A sessão de pesagem ("Iniciar pesagem").
@@ -187,15 +186,15 @@ export const RUN_TEXTS = {
   start: "Iniciar pesagem",
   title: "Pesagem",
   close: "Fechar pesagem",
-  startAuto: "Modo rápido: o app registra e passa ao próximo produto sozinho quando o peso estabiliza.",
-  startManual: "Modo manual: você registra cada produto e confirma cada pedido. Mude em Mais > Configurações.",
-  nothing: "Tudo pesado. Entregue os pedidos à logística quando ela chegar.",
+  startAuto: "Modo rápido: registra e segue sozinho.",
+  startManual: "Modo manual: você registra e confirma.",
+  nothing: "Tudo pesado.",
   autoNote: "Modo rápido",
   manualNote: "Modo manual",
   market: "Mercado",
   weigh: (kg: string) => `Pese ${kg}`,
-  minimum: (min: string) => `Mínimo ${min}. Passar do pedido pode, mas o que passa não é pago.`,
-  locked: "Peso registrado. Tire o produto da balança.",
+  accepted: (min: string, max: string) => `Aceito de ${min} a ${max}`,
+  locked: "Peso registrado. Tire da balança.",
   register: "Registrar peso",
   next: "Próximo produto",
   finishOrder: "Concluir pedido",
@@ -205,7 +204,7 @@ export const RUN_TEXTS = {
   mute: "Desligar a voz",
   unmute: "Ligar a voz",
   confirmTitle: "Confirmar pedido",
-  confirmHint: "Confira os pesos. Depois de confirmar, o app passa ao próximo pedido.",
+  confirmHint: "Confira os pesos.",
   confirm: "Confirmar pedido",
   confirmLast: "Confirmar e concluir",
   review: "Voltar e revisar",
@@ -215,31 +214,32 @@ export const RUN_TEXTS = {
   betweenNext: "Próximo pedido",
   betweenProducts: (count: number) => `${count} ${count === 1 ? "produto" : "produtos"} para pesar`,
   betweenCountdown: (seconds: number) => `Começa em ${seconds} s`,
-  betweenHint: "Prepare os próximos produtos. Se não der agora, deixe este pedido para depois.",
+  betweenHint: "Prepare os próximos produtos.",
   startNow: "Pesar agora",
   later: "Deixar para depois",
-  skippedNote: (count: number) =>
-    `${count} ${count === 1 ? "pedido ficou" : "pedidos ficaram"} para depois, continua em Entregas.`,
+  skippedNote: (count: number) => `${count} ${count === 1 ? "pedido ficou" : "pedidos ficaram"} para depois.`,
 } as const;
 
 // O peso na balança durante a pesagem: carga irregular (oscilando) e a contagem de 5 segundos de estabilização.
 export const STABILITY_TEXTS = {
   irregularTitle: "Carga irregular",
-  irregularHint:
-    "O peso está oscilando. Segure a carga firme e espere assentar; a contagem de 5 s começa quando parar.",
+  irregularHint: "Segure a carga firme.",
   spread: (spread: string) => `Variação ${spread}`,
   limit: (limit: string) => `Aceita até ${limit}`,
-  holdTitle: (seconds: number) => `Estabilizando: ${seconds} s`,
-  holdHint: "Peso parado. Mantenha o produto sem mexer até a contagem chegar a zero.",
+  holdTitle: "Estabilizando",
+  holdSpoken: (seconds: number) => `Estabilizando: ${seconds} s`,
+  holdHint: "Não mexa na carga.",
   readyTitle: "Peso firme",
-  readyAuto: "Registrando e passando ao próximo produto...",
+  readyAuto: "Registrando...",
   readyManual: "Pode registrar.",
-  // Botões bloqueados enquanto o peso não está firme.
+  // Botões bloqueados enquanto o peso não está firme ou fora da faixa.
   blockedButton: "Carga irregular",
   holdingButton: (seconds: number) => `Aguarde ${seconds} s`,
+  belowButton: "Abaixo do mínimo",
+  aboveButton: "Acima do pedido",
 } as const;
 
-// A confirmação verde ao passar de produto ou de pedido.
+// A confirmação verde ao passar de produto ou de pedido. Fica 10 segundos na tela: é o tempo de tirar a carga da balança.
 export const CELEBRATION_TEXTS = {
   itemTitle: (produto: string) => `${produto} pesado!`,
   itemDetail: (kg: string) => `${kg} registrados`,
@@ -249,6 +249,9 @@ export const CELEBRATION_TEXTS = {
   nextConfirm: "Em seguida: confirmar o pedido",
   nextOrder: (mercado: string) => `Próximo pedido: ${mercado}`,
   lastOrder: "Último pedido da pesagem",
+  notice: "Retire o produto da balança.",
+  noticeOrder: "Retire a carga da balança.",
+  countdown: (seconds: number) => `Segue em ${seconds} s`,
 } as const;
 
 // "Pedido 1 de 3 · Produto 2 de 4": onde a pessoa está na sessão.

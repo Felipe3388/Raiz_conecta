@@ -1,4 +1,3 @@
-import type { MarketData } from "@/lib/pricing/insights";
 import type { PriceAnswerKind } from "@/lib/pricing/suggestion";
 import type { SuggestedPrice } from "@/lib/pricing/suggestion";
 
@@ -22,6 +21,4 @@ export interface PricingGateway {
   getSuggestedPrices(): Promise<Record<string, SuggestedPrice>>;
   // Guarda a resposta a uma proposta; é com elas que o preço sugerido é ajustado.
   recordResponse(email: string, response: PriceResponse): Promise<void>;
-  // Preços e vendas do mercado, para o Painel.
-  getMarketData(): Promise<MarketData[]>;
 }

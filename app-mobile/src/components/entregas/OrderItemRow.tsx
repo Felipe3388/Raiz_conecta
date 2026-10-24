@@ -28,11 +28,7 @@ export function OrderItemRow({ card, current = false }: OrderItemRowProps) {
       </Text>
       <View style={styles.text}>
         <Text style={styles.product}>{delivery.produto}</Text>
-        <Text style={styles.detail}>
-          {delivery.unidade.toLowerCase() === "kg"
-            ? formatKg(card.expectedKg)
-            : `${delivery.quantidade} ${delivery.unidade.toLowerCase()} · ${formatKg(card.expectedKg)}`}
-        </Text>
+        <Text style={styles.detail}>{formatKg(card.expectedKg)}</Text>
       </View>
       <View style={[styles.status, { backgroundColor: tone.soft, borderColor: tone.border }]}>
         <Text style={[styles.statusText, { color: tone.text }]}>{status.label}</Text>

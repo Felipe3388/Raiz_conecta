@@ -39,7 +39,7 @@ export function useSuggestionForm(onSent: () => void) {
       const id = await suggestProduct({ ...form, precoSugerido: normalizePrice(form.precoSugerido) });
       undo.announce({
         title: "Sugestão enviada!",
-        description: "Nossa equipe vai avaliar. Acompanhe em Minhas sugestões.",
+        description: "Acompanhe em Minhas sugestões.",
         label: `Sugestão de ${form.nomeProduto.trim()}`,
         revert: () => withdrawSuggestion(id),
       });

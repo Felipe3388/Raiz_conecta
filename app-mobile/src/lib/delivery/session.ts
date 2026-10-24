@@ -159,9 +159,12 @@ export function shouldAutoRegister({
   return autoWeigh && source === "BALANCA" && !saving && held && candidateKg !== null && verdict === "NA_FAIXA";
 }
 
-// A confirmação verde ao passar de produto (ou de pedido): aparece por 3 segundos, e o conteúdo de baixo troca no meio
-// desse tempo, escondido por ela. Assim o próximo produto nunca aparece de repente.
-export const CELEBRATION_MS = 3000;
+// A confirmação verde ao passar de produto (ou de pedido): fica 10 segundos (o tempo de tirar a carga da balança e
+// preparar a próxima). O conteúdo de baixo troca logo no começo, escondido por ela, e ela some devagar no fim, então o
+// próximo produto nunca aparece de repente.
+export const CELEBRATION_MS = 10000;
+// Os últimos instantes em que ela vai sumindo, revelando o próximo produto aos poucos.
+export const CELEBRATION_FADE_OUT_MS = 1400;
 export const CELEBRATION_SWAP_MS = 1500;
 
 export type CelebrationKind = "item" | "order";

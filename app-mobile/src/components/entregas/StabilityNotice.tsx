@@ -1,5 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, Text, View } from "react-native";
+import { useEffect, useRef } from "react";
+import { Animated, Easing, StyleSheet, Text, View } from "react-native";
+import Svg, { Circle } from "react-native-svg";
+import { useReducedMotion } from "@/components/motion/useReducedMotion";
 import { STABILITY_TEXTS } from "@/content/deliveryTexts";
 import { STABLE_HOLD_SECONDS, type ReadingSpread } from "@/lib/delivery/scale";
 import { formatKg } from "@/lib/format/weight";
@@ -23,8 +26,10 @@ export function StabilityNotice({ state, secondsLeft, spread, auto }: StabilityN
     state === "irregular"
       ? STABILITY_TEXTS.irregularTitle
       : state === "holding"
-        ? STABILITY_TEXTS.holdTitle(secondsLeft)
+        ? STABILITY_TEXTS.holdTitle
         : STABILITY_TEXTS.readyTitle;
+  // Para leitor de tela o aviso inclui os segundos que faltam, já que o número fica dentro do anel.
+  const spoken = state === "holding" ? STABILITY_TEXTS.holdSpoken(secondsLeft) : title;
   const hint =
     state === "irregular"
       ? STABILITY_TEXTS.irregularHint
@@ -38,35 +43,79 @@ export function StabilityNotice({ state, secondsLeft, spread, auto }: StabilityN
   return (
     <View
       accessibilityLiveRegion="polite"
-      accessibilityLabel={`${title}. ${hint}`}
+      accessibilityLabel={`${spoken}. ${hint}`}
       style={[styles.box, { backgroundColor: colors.surface, borderColor: tone.border }]}
     >
       <View style={styles.row}>
-        <View style={[styles.badge, { backgroundColor: tone.strong }]}>
-          {state === "irregular" ? (
-            <Ionicons name="warning" size={26} color={colors.primaryContrast} />
-          ) : state === "ready" ? (
-            <Ionicons name="checkmark" size={30} color={colors.primaryContrast} />
-          ) : (
-            <Text style={styles.count}>{secondsLeft}</Text>
-          )}
-        </View>
+        {state === "irregular" ? (
+          <View style={[styles.badge, { backgroundColor: tone.strong }]}>
+            <Ionicons name="warning" size={30} color={colors.primaryContrast} />
+          </View>
+        ) : (
+          <CountdownRing filled={filled} color={tone.strong}>
+            {state === "ready" ? (
+              <Ionicons name="checkmark" size={34} color={tone.strong} />
+            ) : (
+              <Text style={[styles.count, { color: tone.strong }]}>{secondsLeft}</Text>
+            )}
+          </CountdownRing>
+        )}
         <View style={styles.texts}>
           <Text style={[styles.title, { color: tone.text }]}>{title}</Text>
           <Text style={styles.hint}>{hint}</Text>
         </View>
       </View>
 
-      {state === "irregular" ? (
-        <SpreadMeter spread={spread} />
-      ) : (
-        // Cinco tracinhos, um por segundo de peso parado; enchem até a contagem acabar.
-        <View style={styles.dots}>
-          {Array.from({ length: STABLE_HOLD_SECONDS }, (_unused, index) => (
-            <View key={index} style={[styles.dot, { backgroundColor: index < filled ? tone.strong : colors.border }]} />
-          ))}
-        </View>
-      )}
+      {state === "irregular" ? <SpreadMeter spread={spread} /> : null}
+    </View>
+  );
+}
+
+// O anel que se fecha: um quinto por segundo de peso parado. Dentro vai o número de segundos que faltam (ou o visto).
+const RING_SIZE = 72;
+const RING_STROKE = 8;
+const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2;
+const RING_LENGTH = 2 * Math.PI * RING_RADIUS;
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+function CountdownRing({ filled, color, children }: { filled: number; color: string; children: React.ReactNode }) {
+  const reduced = useReducedMotion();
+  const progress = useRef(new Animated.Value(filled / STABLE_HOLD_SECONDS)).current;
+
+  useEffect(() => {
+    const target = filled / STABLE_HOLD_SECONDS;
+    if (reduced) {
+      progress.setValue(target);
+      return;
+    }
+    const animation = Animated.timing(progress, {
+      toValue: target,
+      duration: 900,
+      easing: Easing.linear,
+      useNativeDriver: false, // propriedade do SVG não aceita driver nativo
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [filled, reduced, progress]);
+
+  return (
+    <View style={styles.ring}>
+      <Svg width={RING_SIZE} height={RING_SIZE} style={styles.ringSvg}>
+        <Circle cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS} stroke={colors.border} strokeWidth={RING_STROKE} fill="none" />
+        <AnimatedCircle
+          cx={RING_SIZE / 2}
+          cy={RING_SIZE / 2}
+          r={RING_RADIUS}
+          stroke={color}
+          strokeWidth={RING_STROKE}
+          strokeLinecap="round"
+          fill="none"
+          strokeDasharray={RING_LENGTH}
+          strokeDashoffset={progress.interpolate({ inputRange: [0, 1], outputRange: [RING_LENGTH, 0] })}
+          transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`}
+        />
+      </Svg>
+      {children}
     </View>
   );
 }
@@ -102,13 +151,13 @@ function SpreadMeter({ spread }: { spread: ReadingSpread }) {
 const styles = StyleSheet.create({
   box: { alignSelf: "stretch", gap: spacing.sm, padding: spacing.sm + 4, borderWidth: 2, borderRadius: radius.lg },
   row: { flexDirection: "row", alignItems: "center", gap: spacing.sm + 4 },
-  badge: { width: 48, height: 48, alignItems: "center", justifyContent: "center", borderRadius: radius.full },
-  count: { fontSize: 26, lineHeight: 30, fontWeight: "700", ...typography.numeric, color: colors.primaryContrast },
+  badge: { width: RING_SIZE, height: RING_SIZE, alignItems: "center", justifyContent: "center", borderRadius: radius.full },
+  ring: { width: RING_SIZE, height: RING_SIZE, alignItems: "center", justifyContent: "center" },
+  ringSvg: { position: "absolute" },
+  count: { fontSize: 32, lineHeight: 36, fontWeight: "800", ...typography.numeric },
   texts: { flex: 1, gap: 2 },
   title: { ...typography.label, fontSize: 17 },
   hint: { ...typography.hint, color: colors.textMuted },
-  dots: { flexDirection: "row", gap: spacing.xs },
-  dot: { flex: 1, height: 8, borderRadius: radius.full },
   meterBlock: { gap: 4 },
   meter: { height: 10, borderRadius: radius.full, backgroundColor: colors.border, overflow: "hidden" },
   meterFill: { position: "absolute", left: 0, top: 0, bottom: 0, borderRadius: radius.full },

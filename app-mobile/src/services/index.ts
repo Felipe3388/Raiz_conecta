@@ -1,11 +1,13 @@
 import { env } from "@/config/env";
 import { getApiClient } from "@/lib/http";
 import { DEFAULT_MY_PRODUCT_IDS, MOCK_PRODUCTS } from "@/mocks/catalogData";
-import { MOCK_MARKET, MOCK_PRICE_SIGNALS, seedMyPrices } from "@/mocks/priceData";
+import { MOCK_PRICE_SIGNALS, seedMyPrices } from "@/mocks/priceData";
 import { seedProposals } from "@/mocks/proposalData";
 import { seedSuggestions } from "@/mocks/suggestionData";
 import { getTokenStorage } from "@/lib/storage";
 import type { AssistantGateway } from "./AssistantGateway";
+import { ApiCatalogService } from "./ApiCatalogService";
+import { ApiProfileService } from "./ApiProfileService";
 import type { AuthGateway } from "./AuthGateway";
 import { AuthService } from "./authService";
 import type { CatalogGateway } from "./CatalogGateway";
@@ -59,14 +61,18 @@ export function getCepService(): CepGateway {
   return cepService;
 }
 
-// Área do Produtor (Ofertas, Catálogo, Entregas, Perfil): por ora só existe a versão simulada.
-// Quando as APIs forem ligadas, cada getter passa a escolher entre real e simulada como os de cima.
+// Área do Produtor. Catálogo, sugestão de produto e Meu Perfil já têm API no app-principal e trocam de simulado para
+// real pelo EXPO_PUBLIC_USE_MOCKS. O resto (propostas com preço fixo, entregas e pesagem, preços, balança) ainda não
+// existe no site e continua simulado, mesmo com a API ligada (ver ARQUITETURA.md).
 export function getCatalogService(): CatalogGateway {
-  catalogService ??= new MockCatalogService({
-    products: MOCK_PRODUCTS,
-    defaultMyProductIds: DEFAULT_MY_PRODUCT_IDS,
-    seedSuggestions,
-  });
+  if (!catalogService) {
+    const mock = new MockCatalogService({
+      products: MOCK_PRODUCTS,
+      defaultMyProductIds: DEFAULT_MY_PRODUCT_IDS,
+      seedSuggestions,
+    });
+    catalogService = env.useMocks ? mock : new ApiCatalogService(getApiClient(), mock);
+  }
   return catalogService;
 }
 
@@ -77,7 +83,7 @@ export function getProposalService(): ProposalGateway {
 }
 
 export function getProfileService(): ProfileGateway {
-  profileService ??= new MockProfileService();
+  profileService ??= env.useMocks ? new MockProfileService() : new ApiProfileService(getApiClient());
   return profileService;
 }
 
@@ -85,7 +91,6 @@ export function getProfileService(): ProfileGateway {
 // então só existe a versão simulada.
 export function getPricingService(): PricingGateway {
   pricingService ??= new MockPricingService({
-    market: MOCK_MARKET,
     signals: MOCK_PRICE_SIGNALS,
     seedMyPrices,
   });

@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import {
   ORDER_ACTIONS,
-  PARTIAL_NOTE,
   PRICE_NOTE,
   PROPOSAL_CLOSED_NOTES,
   PROPOSAL_STATUS_INFO,
@@ -16,7 +15,6 @@ import {
   acceptedTotal,
   countdownLabel,
   effectiveStatus,
-  isPartial,
   secondsLeft,
   selectedCount,
   selectionTotal,
@@ -109,7 +107,6 @@ export function OrderBlock({
             </Text>
             <Text style={styles.total}>{formatBRL(total)}</Text>
           </View>
-          {chosenCount > 0 && isPartial(proposal, quantities) && <Text style={styles.note}>{PARTIAL_NOTE}</Text>}
           <View style={styles.actions}>
             <View style={styles.action}>
               <Button label={ORDER_ACTIONS.acceptAll} variant="outline" size="sm" onPress={onAcceptAll} />

@@ -12,7 +12,6 @@ import { FilterChips } from "@/components/ui/FilterChips";
 import { ListScreen } from "@/components/ui/ListScreen";
 import { LoadError } from "@/components/ui/LoadError";
 import { PageLoader } from "@/components/ui/PageLoader";
-import { SCALE_CONFIG_NOTE } from "@/content/scaleTexts";
 import { orderHandOverText, pickListTitle, RUN_TEXTS } from "@/content/deliveryTexts";
 import { useEntregasScreen } from "@/hooks/useEntregasScreen";
 import { DONE_FILTER } from "@/lib/delivery/plan";
@@ -33,9 +32,6 @@ export default function EntregasScreen() {
     <View style={styles.header}>
       <View style={styles.top}>
         <ScreenHeading title="Entregas" count={screen.cards.length} />
-        <Text style={styles.subtitle}>
-          Entregas às terças e sextas. Separe o total do dia, toque em Iniciar pesagem e o mercado confere ao receber.
-        </Text>
       </View>
 
       <FilterChips
@@ -50,10 +46,6 @@ export default function EntregasScreen() {
           <Text style={styles.runHint}>
             {!screen.run.canStart ? RUN_TEXTS.nothing : screen.run.isAuto ? RUN_TEXTS.startAuto : RUN_TEXTS.startManual}
           </Text>
-          <View style={styles.scaleNote}>
-            <Ionicons name="scale-outline" size={18} color={colors.textMuted} />
-            <Text style={styles.runHint}>{SCALE_CONFIG_NOTE}</Text>
-          </View>
         </View>
       )}
 
@@ -86,24 +78,20 @@ export default function EntregasScreen() {
           screen.dayTotal > 0 && screen.situation !== "all" ? (
             <EmptyState
               icon={<Ionicons name="checkmark-done-outline" size={40} color={colors.primary} />}
-              title={screen.situation === "toWeigh" ? "Nada falta pesar." : "Nenhum pedido pronto para a logística."}
-              description={
-                screen.situation === "toWeigh"
-                  ? "Todos os pedidos deste dia já foram pesados."
-                  : "Quando um pedido for todo pesado, ele aparece aqui para entregar à logística."
-              }
+              title={screen.situation === "toWeigh" ? "Nada falta pesar." : "Nenhum pedido pronto."}
+              description={screen.situation === "toWeigh" ? "Tudo pesado neste dia." : "Pedidos pesados aparecem aqui."}
             />
           ) : screen.total === 0 ? (
             <EmptyState
               icon={<Ionicons name="cube-outline" size={40} color={colors.primary} />}
               title="Nenhuma entrega ainda."
-              description="Quando você aceitar um pedido em Ofertas, ele aparece aqui, no dia de entrega."
+              description="Pedidos aceitos aparecem aqui."
             />
           ) : (
             <EmptyState
               icon={<Ionicons name="calendar-outline" size={40} color={colors.primary} />}
               title="Nenhum pedido neste dia."
-              description="Escolha outro dia de entrega acima para ver o que separar."
+              description="Escolha outro dia."
             />
           )
         }
@@ -152,9 +140,7 @@ export default function EntregasScreen() {
 const styles = StyleSheet.create({
   header: { gap: spacing.md },
   top: { gap: spacing.xs },
-  subtitle: { ...typography.body, color: colors.textMuted },
   run: { gap: spacing.xs },
   runHint: { ...typography.hint, color: colors.textMuted, flexShrink: 1 },
-  scaleNote: { flexDirection: "row", alignItems: "flex-start", gap: spacing.xs + 2, paddingTop: spacing.xs },
   section: { ...typography.heading, fontSize: 18, color: colors.text, marginTop: spacing.xs },
 });

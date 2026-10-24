@@ -52,15 +52,11 @@ export default function PerfilScreen() {
         <Badge label="Perfil: Produtor Rural" variant="success" dot />
       </View>
 
-      <SectionCard
-        title="Seu ícone"
-        icon="happy-outline"
-        description="Escolha como você aparece no canto da tela. Você pode trocar quando quiser."
-      >
+      <SectionCard title="Seu ícone" icon="happy-outline" description="Escolha como você aparece.">
         <AvatarPicker initials={identity.initials} value={identity.emoji} onChange={changeIcon} />
       </SectionCard>
 
-      <SectionCard title="Dados Principais" icon="person-outline" description="Como você aparece para os mercados.">
+      <SectionCard title="Dados Principais" icon="person-outline">
         <LockedField label="E-mail" value={profile.email} />
         <LockedField label={profile.tipoDoc} value={maskDocument(profile.documento, profile.tipoDoc)} />
         <Text style={styles.locked}>Dados sensíveis travados por segurança. Contate o suporte para alterar.</Text>
@@ -143,7 +139,7 @@ export default function PerfilScreen() {
       <ConfirmModal
         visible={perfil.isConfirmingSave}
         title="Salvar alterações?"
-        description="Seus dados serão atualizados na plataforma."
+        description="Seus dados serão atualizados."
         confirmLabel="Sim, salvar"
         cancelLabel="Cancelar"
         isLoading={perfil.isSaving}
@@ -154,7 +150,7 @@ export default function PerfilScreen() {
         visible={perfil.isConfirmingDelete}
         variant="danger"
         title="Excluir conta?"
-        description="Todos os seus dados serão apagados para sempre. Tem certeza?"
+        description="Seus dados serão apagados para sempre."
         confirmLabel="Sim, excluir minha conta"
         cancelLabel="Cancelar"
         isLoading={perfil.isDeleting}

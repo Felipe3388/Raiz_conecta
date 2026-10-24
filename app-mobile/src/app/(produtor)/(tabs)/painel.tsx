@@ -3,11 +3,9 @@ import { useRouter } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/motion/PressableScale";
 import { ProposalRow } from "@/components/produtor/ProposalRow";
-import { PriceInsightRow } from "@/components/produtor/PriceInsightRow";
 import { RevenueBars } from "@/components/produtor/RevenueBars";
 import { ScreenHeading } from "@/components/produtor/ScreenHeading";
 import { StatTile } from "@/components/produtor/StatTile";
-import { Button } from "@/components/ui/Button";
 import { FormScreen } from "@/components/ui/FormScreen";
 import { LoadError } from "@/components/ui/LoadError";
 import { PageLoader } from "@/components/ui/PageLoader";
@@ -21,10 +19,8 @@ import { colors, elevation, radius, spacing, typography } from "@/theme";
 const MAX_CHART_ROWS = 5;
 
 function deliveriesText(count: number, dayLabel: string): string {
-  if (count === 0) return `Nada para separar ou entregar até ${dayLabel}.`;
-  return count === 1
-    ? `1 pedido para separar e entregar até ${dayLabel}.`
-    : `${count} pedidos para separar e entregar até ${dayLabel}.`;
+  if (count === 0) return `Nada para separar até ${dayLabel}.`;
+  return count === 1 ? `1 pedido para separar até ${dayLabel}.` : `${count} pedidos para separar até ${dayLabel}.`;
 }
 // Espaço no fim para o botão de ajuda não cobrir o último bloco.
 const BOTTOM_SPACE = 96;
@@ -32,7 +28,7 @@ const BOTTOM_SPACE = 96;
 // Painel: um resumo simples da atividade do produtor, com atalhos para cada tela.
 export default function PainelScreen() {
   const router = useRouter();
-  const { status, summary, reload, prices, nextDelivery, now } = useDashboardScreen();
+  const { status, summary, reload, nextDelivery, now } = useDashboardScreen();
 
   if (status === "loading") return <PageLoader />;
   if (status === "error") return <LoadError onRetry={reload} />;
@@ -44,7 +40,6 @@ export default function PainelScreen() {
     <FormScreen edges={[]} centered={false} animated={false} bottomSpace={BOTTOM_SPACE}>
       <View style={styles.top}>
         <ScreenHeading title="Meu Painel" />
-        <Text style={styles.subtitle}>Veja como está a sua atividade.</Text>
       </View>
 
       <View style={styles.hero}>
@@ -54,15 +49,15 @@ export default function PainelScreen() {
         </Text>
         <Text style={styles.heroNote}>
           {summary.acceptedCount === 0
-            ? "Quando você aceitar pedidos em Ofertas, o valor aparece aqui."
-            : `Com base em ${summary.acceptedCount} ${summary.acceptedCount === 1 ? "pedido aceito" : "pedidos aceitos"} e no preço fixo de cada produto.`}
+            ? "Aceite pedidos em Ofertas."
+            : `${summary.acceptedCount} ${summary.acceptedCount === 1 ? "pedido aceito" : "pedidos aceitos"}.`}
         </Text>
       </View>
 
       {nextDelivery !== null && (
         <PressableScale
           accessibilityRole="button"
-          accessibilityLabel={`Próxima entrega: ${deliveriesText(nextDelivery.pending, nextDayLabel)} Toque para abrir.`}
+          accessibilityLabel={`Próxima entrega: ${deliveriesText(nextDelivery.pending, nextDayLabel)}`}
           onPress={() => router.navigate("/entregas")}
           style={[styles.deliveries, nextDelivery.pending > 0 && styles.deliveriesDue]}
         >
@@ -101,45 +96,7 @@ export default function PainelScreen() {
       </View>
 
       <SectionCard title="Receita por produto" icon="bar-chart-outline">
-        {rows.length > 0 ? (
-          <RevenueBars rows={rows} />
-        ) : (
-          <Text style={styles.empty}>Ainda não há receita para mostrar. Ela aparece quando você aceita pedidos.</Text>
-        )}
-      </SectionCard>
-
-      <SectionCard
-        title="Preços e vendas"
-        description="O que está vendendo mais ou menos, pelos preços dos produtores."
-        icon="pricetags-outline"
-        iconColor={colors.warning}
-      >
-        {summary.savedProducts === 0 ? (
-          <Text style={styles.empty}>
-            Quando você marcar produtos no Catálogo, as médias de preço e venda deles aparecem aqui.
-          </Text>
-        ) : prices.status === "error" ? (
-          <View style={styles.emptyBlock}>
-            <Text style={styles.empty}>Não foi possível carregar os preços.</Text>
-            <Button label="Tentar de novo" variant="amberOutline" onPress={prices.reload} />
-          </View>
-        ) : prices.insights.length === 0 ? (
-          <Text style={styles.empty}>
-            {prices.status === "loading"
-              ? "Carregando os preços..."
-              : "Ainda não há vendas registradas para os seus produtos."}
-          </Text>
-        ) : (
-          <View style={styles.list}>
-            <Text style={styles.signalSummary} accessibilityRole="summary">
-              {prices.signals.up} vendendo mais · {prices.signals.steady} estáveis · {prices.signals.down} vendendo
-              menos
-            </Text>
-            {prices.insights.map((insight) => (
-              <PriceInsightRow key={insight.produto} insight={insight} />
-            ))}
-          </View>
-        )}
+        {rows.length > 0 ? <RevenueBars rows={rows} /> : <Text style={styles.empty}>Sem receita ainda.</Text>}
       </SectionCard>
 
       <SectionCard title="Responder primeiro" icon="time-outline" iconColor={colors.warning}>
@@ -157,7 +114,7 @@ export default function PainelScreen() {
         ) : (
           <View style={styles.emptyBlock}>
             <Ionicons name="checkmark-circle-outline" size={28} color={colors.primary} />
-            <Text style={styles.empty}>Nenhum pedido esperando resposta agora. Volte mais tarde.</Text>
+            <Text style={styles.empty}>Nenhum pedido esperando resposta.</Text>
           </View>
         )}
       </SectionCard>
@@ -167,7 +124,6 @@ export default function PainelScreen() {
 
 const styles = StyleSheet.create({
   top: { gap: spacing.xs },
-  subtitle: { ...typography.body, color: colors.textMuted },
   hero: {
     gap: spacing.xs,
     borderRadius: radius.lg,
@@ -196,5 +152,4 @@ const styles = StyleSheet.create({
   list: { gap: spacing.sm },
   emptyBlock: { alignItems: "center", gap: spacing.sm + 4 },
   empty: { ...typography.body, color: colors.textMuted },
-  signalSummary: { ...typography.hint, fontWeight: "700", color: colors.textStrong },
 });

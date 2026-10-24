@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { formatKg } from "@/lib/format/weight";
 import { WEIGH_ERRORS } from "@/content/deliveryTexts";
 import { keepLocked, scaleStatus } from "@/lib/delivery/scale";
 import { deliveryExpectedKg, totalWeighedKg } from "@/lib/delivery/stage";
-import { judgeProducerWeight, judgeWeight, parseKg, roundKg, toleranceFor } from "@/lib/delivery/weight";
+import { judgeWeight, parseKg, roundKg, toleranceFor } from "@/lib/delivery/weight";
 import { minimumAlert, type MinimumAlert } from "@/content/deliveryTexts";
 import type { Delivery, WeigherRole, WeighingInput, WeighingSource } from "@/types/delivery";
 import { useScale } from "./useScale";
@@ -54,17 +55,16 @@ export function useWeighSheet({ visible, delivery, role, onRegister, keepScaleBe
   const projectedKg = roundKg(already + (candidate ?? 0));
   const expectedKg = delivery ? deliveryExpectedKg(delivery) : 0;
   const tolerance = toleranceFor(delivery?.produto ?? "");
-  // O produtor tem mínimo obrigatório e nenhum máximo; o mercado confere dentro da faixa dos dois lados.
-  const judge = role === "PRODUTOR" ? judgeProducerWeight : judgeWeight;
-  const judgement = judge(expectedKg, projectedKg > 0 ? projectedKg : null, tolerance);
+  // A mesma faixa para os dois lados (±2%): abaixo do mínimo não fecha o produto e acima do máximo não é aceito.
+  const judgement = judgeWeight(expectedKg, projectedKg > 0 ? projectedKg : null, tolerance);
   // Aviso "abaixo do mínimo": enquanto aberto, o produtor continua no mesmo produto.
   const [alert, setAlert] = useState<MinimumAlert | null>(null);
 
-  // Barra o que ficaria abaixo do mínimo e abre o aviso. Devolve true quando pode seguir.
+  // Para sair do produto: barra o que ficou abaixo do mínimo e abre o aviso. Devolve true quando pode seguir.
   function allow(totalKg: number): boolean {
     if (role !== "PRODUTOR" || !delivery) return true;
-    const result = judgeProducerWeight(expectedKg, totalKg > 0 ? totalKg : null, tolerance);
-    if (result.verdict === "NA_FAIXA") return true;
+    const result = judgeWeight(expectedKg, totalKg > 0 ? totalKg : null, tolerance);
+    if (result.verdict === "NA_FAIXA" || result.verdict === "ACIMA") return true;
     setAlert(minimumAlert(delivery.produto, result));
     return false;
   }
@@ -74,7 +74,15 @@ export function useWeighSheet({ visible, delivery, role, onRegister, keepScaleBe
       setError(source === "BALANCA" ? WEIGH_ERRORS.nothing : WEIGH_ERRORS.manual);
       return;
     }
-    if (!allow(projectedKg)) return;
+    // O produtor não registra abaixo do mínimo nem acima do pedido (999 kg num pedido de 10 kg, por exemplo).
+    if (role === "PRODUTOR" && judgement.verdict === "ACIMA") {
+      setError(WEIGH_ERRORS.above(formatKg(judgement.range.maxKg)));
+      return;
+    }
+    if (role === "PRODUTOR" && judgement.verdict === "ABAIXO") {
+      setError(WEIGH_ERRORS.below(formatKg(judgement.range.minKg)));
+      return;
+    }
     setIsSaving(true);
     setError(null);
     try {

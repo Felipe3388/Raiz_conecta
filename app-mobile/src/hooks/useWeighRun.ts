@@ -38,8 +38,10 @@ export interface Celebration {
   kind: "item" | "order";
   title: string;
   detail: string;
-  // "Em seguida: ...", ou null quando é a última.
+  // "Em seguida: ...", ou o aviso de que é a última.
   next: string;
+  // O aviso junto da confirmação: retirar a carga da balança.
+  notice: string;
 }
 
 // Controller da sessão de pesagem (o botão "Iniciar pesagem"): passa por todos os produtos do dia, um por vez, com o
@@ -58,7 +60,7 @@ export function useWeighRun({ cards }: Options) {
   const [celebration, setCelebration] = useState<Celebration | null>(null);
   const celebrationId = useRef(0);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  // As funções dos temporizadores rodam 1,5 a 3 s depois: precisam ver os pedidos e o modo de agora, não os de quando
+  // As funções dos temporizadores rodam 1,5 a 10 s depois: precisam ver os pedidos e o modo de agora, não os de quando
   // foram criadas.
   const latest = useRef({ cards, auto, muted });
   latest.current = { cards, auto, muted };
@@ -97,7 +99,7 @@ export function useWeighRun({ cards }: Options) {
     timers.current = [];
   }
 
-  // Seguir adiante com a confirmação verde: ela aparece por 3 s e o passo troca por baixo dela no meio desse tempo,
+  // Seguir adiante com a confirmação verde: ela aparece por 10 s e o passo troca por baixo dela logo no começo,
   // então o próximo produto nunca surge de repente. Na pausa entre pedidos não há confirmação e segue direto.
   // `itemKg` é o peso do produto da vez já com o lote que acabou de ser registrado.
   function advanceWithCelebration(state: RunState, itemKg: number) {
@@ -120,6 +122,7 @@ export function useWeighRun({ cards }: Options) {
             title: CELEBRATION_TEXTS.itemTitle(current?.produto ?? ""),
             detail: CELEBRATION_TEXTS.itemDetail(formatKg(itemKg)),
             next: next ? CELEBRATION_TEXTS.nextProduct(next.produto) : CELEBRATION_TEXTS.nextConfirm,
+            notice: CELEBRATION_TEXTS.notice,
           }
         : {
             id: celebrationId.current,
@@ -130,6 +133,7 @@ export function useWeighRun({ cards }: Options) {
               formatKg(state.phase === "confirm" ? (orderCard?.weighedKg ?? orderKg) : orderKg),
             ),
             next: next ? CELEBRATION_TEXTS.nextOrder(next.mercado) : CELEBRATION_TEXTS.lastOrder,
+            notice: CELEBRATION_TEXTS.noticeOrder,
           },
     );
 

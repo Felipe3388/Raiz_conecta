@@ -14,7 +14,7 @@ export function SignOutConfirm({ visible, isLoading, onConfirm, onCancel }: Sign
       visible={visible}
       variant="danger"
       title="Sair da conta?"
-      description="Você vai precisar entrar de novo com seu e-mail e senha."
+      description="Você precisará entrar de novo."
       confirmLabel="Sim, sair"
       cancelLabel="Ficar"
       isLoading={isLoading}

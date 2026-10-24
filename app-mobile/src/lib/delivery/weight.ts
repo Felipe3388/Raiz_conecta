@@ -1,21 +1,8 @@
 import { normalizeText } from "@/lib/text/normalize";
 
-// Quanto pesa uma unidade de cada tipo de pedido. É daqui que "40 Caixas" vira os quilos que a balança vai ler.
-// Chave: nome da unidade sem acento, minúsculo, no plural e no singular.
-export const KG_PER_UNIT: Record<string, number> = {
-  kg: 1,
-  caixas: 20,
-  caixa: 20,
-  macos: 0.4,
-  maco: 0.4,
-};
-
-// Unidade que não está na tabela conta como kg, para o pedido poder ser pesado do mesmo jeito.
-const FALLBACK_KG_PER_UNIT = 1;
-
-export function kgPerUnit(unit: string): number {
-  return KG_PER_UNIT[normalizeText(unit)] ?? FALLBACK_KG_PER_UNIT;
-}
+// Todo produto é vendido por quilo: 1 unidade do pedido = 1 kg (ex.: maçã a R$ 8,00/kg; 1 kg comprado = R$ 8,00).
+// O pedido de 40 unidades é de 40 kg, e é esse peso que a balança precisa ler.
+export const UNIT = "kg";
 
 // Os quilos são guardados em gramas: tira os restos de decimais das contas (ex.: 12 × 1,1 = 13,200000000000001).
 export function roundKg(value: number): number {
@@ -23,9 +10,9 @@ export function roundKg(value: number): number {
 }
 
 // Peso que o pedido deve ter (em kg).
-export function expectedKg(quantity: number, unit: string): number {
+export function expectedKg(quantity: number): number {
   if (!Number.isFinite(quantity) || quantity <= 0) return 0;
-  return roundKg(quantity * kgPerUnit(unit));
+  return roundKg(quantity);
 }
 
 // Quanto o peso pode ficar abaixo e acima do esperado, em fração (0,02 = 2%).
@@ -34,8 +21,13 @@ export interface Tolerance {
   over: number;
 }
 
-// Combinado com o produtor: 10 kg pedidos aceitam de 9,8 a 11 kg. Vale para todos os produtos.
-export const DEFAULT_TOLERANCE: Tolerance = { under: 0.02, over: 0.1 };
+// Combinado com o produtor: o peso pode variar 2% para menos e 2% para mais (10 kg pedidos aceitam de 9,8 a 10,2 kg).
+// Vale para todos os produtos. Passar do limite é bloqueado, não só avisado: 999 kg num pedido de 10 kg não é aceito.
+export const TOLERANCE_PERCENT = 0.02;
+export const DEFAULT_TOLERANCE: Tolerance = { under: TOLERANCE_PERCENT, over: TOLERANCE_PERCENT };
+
+// O menor peso aceito: a venda é de 1 kg no mínimo, então pedidos muito pequenos (1 kg) não aceitam menos que isso.
+export const MIN_WEIGHING_KG = 1;
 
 // Exceções por produto (chave sem acento e minúscula): folhosas que murcham, por exemplo, podem ter faixa própria.
 export const TOLERANCE_BY_PRODUCT: Record<string, Tolerance> = {};
@@ -50,8 +42,9 @@ export interface WeightRange {
 }
 
 export function acceptedRange(expected: number, tolerance: Tolerance): WeightRange {
+  const floor = Math.min(MIN_WEIGHING_KG, expected);
   return {
-    minKg: roundKg(expected * (1 - tolerance.under)),
+    minKg: Math.max(roundKg(expected * (1 - tolerance.under)), floor),
     maxKg: roundKg(expected * (1 + tolerance.over)),
   };
 }
@@ -84,17 +77,10 @@ export function judgeWeight(expected: number, actual: number | null, tolerance: 
   return { verdict, expectedKg: expected, actualKg: weight, diffKg, diffPercent, range };
 }
 
-// Pesagem do produtor: o mínimo é obrigatório, mas não há máximo. O que passa do pedido é aceito (o produtor
-// pode mandar a mais por conta própria), só não é pago. Por isso "acima" também conta como dentro.
-export function judgeProducerWeight(expected: number, actual: number | null, tolerance: Tolerance): WeightJudgement {
-  const judgement = judgeWeight(expected, actual, tolerance);
-  return judgement.verdict === "ACIMA" ? { ...judgement, verdict: "NA_FAIXA" } : judgement;
-}
-
-// Quanto vale o peso conferido: o preço é por unidade do pedido, então o peso volta a ser unidades.
-export function valueForKg(kg: number, unit: string, price: number | null): number {
+// Quanto vale o peso conferido: o preço é por kg (R$ 8,00/kg, 1 kg comprado = R$ 8,00).
+export function valueForKg(kg: number, price: number | null): number {
   if (price === null || !(kg > 0)) return 0;
-  return Math.round((kg / kgPerUnit(unit)) * price * 100 + Number.EPSILON) / 100;
+  return Math.round(kg * price * 100 + Number.EPSILON) / 100;
 }
 
 // Maior peso aceito numa pesagem (kg): barra erro de digitação, como um zero a mais.

@@ -4,11 +4,14 @@ import { PressableScale } from "@/components/motion/PressableScale";
 import { AlertModal } from "@/components/ui/AlertModal";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
+import { registerState } from "@/lib/delivery/registerState";
+import { RegisterButton } from "./RegisterButton";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { Input } from "@/components/ui/Input";
 import {
   producerVerdictSummary,
   SCALE_TEXTS,
+  STABILITY_TEXTS,
   VERDICT_TONES,
   verdictSummary,
   type StageTone,
@@ -78,9 +81,22 @@ export function WeighSheet({
   const range = sheet.judgement.range;
   const tone = TONE_COLORS[VERDICT_TONES[sheet.judgement.verdict]];
   const registered = isProducer ? (card?.weighedKg ?? 0) : 0;
-  const missing = Math.max(0, sheet.expectedKg - sheet.projectedKg);
-
-  const registerLabel = sheet.candidate !== null ? `Registrar ${formatKg(sheet.candidate)}` : "Registrar peso";
+  // O mercado registra o que mediu mesmo fora da faixa (vira divergência); só o produtor fica bloqueado abaixo do mínimo
+  // ou acima do pedido.
+  const state = registerState({
+    hasWeight: sheet.candidate !== null,
+    irregular: false,
+    holding: false,
+    verdict: isProducer ? sheet.judgement.verdict : "NA_FAIXA",
+  });
+  const registerLabel =
+    state === "below"
+      ? STABILITY_TEXTS.belowButton
+      : state === "above"
+        ? STABILITY_TEXTS.aboveButton
+        : sheet.candidate !== null
+          ? `Registrar ${formatKg(sheet.candidate)}`
+          : "Registrar peso";
   const total = order?.itemCount ?? 1;
   const inRange = card?.weighing.verdict === "NA_FAIXA";
 
@@ -93,12 +109,7 @@ export function WeighSheet({
       subtitle={card ? `${order?.mercado ?? ""} · produto ${position + 1} de ${total}` : undefined}
       footer={
         <View style={styles.footer}>
-          <Button
-            label={registerLabel}
-            isLoading={sheet.isSaving}
-            disabled={sheet.candidate === null}
-            onPress={sheet.register}
-          />
+          <RegisterButton state={state} label={registerLabel} isLoading={sheet.isSaving} onPress={sheet.register} />
           {isProducer ? (
             <View style={styles.steps}>
               {position > 0 && (
@@ -183,10 +194,7 @@ export function WeighSheet({
 
           <View style={[styles.summary, { backgroundColor: tone.soft, borderColor: tone.border }]}>
             <Text style={styles.expected}>
-              Esperado {formatKg(sheet.expectedKg)} ·{" "}
-              {isProducer
-                ? `mínimo ${formatKg(range.minKg)}`
-                : `aceita de ${formatKg(range.minKg)} a ${formatKg(range.maxKg)}`}
+              Esperado {formatKg(sheet.expectedKg)} · aceita de {formatKg(range.minKg)} a {formatKg(range.maxKg)}
             </Text>
             <WeightGauge
               range={range}
@@ -194,7 +202,6 @@ export function WeighSheet({
               registeredKg={registered}
               pendingKg={sheet.candidate ?? 0}
               tone={VERDICT_TONES[sheet.judgement.verdict]}
-              openEnded={isProducer}
             />
             {isProducer && (
               <View style={styles.sumRow}>
@@ -215,9 +222,6 @@ export function WeighSheet({
             </View>
             <Text style={[styles.verdict, { color: tone.text }]} accessibilityLiveRegion="polite">
               {isProducer ? producerVerdictSummary(sheet.judgement) : verdictSummary(sheet.judgement)}
-              {isProducer && sheet.judgement.verdict === "ABAIXO" && missing > 0
-                ? ` · faltam ${formatKg(missing)} para o ideal`
-                : ""}
             </Text>
           </View>
 

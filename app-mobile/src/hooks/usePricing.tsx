@@ -1,10 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { buildInsights, type MarketData, type PriceInsight } from "@/lib/pricing/insights";
 import { priceKey } from "@/lib/pricing/price";
 import type { SuggestedPrice } from "@/lib/pricing/suggestion";
-import { selectedProductNames } from "@/lib/produtor/catalog";
 import { getPricingService, type PriceResponse, type PricingGateway } from "@/services";
-import { useProdutorData } from "./useProdutorData";
 
 type LoadStatus = "loading" | "ready" | "error";
 
@@ -14,8 +11,6 @@ interface PricingData {
   priceOf: (produto: string) => number | null;
   // A média que a plataforma sugere para um produto: só uma referência, não é o preço dele.
   suggestedOf: (produto: string) => SuggestedPrice | null;
-  // Preços e vendas dos produtos que ele cultiva, para o Painel.
-  insights: PriceInsight[];
   setPrice: (produto: string, price: number | null) => Promise<void>;
   recordResponse: (response: PriceResponse) => Promise<void>;
   reload: () => Promise<void>;
@@ -29,24 +24,16 @@ interface ProviderProps {
   pricing?: PricingGateway;
 }
 
-// Preços da área do Produtor. Fica dentro de ProdutorDataProvider porque os resultados do Painel
-// dependem dos produtos que ele salvou no catálogo.
+// Preços da área do Produtor: o preço que ele pede por produto e a média sugerida pela plataforma.
 export function PricingProvider({ email, children, pricing = getPricingService() }: ProviderProps) {
-  const { products, savedIds } = useProdutorData();
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [myPrices, setMyPrices] = useState<Record<string, number>>({});
   const [suggested, setSuggested] = useState<Record<string, SuggestedPrice>>({});
-  const [market, setMarket] = useState<MarketData[]>([]);
 
   const fetchAll = useCallback(async () => {
-    const [prices, suggestions, marketData] = await Promise.all([
-      pricing.getMyPrices(email),
-      pricing.getSuggestedPrices(),
-      pricing.getMarketData(),
-    ]);
+    const [prices, suggestions] = await Promise.all([pricing.getMyPrices(email), pricing.getSuggestedPrices()]);
     setMyPrices(prices);
     setSuggested(suggestions);
-    setMarket(marketData);
   }, [pricing, email]);
 
   const reload = useCallback(async () => {
@@ -81,17 +68,15 @@ export function PricingProvider({ email, children, pricing = getPricingService()
   );
 
   const value = useMemo<PricingData>(() => {
-    const names = selectedProductNames(products, savedIds);
     return {
       status,
       priceOf: (produto) => myPrices[priceKey(produto)] ?? null,
       suggestedOf: (produto) => suggested[priceKey(produto)] ?? null,
-      insights: buildInsights(market, names, myPrices),
       setPrice,
       recordResponse,
       reload,
     };
-  }, [status, products, savedIds, myPrices, suggested, market, setPrice, recordResponse, reload]);
+  }, [status, myPrices, suggested, setPrice, recordResponse, reload]);
 
   return <PricingContext.Provider value={value}>{children}</PricingContext.Provider>;
 }

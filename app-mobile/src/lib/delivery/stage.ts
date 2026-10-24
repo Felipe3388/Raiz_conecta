@@ -1,9 +1,9 @@
 import type { Delivery, DeliveryStage } from "@/types/delivery";
-import { expectedKg, judgeProducerWeight, judgeWeight, roundKg, toleranceFor, type WeightJudgement } from "./weight";
+import { expectedKg, judgeWeight, roundKg, toleranceFor, type WeightJudgement } from "./weight";
 
 // Peso que o pedido deve ter, em kg.
 export function deliveryExpectedKg(delivery: Delivery): number {
-  return expectedKg(delivery.quantidade, delivery.unidade);
+  return expectedKg(delivery.quantidade);
 }
 
 // Tudo o que o produtor já pesou (os lotes se somam).
@@ -11,10 +11,10 @@ export function totalWeighedKg(delivery: Delivery): number {
   return roundKg(delivery.weighings.reduce((sum, item) => sum + item.kg, 0));
 }
 
-// O peso do produtor contra o esperado: só o mínimo conta (o que passa do pedido não é pago, mas não é erro).
+// O peso do produtor contra o esperado: mínimo e máximo, a mesma faixa dos dois lados (±2%).
 export function weighingJudgement(delivery: Delivery): WeightJudgement {
   const total = totalWeighedKg(delivery);
-  return judgeProducerWeight(deliveryExpectedKg(delivery), total > 0 ? total : null, toleranceFor(delivery.produto));
+  return judgeWeight(deliveryExpectedKg(delivery), total > 0 ? total : null, toleranceFor(delivery.produto));
 }
 
 // O peso do mercado contra o esperado, ou null se ele ainda não pesou.

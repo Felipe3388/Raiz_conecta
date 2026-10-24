@@ -6,7 +6,6 @@ import { useUndo } from "./useUndo";
 
 export interface PriceTarget {
   produto: string;
-  unidade?: string;
 }
 
 // Controller de "definir o meu preço": guarda qual produto está sendo editado, salva e deixa desfazer.

@@ -82,7 +82,7 @@ export function demandByProduct(
     .sort((a, b) => b.requested - a.requested || a.produto.localeCompare(b.produto, "pt-BR"));
 }
 
-// O total de todos os produtos, pelo valor em reais (as unidades variam: kg, caixa, maço).
+// O total de todos os produtos, pelo valor em reais (tudo é vendido por kg).
 export function demandPercent(lines: DemandLine[]): number {
   const requested = lines.reduce((sum, line) => sum + line.requestedValue, 0);
   const offered = lines.reduce((sum, line) => sum + line.offeredValue, 0);

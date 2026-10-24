@@ -72,8 +72,6 @@ export function filterOrders(orders: Order[], filter: string, today: Date): Orde
 export interface PickItem {
   produto: string;
   orders: number;
-  // Quanto foi pedido em cada unidade (ex.: 50 Caixas).
-  units: { unidade: string; quantidade: number }[];
   expectedKg: number;
   weighedKg: number;
   remainingKg: number;
@@ -92,15 +90,11 @@ export function buildPickList(deliveries: Delivery[]): PickItem[] {
 
   return [...groups.values()]
     .map((group) => {
-      const units = new Map<string, number>();
-      for (const delivery of group)
-        units.set(delivery.unidade, (units.get(delivery.unidade) ?? 0) + delivery.quantidade);
       const expected = roundKg(group.reduce((sum, delivery) => sum + deliveryExpectedKg(delivery), 0));
       const weighed = roundKg(group.reduce((sum, delivery) => sum + totalWeighedKg(delivery), 0));
       return {
         produto: group[0].produto,
         orders: group.length,
-        units: [...units.entries()].map(([unidade, quantidade]) => ({ unidade, quantidade })),
         expectedKg: expected,
         weighedKg: weighed,
         remainingKg: Math.max(0, roundKg(expected - weighed)),

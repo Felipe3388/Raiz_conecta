@@ -18,23 +18,18 @@ export const PROPOSAL_STATUS_INFO: Record<ProposalStatus, StatusInfo> = {
 };
 
 export const PROPOSAL_CLOSED_NOTES: Partial<Record<ProposalStatus, string>> = {
-  RECUSADA: "Você recusou. O pedido seguiu para outro produtor.",
-  EXPIRADA: "O prazo acabou sem resposta. O pedido seguiu para outro produtor.",
+  RECUSADA: "Você recusou este pedido.",
+  EXPIRADA: "O prazo acabou sem resposta.",
 };
 
 // O aviso de que o prazo está acabando (menos de 2 minutos).
 export const URGENT_SECONDS = 120;
 
-export const PRICE_NOTE = "Preço fixo definido pela Raiz. Escolha quanto de cada produto você entrega.";
-
-export const PARTIAL_NOTE = "O que você não aceitar segue para outros produtores, até o pedido ser completado.";
-
-export const OFFERS_INTRO = "Cada pedido vale por 30 minutos. Aceite tudo ou só uma parte de cada produto.";
+export const PRICE_NOTE = "Preço fixo por kg.";
 
 export const OFFERS_EMPTY = {
   title: "Nenhum pedido por enquanto.",
-  description:
-    "Quando um mercado pedir um dos seus produtos, o pedido chega aqui e por e-mail, com 30 minutos para responder. Mantenha o catálogo em dia.",
+  description: "Os pedidos dos mercados chegam aqui.",
 };
 
 export const ORDER_ACTIONS = {
@@ -55,7 +50,7 @@ export const OFFER_TEXTS = {
   offered: "VOCÊ OFERECE",
   progress: (percent: number, kind: "none" | "partial" | "full"): string =>
     kind === "none"
-      ? "Arraste a barra ou digite a quantidade"
+      ? "Arraste ou digite a quantidade"
       : kind === "full"
         ? "Você atende 100% deste pedido"
         : `Você atende ${percent}% deste pedido`,
@@ -64,7 +59,6 @@ export const OFFER_TEXTS = {
 // A demanda dos mercados por produto (resumo no topo de Ofertas).
 export const DEMAND_TEXTS = {
   title: "Demanda dos mercados",
-  hint: "Quanto cada produto é pedido, somando os mercados, e quanto você já cobre.",
   summary: (percent: number, products: number): string =>
     `${products} ${products === 1 ? "produto" : "produtos"} · você cobre ${percent}%`,
   asked: "pedidos",

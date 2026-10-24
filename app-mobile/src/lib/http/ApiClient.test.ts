@@ -33,9 +33,7 @@ describe("ApiClient", () => {
 
     await createClient(fetchMock, "abc123").get("/api/qualquer");
 
-    expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe(
-      "Bearer abc123",
-    );
+    expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe("Bearer abc123");
   });
 
   it("serializa o corpo do POST como JSON", async () => {
@@ -53,9 +51,7 @@ describe("ApiClient", () => {
   });
 
   it("lança ApiError com a mensagem e o status devolvidos pela API", async () => {
-    const fetchMock = jest
-      .fn()
-      .mockResolvedValue(jsonResponse({ error: "E-mail ou senha incorretos." }, 401));
+    const fetchMock = jest.fn().mockResolvedValue(jsonResponse({ error: "E-mail ou senha incorretos." }, 401));
 
     const promise = createClient(fetchMock).post("/api/auth/login", {});
 
@@ -67,9 +63,7 @@ describe("ApiClient", () => {
   });
 
   it("usa mensagem genérica quando o erro não vem em JSON", async () => {
-    const fetchMock = jest
-      .fn()
-      .mockResolvedValue(new Response("<html>oops</html>", { status: 500 }));
+    const fetchMock = jest.fn().mockResolvedValue(new Response("<html>oops</html>", { status: 500 }));
 
     await expect(createClient(fetchMock).get("/x")).rejects.toMatchObject({
       message: "Erro inesperado (500).",
@@ -99,5 +93,23 @@ describe("ApiClient", () => {
     expect(init.body).toBe(form);
     expect(init.headers["Content-Type"]).toBeUndefined();
     expect(init.headers.Authorization).toBe("Bearer abc123");
+  });
+});
+
+describe("ApiClient: PUT e DELETE", () => {
+  it("put envia JSON e delete não envia corpo", async () => {
+    const fetchMock = jest.fn().mockResolvedValue(jsonResponse({ message: "ok" }));
+    const client = createClient(fetchMock);
+
+    await client.put("/api/perfil/meus-dados", { email: "a@b.c" });
+    await client.delete("/api/perfil/meus-dados?email=a%40b.c");
+
+    const [, putInit] = fetchMock.mock.calls[0];
+    expect(putInit.method).toBe("PUT");
+    expect(putInit.body).toBe(JSON.stringify({ email: "a@b.c" }));
+    const [deleteUrl, deleteInit] = fetchMock.mock.calls[1];
+    expect(deleteUrl).toBe("http://api.test/api/perfil/meus-dados?email=a%40b.c");
+    expect(deleteInit.method).toBe("DELETE");
+    expect(deleteInit.body).toBeUndefined();
   });
 });

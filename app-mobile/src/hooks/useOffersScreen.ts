@@ -6,7 +6,6 @@ import {
   filterProposals,
   fullQuantities,
   groupByMarket,
-  isPartial,
   marketKey,
   proposalCounts,
   quantitiesError,
@@ -118,14 +117,13 @@ export function useOffersScreen() {
           .catch(() => {});
       }
       if (response.answer === "ACEITAR") {
-        const partial = isPartial(proposal, response.quantities);
         toast.show(
           "success",
           "Pedido aceito!",
-          `${proposal.mercado}, entrega ${deliveryDayLabel(proposal.entrega, new Date()).toLowerCase()}.${partial ? " O resto segue para outros produtores." : ""}`,
+          `${proposal.mercado}, entrega ${deliveryDayLabel(proposal.entrega, new Date()).toLowerCase()}.`,
         );
       } else {
-        toast.show("success", "Pedido recusado.", "O pedido segue para outro produtor.");
+        toast.show("success", "Pedido recusado.");
       }
     } catch (error) {
       setAsking(null);
