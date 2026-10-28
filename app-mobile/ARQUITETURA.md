@@ -280,6 +280,21 @@ O app mobile **não usa o `.env` do app-principal**. Variáveis `EXPO_PUBLIC_*` 
 
 Toda leitura de ambiente passa por `src/config/env.ts`. Para conectar à API real, basta `EXPO_PUBLIC_USE_MOCKS=false` e a URL do servidor; nenhuma tela muda. Com a API ligada, só o que o site já tem fica real (ver "O que ainda é simulado").
 
+## Gerar o APK (EAS Build)
+
+O `eas.json` já tem o perfil `preview`, que gera um **APK** para instalar direto no celular, com `EXPO_PUBLIC_USE_MOCKS=true` (dados simulados, sem precisar da API). O `.env` não vai para a nuvem do EAS (está no `.gitignore`); por isso as variáveis `EXPO_PUBLIC_*` do build ficam no `env` do `eas.json`. Sem elas, o app instalado fecha na abertura por faltar a `EXPO_PUBLIC_API_URL`.
+
+```bash
+npm install
+npx expo-doctor                                  # deve passar nas verificações de pacotes
+npx eas-cli@latest login
+npx eas-cli@latest build -p android --profile preview
+```
+
+Na primeira vez o EAS pergunta se pode criar o projeto (`eas init`). Para um APK que usa a API real, crie outro perfil em `eas.json` com `EXPO_PUBLIC_USE_MOCKS=false` e `EXPO_PUBLIC_API_URL` apontando para um endereço `https://` do servidor (nunca `localhost`).
+
+Se o expo-doctor reclamar de versões, rode `npx expo install --fix` e confirme com `npm test` e `npm run typecheck`. As versões desta pasta já estão alinhadas ao SDK 57 (inclusive `@types/jest` 29.5.14, que é o que o SDK espera).
+
 ## Como adicionar uma feature (padrão por story)
 
 1. **Tipos** em `src/types/<feature>.ts`, espelhando o JSON da API.
