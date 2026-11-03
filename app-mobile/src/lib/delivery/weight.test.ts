@@ -6,6 +6,7 @@ import {
   MAX_WEIGHING_KG,
   MIN_WEIGHING_KG,
   parseKg,
+  tolerancePercent,
   toleranceFor,
   valueForKg,
 } from "./weight";
@@ -158,5 +159,20 @@ describe("parseKg (o peso que a pessoa digitou)", () => {
 
   it("aceita até o limite", () => {
     expect(parseKg(String(MAX_WEIGHING_KG))).toBe(MAX_WEIGHING_KG);
+  });
+});
+
+describe("tolerancePercent (a tolerância mostrada na pesagem)", () => {
+  it("2% do pedido vira 2", () => {
+    expect(tolerancePercent(8, acceptedRange(8, DEFAULT_TOLERANCE))).toBe(2);
+    expect(tolerancePercent(10, acceptedRange(10, DEFAULT_TOLERANCE))).toBe(2);
+  });
+
+  it("aceita tolerância com casa decimal", () => {
+    expect(tolerancePercent(10, acceptedRange(10, { under: 0.025, over: 0.025 }))).toBe(2.5);
+  });
+
+  it("pedido zerado não quebra", () => {
+    expect(tolerancePercent(0, { minKg: 0, maxKg: 0 })).toBe(0);
   });
 });

@@ -1,238 +1,63 @@
 "use client";
 
-import { useState, useEffect, Suspense, useCallback } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { toast } from "sonner";
-import {
-  LogIn, UserPlus, Mail, Lock, User, Building2, Clock,
-  ArrowLeft, Eye, EyeOff, AlertCircle, Loader2, Leaf, Phone,
-} from "lucide-react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
+import { Loader2, LogIn, UserPlus } from "lucide-react";
+import { LoginForm } from "@/components/auth/LoginForm";
+import { Wordmark } from "@/components/brand/Wordmark";
+import { PendingApproval } from "@/components/auth/PendingApproval";
+import { SignupForm } from "@/components/auth/SignupForm";
+import { PrivacidadeModal, TermosModal } from "@/components/legal/LegalModals";
+import { SUPPORT_EMAIL } from "@/lib/support";
 
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Card } from "@/components/ui/Card";
-import { TermosModal } from "@/components/ui/TermosModal";
-import { PrivacidadeModal } from "@/components/ui/PrivacidadeModal";
+type View = "login" | "cadastro" | "em_analise";
 
-// Componente separado para evitar IIFE no JSX (incompatível com Turbopack)
-function SenhaForcaIndicador({ senha }: { senha: string }) {
-  const pontos = [
-    senha.length >= 8,
-    /[A-Z]/.test(senha),
-    /[0-9]/.test(senha),
-    /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(senha),
-    senha.length >= 12,
-  ].filter(Boolean).length;
+const SUBTITLES: Record<View, string> = {
+  login: "Acesse sua conta para continuar",
+  cadastro: "Crie sua conta para começar",
+  em_analise: "Aguardando aprovação",
+};
 
-  const info = [
-    { label: "Muito fraca", color: "bg-red-500",     text: "text-red-600"    },
-    { label: "Fraca",       color: "bg-orange-400",  text: "text-orange-600" },
-    { label: "Razoável",    color: "bg-yellow-400",  text: "text-yellow-600" },
-    { label: "Forte",       color: "bg-green-500",   text: "text-green-600"  },
-    { label: "Muito forte", color: "bg-emerald-600", text: "text-emerald-700"},
-  ][Math.max(0, pontos - 1)] ?? { label: "Muito fraca", color: "bg-red-500", text: "text-red-600" };
+const TABS = [
+  { id: "login", label: "Entrar", icon: LogIn },
+  { id: "cadastro", label: "Criar Conta", icon: UserPlus },
+] as const;
 
-  return (
-    <div className="mt-2">
-      <div className="flex gap-1 mb-1">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${i <= pontos ? info.color : "bg-gray-200"}`} />
-        ))}
-      </div>
-      <p className={`text-xs font-bold ${info.text}`}>{info.label}</p>
-      {pontos < 4 && (
-        <p className="text-xs text-gray-400 mt-0.5">Use maiúsculas, números e símbolos (!@#$%)</p>
-      )}
-    </div>
-  );
-}
-
+// Entrar e criar conta: as mesmas telas do app (login, cadastro e conta em análise), em uma página só.
+// Cada parte mora em src/components/auth e as regras de validação em src/lib/validation/auth.
 function LoginContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const [view, setView] = useState<"login" | "cadastro" | "em_analise">("login");
-  const [carregando, setCarregando] = useState(false);
-  const [erro, setErro] = useState("");
-  const [mostrarSenhaLogin, setMostrarSenhaLogin] = useState(false);
-  const [mostrarSenhaCadastro, setMostrarSenhaCadastro] = useState(false);
-  const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
-  const [isTermosOpen, setIsTermosOpen] = useState(false);
-  const [isPrivacidadeOpen, setIsPrivacidadeOpen] = useState(false);
-
-  const [formLogin, setFormLogin] = useState({ email: "", senha: "" });
-  const [formCadastro, setFormCadastro] = useState({
-    tipoUsuario: "produtor",
-    nome: "",
-    email: "",
-    senha: "",
-    confirmarSenha: "",
-    telefone: "",
-  });
-
-  useEffect(() => {
-    if (searchParams.get("modo") === "cadastro") setView("cadastro");
-  }, [searchParams]);
-
-  // Limpa erro ao trocar de aba
-  const trocarView = useCallback((novaView: "login" | "cadastro") => {
-    setView(novaView);
-    setErro("");
-    if (novaView === "cadastro") {
-      setFormCadastro((prev) => ({ tipoUsuario: prev.tipoUsuario || "produtor", nome: "", email: "", senha: "", confirmarSenha: "", telefone: "" }));
-    }
-  }, []);
-
-  const tabs = [
-    { id: "login", label: "Entrar", icon: LogIn },
-    { id: "cadastro", label: "Criar Conta", icon: UserPlus },
-  ];
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErro("");
-    if (!formLogin.email || !formLogin.senha) {
-      setErro("Preencha o e-mail e a senha.");
-      return;
-    }
-    setCarregando(true);
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formLogin),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setErro(data.error || "Erro ao fazer login.");
-        return;
-      }
-
-      if (data.user.status === "EM_ANALISE") {
-        setView("em_analise");
-        return;
-      }
-
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("userEmail", data.user.email);
-      localStorage.setItem("userName", data.user.nome);
-      localStorage.setItem("userRole", data.user.tipoUser);
-      window.dispatchEvent(new Event("loginStateChange"));
-      toast.success(`Bem-vindo de volta, ${data.user.nome}!`);
-
-      const destinos: Record<string, string> = {
-        admin: "/admin",
-        produtor: "/produtor",
-        mercado: "/catalogo",
-      };
-      router.push(destinos[data.user.tipoUser] || "/");
-    } catch {
-      setErro("Erro de conexão com o servidor.");
-    } finally {
-      setCarregando(false);
-    }
-  };
-
-  // ── Validações ────────────────────────────────────────────────
-  const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-  const REGEX_SENHA = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
-
-  const handleCadastroPasso1 = (e: React.FormEvent) => {
-    e.preventDefault();
-    setErro("");
-
-    if (!REGEX_EMAIL.test(formCadastro.email)) {
-      setErro("E-mail inválido. Use o formato nome@dominio.com.");
-      return;
-    }
-    if (!REGEX_SENHA.test(formCadastro.senha)) {
-      setErro("A senha deve ter mínimo 8 caracteres, letra maiúscula, minúscula, número e caractere especial (!@#$%...).");
-      return;
-    }
-    if (formCadastro.senha !== formCadastro.confirmarSenha) {
-      setErro("As senhas não coincidem. Verifique e tente novamente.");
-      return;
-    }
-    sessionStorage.setItem("cadastro_temporario", JSON.stringify(formCadastro));
-    router.push("/completar-perfil");
-  };
-
-  const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let v = e.target.value.replace(/\D/g, "");
-    v = v.replace(/^(\d{2})(\d)/, "($1) $2");
-    v = v.replace(/(\d{5})(\d{1,4})$/, "$1-$2");
-    setFormCadastro({ ...formCadastro, telefone: v.slice(0, 15) });
-  };
+  const params = useSearchParams();
+  const [view, setView] = useState<View>(params.get("modo") === "cadastro" ? "cadastro" : "login");
+  const [termsOpen, setTermsOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-linear-to-br from-green-50 via-white to-emerald-50 flex flex-col items-center justify-center p-4 md:p-8 overflow-hidden">
-
-      {/* LOGO */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="text-center mb-8"
-      >
-        <Link href="/" className="inline-flex items-center gap-2 group">
-          <div className="bg-green-100 p-2.5 rounded-xl group-hover:bg-green-600 transition-colors">
-            <Leaf className="text-green-600 group-hover:text-white transition-colors" size={28} />
-          </div>
-          <span className="text-3xl font-black text-gray-900">
-            Raiz<span className="text-green-600">Conecta</span>
-          </span>
-        </Link>
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={view}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.2 }}
-            className="text-gray-500 mt-3 text-sm"
-          >
-            {view === "cadastro"
-              ? "Crie sua conta para começar"
-              : view === "em_analise"
-              ? "Aguardando aprovação"
-              : "Acesse sua conta para continuar"}
-          </motion.p>
-        </AnimatePresence>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="text-center mb-8">
+        <Wordmark href="/" size="lg" />
+        <p className="text-gray-600 mt-3 text-sm" aria-live="polite">{SUBTITLES[view]}</p>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.35, delay: 0.1 }}
-        className="w-full max-w-120"
-      >
-        {/* Sem hover lift no card de login — é um form, não um item de lista */}
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.35, delay: 0.1 }} className="w-full max-w-120">
         <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
-
-          {/* ABAS */}
           {view !== "em_analise" && (
-            <div className="p-1.5 bg-gray-100/80 rounded-full flex gap-1 relative m-6 mb-0 border border-gray-200">
-              {tabs.map((tab) => {
-                const isActive = view === tab.id;
+            <div role="tablist" className="p-1.5 bg-gray-100/80 rounded-full flex gap-1 relative m-6 mb-0 border border-gray-200">
+              {TABS.map((tab) => {
+                const active = view === tab.id;
                 return (
                   <button
                     key={tab.id}
                     type="button"
-                    onClick={() => trocarView(tab.id as "login" | "cadastro")}
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setView(tab.id)}
                     className={`flex-1 relative z-10 px-4 py-2.5 rounded-full text-sm font-bold flex items-center justify-center gap-2 transition-colors duration-300 ${
-                      isActive ? "text-green-700" : "text-gray-500 hover:text-gray-800"
+                      active ? "text-green-700" : "text-gray-500 hover:text-gray-800"
                     }`}
                   >
-                    {isActive && (
-                      <motion.div
-                        layoutId="activeTabPill"
-                        className="absolute inset-0 bg-white rounded-full shadow-md"
-                        transition={{ type: "spring", duration: 0.5, bounce: 0.2 }}
-                      />
+                    {active && (
+                      <motion.div layoutId="activeTabPill" className="absolute inset-0 bg-white rounded-full shadow-md" transition={{ type: "spring", duration: 0.5, bounce: 0.2 }} />
                     )}
                     <tab.icon size={16} className="relative z-10" />
                     <span className="relative z-10">{tab.label}</span>
@@ -244,288 +69,24 @@ function LoginContent() {
 
           <div className="p-8 md:p-10 relative min-h-100 flex flex-col justify-center">
             <AnimatePresence mode="wait">
-
-              {/* ── LOGIN ── */}
-              {view === "login" && (
-                <motion.div
-                  key="login"
-                  initial={{ opacity: 0, x: -24 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 24 }}
-                  transition={{ duration: 0.25 }}
-                  className="space-y-6"
-                >
-                  <h1 className="text-2xl font-black text-gray-950 text-center">Entrar na conta</h1>
-
-                  <form onSubmit={handleLogin} className="space-y-5">
-                    {erro && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm"
-                      >
-                        <AlertCircle size={16} className="shrink-0" />
-                        {erro}
-                      </motion.div>
-                    )}
-
-                    <Input
-                      label="E-mail"
-                      name="email"
-                      type="email"
-                      icon={Mail}
-                      placeholder="seu@email.com"
-                      value={formLogin.email}
-                      onChange={(e) => setFormLogin({ ...formLogin, email: e.target.value })}
-                      disabled={carregando}
-                      required
-                    />
-
-                    {/* Senha com olho */}
-                    <div className="space-y-1.5 w-full">
-                      <label className="text-sm font-semibold text-gray-700 block">Senha</label>
-                      <div className="relative">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                          <Lock size={18} />
-                        </div>
-                        <input
-                          type={mostrarSenhaLogin ? "text" : "password"}
-                          value={formLogin.senha}
-                          onChange={(e) => setFormLogin({ ...formLogin, senha: e.target.value })}
-                          placeholder="Sua senha"
-                          className="w-full pl-10 pr-11 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 bg-white text-sm outline-none transition-all"
-                          disabled={carregando}
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setMostrarSenhaLogin(!mostrarSenhaLogin)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                          tabIndex={-1}
-                        >
-                          {mostrarSenhaLogin ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="text-right">
-                      <button
-                        type="button"
-                        onClick={() => toast.info("A recuperação de senha estará disponível em breve. Para urgências, contate o suporte.")}
-                        className="text-xs text-gray-400 hover:text-gray-600 font-medium transition-colors"
-                      >
-                        Esqueceu a senha?
-                      </button>
-                    </div>
-
-                    <Button type="submit" isLoading={carregando} className="w-full h-12 text-base">
-                      Acessar Painel
-                    </Button>
-                  </form>
-                </motion.div>
-              )}
-
-              {/* ── CADASTRO ── */}
-              {view === "cadastro" && (
-                <motion.div
-                  key="cadastro"
-                  initial={{ opacity: 0, x: 24 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -24 }}
-                  transition={{ duration: 0.25 }}
-                  className="space-y-6"
-                >
-                  <h1 className="text-2xl font-black text-gray-950 text-center">Junte-se a nós</h1>
-
-                  <form onSubmit={handleCadastroPasso1} className="space-y-5">
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <Building2 size={16} /> Tipo de Perfil
-                      </label>
-                      <div className="grid grid-cols-2 gap-3">
-                        {[
-                          { value: "produtor", label: "Produtor Rural",        icon: "🌱" },
-                          { value: "mercado",  label: "Mercado / Supermercado", icon: "🏪" },
-                        ].map((opt) => (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => setFormCadastro({ ...formCadastro, tipoUsuario: opt.value })}
-                            className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 font-bold text-sm transition-all cursor-pointer ${
-                              formCadastro.tipoUsuario === opt.value
-                                ? "border-green-500 bg-green-50 text-green-800"
-                                : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
-                            }`}
-                          >
-                            <span className="text-xl">{opt.icon}</span>
-                            <span>{opt.label}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <Input
-                      label="Nome Fantasia / Razão Social"
-                      name="nome"
-                      type="text"
-                      icon={User}
-                      placeholder="Fazenda São João"
-                      value={formCadastro.nome}
-                      onChange={(e) => setFormCadastro({ ...formCadastro, nome: e.target.value })}
-                      required
-                    />
-                    <Input
-                      label="E-mail"
-                      name="email"
-                      type="email"
-                      icon={Mail}
-                      placeholder="seu@email.com"
-                      value={formCadastro.email}
-                      onChange={(e) => setFormCadastro({ ...formCadastro, email: e.target.value })}
-                      error={formCadastro.email && !REGEX_EMAIL.test(formCadastro.email) ? "E-mail inválido" : undefined}
-                      required
-                    />
-
-                    {/* Telefone */}
-                    <Input
-                      label="Telefone / WhatsApp"
-                      name="telefone"
-                      type="tel"
-                      icon={Phone}
-                      placeholder="(11) 99999-9999"
-                      value={formCadastro.telefone}
-                      onChange={handleTelefoneChange}
-                      required
-                    />
-
-                    <div className="space-y-1.5 w-full">
-                      <label className="text-sm font-semibold text-gray-700 block">Senha</label>
-                      <div className="relative">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                          <Lock size={18} />
-                        </div>
-                        <input
-                          type={mostrarSenhaCadastro ? "text" : "password"}
-                          value={formCadastro.senha}
-                          onChange={(e) => setFormCadastro({ ...formCadastro, senha: e.target.value })}
-                          placeholder="Crie uma senha forte"
-                          className="w-full pl-10 pr-11 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 bg-white text-sm outline-none transition-all"
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setMostrarSenhaCadastro(!mostrarSenhaCadastro)}
-                          className="rc-password-toggle absolute right-3 top-1/2 -translate-y-1/2"
-                          tabIndex={-1}
-                        >
-                          {mostrarSenhaCadastro ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
-                      </div>
-                      {formCadastro.senha && (
-                        <SenhaForcaIndicador senha={formCadastro.senha} />
-                      )}
-                    </div>
-
-                    {/* SCRUM-146: Confirmação de Senha */}
-                    <div className="space-y-1.5 w-full">
-                      <label className="text-sm font-semibold text-gray-700 block">Confirmar Senha</label>
-                      <div className="relative">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                          <Lock size={18} />
-                        </div>
-                        <input
-                          type={mostrarConfirmarSenha ? "text" : "password"}
-                          value={formCadastro.confirmarSenha}
-                          onChange={(e) => setFormCadastro({ ...formCadastro, confirmarSenha: e.target.value })}
-                          placeholder="Repita a senha"
-                          className={`w-full pl-10 pr-11 py-3 rounded-lg border focus:ring-2 bg-white text-sm outline-none transition-all ${
-                            formCadastro.confirmarSenha && formCadastro.senha !== formCadastro.confirmarSenha
-                              ? "border-red-400 focus:ring-red-400"
-                              : formCadastro.confirmarSenha && formCadastro.senha === formCadastro.confirmarSenha
-                              ? "border-green-400 focus:ring-green-500"
-                              : "border-gray-300 focus:ring-green-500"
-                          }`}
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setMostrarConfirmarSenha(!mostrarConfirmarSenha)}
-                          className="rc-password-toggle absolute right-3 top-1/2 -translate-y-1/2"
-                          tabIndex={-1}
-                        >
-                          {mostrarConfirmarSenha ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
-                      </div>
-                      {formCadastro.confirmarSenha && formCadastro.senha !== formCadastro.confirmarSenha && (
-                        <p className="text-xs text-red-500 font-medium mt-1">As senhas não coincidem.</p>
-                      )}
-                      {formCadastro.confirmarSenha && formCadastro.senha === formCadastro.confirmarSenha && (
-                        <p className="text-xs text-green-600 font-medium mt-1">Senhas conferem!</p>
-                      )}
-                    </div>
-
-                    <label className="flex items-start gap-2.5 text-xs text-gray-600 pt-1 cursor-pointer">
-                      <input type="checkbox" className="mt-0.5 accent-green-600 rounded" required />
-                      <span>
-                        Li e concordo com os{" "}
-                        <button type="button" onClick={() => setIsTermosOpen(true)} className="text-green-600 font-bold hover:underline">Termos de Uso</button>{" "}
-                        e{" "}
-                        <button type="button" onClick={() => setIsPrivacidadeOpen(true)} className="text-green-600 font-bold hover:underline">Política de Privacidade</button>.
-                      </span>
-                    </label>
-
-                    <Button type="submit" className="w-full h-12 text-base">
-                      Avançar para o Passo 2
-                    </Button>
-                  </form>
-                </motion.div>
-              )}
-
-              {/* ── EM ANÁLISE ── */}
-              {view === "em_analise" && (
-                <motion.div
-                  key="em_analise"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.4, type: "spring" }}
-                  className="text-center space-y-6 py-4"
-                >
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", delay: 0.2, bounce: 0.5 }}
-                    className="mx-auto w-24 h-24 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center"
-                  >
-                    <Clock size={48} className="animate-pulse" />
-                  </motion.div>
-
-                  <div className="space-y-3">
-                    <h1 className="text-3xl font-black text-gray-900">Conta em Análise</h1>
-                    <p className="text-gray-500 leading-relaxed px-4 text-sm">
-                      Sua documentação está sendo verificada. Fique de olho no seu{" "}
-                      <strong className="text-gray-900">e-mail</strong> — avisaremos assim que seu acesso for liberado!
-                    </p>
-                  </div>
-
-                  <Button
-                    variant="outline"
-                    onClick={() => { setView("login"); setFormLogin({ email: "", senha: "" }); }}
-                    className="w-full border-gray-300 text-gray-600 hover:bg-gray-50"
-                  >
-                    <ArrowLeft size={18} className="mr-2" /> Voltar para o Login
-                  </Button>
-                </motion.div>
-              )}
-
+              <motion.div
+                key={view}
+                initial={{ opacity: 0, x: view === "cadastro" ? 24 : -24 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: view === "cadastro" ? -24 : 24 }}
+                transition={{ duration: 0.25 }}
+              >
+                {view === "login" && <LoginForm onPending={() => setView("em_analise")} />}
+                {view === "cadastro" && <SignupForm onOpenTerms={() => setTermsOpen(true)} onOpenPrivacy={() => setPrivacyOpen(true)} />}
+                {view === "em_analise" && <PendingApproval onBack={() => setView("login")} />}
+              </motion.div>
             </AnimatePresence>
           </div>
 
-          {/* RODAPÉ */}
           {view !== "em_analise" && (
-            <div className="px-8 py-5 bg-gray-50 border-t border-gray-100 text-center text-xs text-gray-500">
+            <div className="px-8 py-5 bg-gray-50 border-t border-gray-100 text-center text-xs text-gray-600">
               Precisa de ajuda?{" "}
-              <a href="mailto:suporte@raizconecta.com.br" className="text-green-600 font-bold hover:underline">
+              <a href={`mailto:${SUPPORT_EMAIL}`} className="text-green-700 font-bold hover:underline">
                 Fale com o suporte.
               </a>
             </div>
@@ -533,18 +94,16 @@ function LoginContent() {
         </div>
       </motion.div>
 
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="text-center text-xs text-gray-400 mt-6"
-      >
+      <p className="text-center text-xs text-gray-500 mt-6">
         Ao acessar, você concorda com nossos{" "}
-        <button onClick={() => setIsTermosOpen(true)} className="text-green-600 font-bold hover:underline">termos de uso</button>.
-      </motion.p>
+        <button type="button" onClick={() => setTermsOpen(true)} className="text-green-700 font-bold hover:underline">
+          termos de uso
+        </button>
+        .
+      </p>
 
-      <TermosModal isOpen={isTermosOpen} onClose={() => setIsTermosOpen(false)} />
-      <PrivacidadeModal isOpen={isPrivacidadeOpen} onClose={() => setIsPrivacidadeOpen(false)} />
+      <TermosModal isOpen={termsOpen} onClose={() => setTermsOpen(false)} />
+      <PrivacidadeModal isOpen={privacyOpen} onClose={() => setPrivacyOpen(false)} />
     </div>
   );
 }

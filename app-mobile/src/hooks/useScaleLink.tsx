@@ -13,8 +13,11 @@ interface ScaleLinkData {
   link: ScaleLink | null;
   // O nome da balança conectada, como aparece na tela (o do produtor ou o original), ou null.
   activeName: string | null;
+  // Como a balança nova é encontrada: procurando perto do celular ("scan") ou pelo código da etiqueta ("label").
+  discovery: ScaleLinkGateway["discovery"];
   findDevices: () => Promise<ScaleDevice[]>;
-  addScale: (deviceId: string) => Promise<ScaleLink>;
+  // `code` é o código da etiqueta (só quando discovery é "label").
+  addScale: (deviceId: string, code?: string) => Promise<ScaleLink>;
   activateScale: (deviceId: string) => Promise<void>;
   // O nome que o produtor escolheu; vazio volta ao nome original.
   renameScale: (deviceId: string, text: string) => Promise<void>;
@@ -56,8 +59,8 @@ export function ScaleLinkProvider({ email, children, gateway = getScaleLinkServi
   const refresh = useCallback(async () => setState(await gateway.getState(email)), [gateway, email]);
 
   const addScale = useCallback(
-    async (deviceId: string) => {
-      const added = await gateway.add(email, deviceId);
+    async (deviceId: string, code?: string) => {
+      const added = await gateway.add(email, deviceId, code);
       await refresh();
       return added;
     },
@@ -95,6 +98,7 @@ export function ScaleLinkProvider({ email, children, gateway = getScaleLinkServi
       scales: state.scales,
       link,
       activeName: link ? scaleDisplayName(link) : null,
+      discovery: gateway.discovery,
       findDevices: () => gateway.findDevices(),
       addScale,
       activateScale,
@@ -105,6 +109,11 @@ export function ScaleLinkProvider({ email, children, gateway = getScaleLinkServi
   }, [status, state, gateway, addScale, activateScale, renameScale, removeScale, reload]);
 
   return <ScaleLinkContext.Provider value={value}>{children}</ScaleLinkContext.Provider>;
+}
+
+// Para quem pode estar fora do ScaleLinkProvider (por exemplo, a folha de pesagem em testes): devolve null em vez de lançar.
+export function useOptionalScaleLink(): ScaleLinkData | null {
+  return useContext(ScaleLinkContext);
 }
 
 export function useScaleLink(): ScaleLinkData {

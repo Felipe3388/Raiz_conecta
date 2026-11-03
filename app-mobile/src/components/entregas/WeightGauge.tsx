@@ -12,12 +12,22 @@ interface WeightGaugeProps {
   registeredKg: number;
   pendingKg: number;
   tone: StageTone;
+  // A legenda "mín. / ideal / máx." embaixo da régua; a pesagem em tela cheia já diz isso em letra grande e a esconde.
+  showLegend?: boolean;
 }
 
-const percent = (value: number, max: number) => `${Math.min(100, Math.max(0, (value / max) * 100))}%` as const;
+const percent = (value: number, max: number) =>
+  `${Math.min(100, Math.max(0, (value / max) * 100))}%` as const;
 
 // Régua do peso: a faixa aceita aparece sombreada e o preenchimento mostra onde o peso está.
-export function WeightGauge({ range, expectedKg, registeredKg, pendingKg, tone }: WeightGaugeProps) {
+export function WeightGauge({
+  range,
+  expectedKg,
+  registeredKg,
+  pendingKg,
+  tone,
+  showLegend = true,
+}: WeightGaugeProps) {
   const total = registeredKg + pendingKg;
   // A régua vai um pouco além do máximo aceito, para dar para ver quando o peso passa dele.
   const axisMax = Math.max(range.maxKg * 1.25, total * 1.05, 0.001);
@@ -28,7 +38,11 @@ export function WeightGauge({ range, expectedKg, registeredKg, pendingKg, tone }
       <View
         accessibilityRole="progressbar"
         accessibilityLabel="Peso em relação à faixa aceita"
-        accessibilityValue={{ min: 0, max: Math.round(axisMax), now: Math.round(total) }}
+        accessibilityValue={{
+          min: 0,
+          max: Math.round(axisMax),
+          now: Math.round(total),
+        }}
         style={styles.track}
       >
         <View
@@ -40,7 +54,15 @@ export function WeightGauge({ range, expectedKg, registeredKg, pendingKg, tone }
             },
           ]}
         />
-        <View style={[styles.fill, { width: percent(registeredKg, axisMax), backgroundColor: color.strong }]} />
+        <View
+          style={[
+            styles.fill,
+            {
+              width: percent(registeredKg, axisMax),
+              backgroundColor: color.strong,
+            },
+          ]}
+        />
         {pendingKg > 0 && (
           <View
             style={[
@@ -56,11 +78,15 @@ export function WeightGauge({ range, expectedKg, registeredKg, pendingKg, tone }
         )}
         <View style={[styles.mark, { left: percent(expectedKg, axisMax) }]} />
       </View>
-      <View style={styles.legend}>
-        <Text style={styles.legendText}>mín. {formatKg(range.minKg)}</Text>
-        <Text style={[styles.legendText, styles.legendStrong]}>ideal {formatKg(expectedKg)}</Text>
-        <Text style={styles.legendText}>máx. {formatKg(range.maxKg)}</Text>
-      </View>
+      {showLegend && (
+        <View style={styles.legend}>
+          <Text style={styles.legendText}>mín. {formatKg(range.minKg)}</Text>
+          <Text style={[styles.legendText, styles.legendStrong]}>
+            ideal {formatKg(expectedKg)}
+          </Text>
+          <Text style={styles.legendText}>máx. {formatKg(range.maxKg)}</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -83,7 +109,13 @@ const styles = StyleSheet.create({
     borderRightWidth: 2,
     borderColor: colors.primary,
   },
-  fill: { position: "absolute", left: 0, top: 4, bottom: 4, borderRadius: radius.full },
+  fill: {
+    position: "absolute",
+    left: 0,
+    top: 4,
+    bottom: 4,
+    borderRadius: radius.full,
+  },
   // O lote ainda não registrado aparece mais claro.
   pending: { opacity: 0.55 },
   // O peso ideal.
@@ -96,7 +128,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.text,
     opacity: 0.55,
   },
-  legend: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", columnGap: spacing.sm },
+  legend: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    columnGap: spacing.sm,
+  },
   legendText: { ...typography.caption, color: colors.textMuted },
   legendStrong: { fontWeight: "700", color: colors.textStrong },
 });

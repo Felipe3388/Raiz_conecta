@@ -1,39 +1,25 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  Leaf,
-  Truck,
   TrendingUp,
   ArrowRight,
   Store,
   Tractor,
   Handshake,
   CheckCircle,
-  Apple,
   UsersRound,
   Network,
 } from "lucide-react";
+import { useSession } from "@/hooks/useSession";
+import { homeFor } from "@/lib/auth/client";
 
 export default function HomePage() {
-  const [roleLogado, setRoleLogado] = useState<string | null>(null);
-
-  useEffect(() => {
-    const role = localStorage.getItem("userRole");
-    if (role) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setRoleLogado(role);
-    }
-  }, []);
-
-  const getLinkDoPainel = () => {
-    if (roleLogado === "admin") return "/admin";
-    if (roleLogado === "mercado") return "/catalogo"; // Atualizado para a rota nova
-    return "/produtor";
-  };
+  // Quem está logado vem do servidor (cookie httpOnly): o botão principal leva direto ao painel de cada perfil.
+  const { session } = useSession();
+  const roleLogado = session?.role ?? null;
+  const getLinkDoPainel = () => homeFor(roleLogado ?? "produtor");
 
   return (
     <div className="flex flex-col min-h-screen font-sans bg-white">

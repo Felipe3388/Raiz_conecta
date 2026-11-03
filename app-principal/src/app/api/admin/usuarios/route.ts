@@ -1,168 +1,117 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireSession } from "@/lib/auth/session";
+import { fail, prismaCode, readJson, serverError, text } from "@/lib/api/http";
+import { emailForStatus, isManagedType, isUserStatus, pickUserEdit } from "@/lib/admin/usuarios";
+import { notify } from "@/lib/notify/email";
 
-// GET: Busca TODOS os usuários (produtores, mercados e admins)
-export async function GET() {
+// Gestão de usuários: só o administrador. Cada rota confere a sessão (o proxy só protege as páginas).
+
+// Tudo o que a tela do admin precisa de cada conta — sem a coluna `senha` antiga.
+const PERFIL_SELECT = {
+  email: true, nomeFantasia: true, razaoSocial: true, documento: true, tipoDoc: true, telefone: true,
+  cidade: true, estado: true, status: true, urlDocumento: true, criadoEm: true,
+} as const;
+
+// GET: produtores, mercados e administradores (da mais antiga à mais nova conta dentro de cada tipo).
+export async function GET(req: Request) {
+  const auth = await requireSession(req, ["admin"]);
+  if (auth.error) return auth.error;
+
   try {
-    const produtores = await prisma.vendedor.findMany({
-      orderBy: { nomeFantasia: "asc" },
-    });
-    const mercados = await prisma.cliente.findMany({
-      orderBy: { nomeFantasia: "asc" },
-    });
-    const admins = await prisma.acesso.findMany({
-      where: { tipoUser: "admin" },
-    });
+    const [produtores, mercados, admins] = await Promise.all([
+      prisma.vendedor.findMany({ select: PERFIL_SELECT, orderBy: { nomeFantasia: "asc" } }),
+      prisma.cliente.findMany({ select: PERFIL_SELECT, orderBy: { nomeFantasia: "asc" } }),
+      prisma.acesso.findMany({ where: { tipoUser: "admin" }, select: { login: true, status: true } }),
+    ]);
 
-    const todosUsuarios = [
+    return NextResponse.json([
       ...produtores.map((p) => ({ ...p, tipo: "produtor" })),
-      ...mercados.map((m)   => ({ ...m, tipo: "mercado" })),
-      ...admins.map((a)     => ({
-        email: a.login,
-        nomeFantasia: "Administrador",
-        status: a.status,
-        tipo: "admin",
-      })),
-    ];
-
-    return NextResponse.json(todosUsuarios);
+      ...mercados.map((m) => ({ ...m, tipo: "mercado" })),
+      ...admins.map((a) => ({ email: a.login, nomeFantasia: "Administrador", status: a.status, tipo: "admin" })),
+    ]);
   } catch (error) {
-    return NextResponse.json({ error: "Erro ao buscar usuários" }, { status: 500 });
+    return serverError("admin.usuarios.listar", error, "Erro ao buscar usuários");
   }
 }
 
-// PUT: Atualiza o status (Aprovar, Rejeitar, Suspender, Reativar)
+// PUT: muda o status (aprovar, rejeitar, suspender, reativar) e avisa o usuário por e-mail.
 export async function PUT(req: Request) {
+  const auth = await requireSession(req, ["admin"]);
+  if (auth.error) return auth.error;
+
   try {
-    const { email, tipo, novoStatus, motivo } = await req.json();
+    const body = await readJson(req);
+    const email = text(body?.email);
+    const motivo = text(body?.motivo);
+    if (!email || !isManagedType(body?.tipo) || !isUserStatus(body?.novoStatus)) return fail(400, "Dados inválidos");
+    const { tipo, novoStatus } = body as { tipo: "produtor" | "mercado"; novoStatus: Parameters<typeof emailForStatus>[0] };
 
-    if (!email || !tipo || !novoStatus) {
-      return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
-    }
+    // O perfil e o acesso mudam juntos: nunca fica um aprovado e o outro não.
+    const data = novoStatus === "REJEITADO" ? { status: novoStatus, urlDocumento: null } : { status: novoStatus };
+    await prisma.$transaction([
+      tipo === "produtor"
+        ? prisma.vendedor.update({ where: { email }, data })
+        : prisma.cliente.update({ where: { email }, data }),
+      prisma.acesso.updateMany({ where: { login: email }, data: { status: novoStatus } }),
+    ]);
 
-    if (tipo === "produtor") {
-      await prisma.vendedor.update({
-        where: { email },
-        data:
-          novoStatus === "REJEITADO"
-            ? { status: novoStatus, urlDocumento: null }
-            : { status: novoStatus },
-      });
-    } else if (tipo === "mercado") {
-      await prisma.cliente.update({
-        where: { email },
-        data: { status: novoStatus },
-      });
-    }
+    const kind = emailForStatus(novoStatus);
+    if (kind) notify(kind, { email, ...(kind === "suspensao" ? { motivo } : {}) });
 
-    await prisma.acesso.updateMany({
-      where: { login: email },
-      data: { status: novoStatus },
-    });
-
-    // Microsserviço de e-mail — só chama se a URL estiver configurada
-    if (process.env.MICROSERVICE_URL) {
-      try {
-        if (novoStatus === "APROVADO") {
-          await fetch(`${process.env.MICROSERVICE_URL}/api/email/aprovacao`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email }),
-          });
-        } else if (novoStatus === "REJEITADO") {
-          await fetch(`${process.env.MICROSERVICE_URL}/api/email/rejeicao`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email }),
-          });
-        } else if (novoStatus === "SUSPENSO") {
-          await fetch(`${process.env.MICROSERVICE_URL}/api/email/suspensao`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, motivo: motivo || "" }),
-          });
-        }
-      } catch (e) {
-        console.log("Aviso: Microsserviço de e-mail indisponível.");
-      }
-    }
-
-    return NextResponse.json(
-      { message: `Status alterado para ${novoStatus}` },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: `Status alterado para ${novoStatus}` });
   } catch (error) {
-    console.error("Erro ao atualizar usuário:", error);
-    return NextResponse.json({ error: "Erro ao atualizar" }, { status: 500 });
+    if (prismaCode(error) === "P2025") return fail(404, "Usuário não encontrado.");
+    return serverError("admin.usuarios.status", error, "Erro ao atualizar");
   }
 }
 
-// DELETE: Exclui o usuário permanentemente
+// PATCH: o administrador corrige nome, telefone, cidade ou estado.
+export async function PATCH(req: Request) {
+  const auth = await requireSession(req, ["admin"]);
+  if (auth.error) return auth.error;
+
+  try {
+    const body = await readJson(req);
+    const email = text(body?.email);
+    if (!email || !isManagedType(body?.tipo)) return fail(400, "Dados inválidos");
+
+    const data = pickUserEdit(body ?? {});
+    if (Object.keys(data).length === 0) return fail(400, "Nenhum dado para atualizar.");
+
+    if (body?.tipo === "produtor") await prisma.vendedor.update({ where: { email }, data });
+    else await prisma.cliente.update({ where: { email }, data });
+
+    return NextResponse.json({ message: "Usuário atualizado com sucesso" });
+  } catch (error) {
+    if (prismaCode(error) === "P2025") return fail(404, "Usuário não encontrado.");
+    return serverError("admin.usuarios.editar", error, "Erro ao atualizar usuário");
+  }
+}
+
+// DELETE: exclui a conta de vez. Só produtor e mercado (um administrador não apaga outro por aqui).
 export async function DELETE(req: Request) {
+  const auth = await requireSession(req, ["admin"]);
+  if (auth.error) return auth.error;
+
   try {
     const { searchParams } = new URL(req.url);
-    const email = searchParams.get("email");
-    const tipo  = searchParams.get("tipo");
-    const motivo = searchParams.get("motivo") || "";
+    const email = text(searchParams.get("email"));
+    const tipo = searchParams.get("tipo");
+    const motivo = text(searchParams.get("motivo"));
+    if (!email || !isManagedType(tipo)) return fail(400, "Dados inválidos");
 
-    if (!email || !tipo)
-      return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
+    await prisma.$transaction([
+      prisma.acesso.deleteMany({ where: { login: email } }),
+      tipo === "produtor" ? prisma.vendedor.delete({ where: { email } }) : prisma.cliente.delete({ where: { email } }),
+    ]);
 
-    // Envia e-mail de exclusão antes de apagar do banco
-    if (process.env.MICROSERVICE_URL) {
-      try {
-        await fetch(`${process.env.MICROSERVICE_URL}/api/email/exclusao`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, motivo }),
-        });
-      } catch (e) {
-        console.log("Aviso: Microsserviço de e-mail indisponível.");
-      }
-    }
-
-    if (tipo === "produtor") {
-      await prisma.vendedor.delete({ where: { email } });
-    } else if (tipo === "mercado") {
-      await prisma.cliente.delete({ where: { email } });
-    }
-
-    await prisma.acesso.deleteMany({ where: { login: email } });
-
-    return NextResponse.json({ message: "Usuário excluído com sucesso" }, { status: 200 });
+    notify("exclusao", { email, motivo });
+    return NextResponse.json({ message: "Usuário excluído com sucesso" });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Erro ao excluir. Pode haver pedidos vinculados." },
-      { status: 500 }
-    );
-  }
-}
-
-// PATCH: Admin edita dados básicos de um usuário
-export async function PATCH(req: Request) {
-  try {
-    const { email, tipo, nomeFantasia, telefone, cidade, estado } = await req.json();
-
-    if (!email || !tipo) {
-      return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
-    }
-
-    const data = {
-      ...(nomeFantasia && { nomeFantasia }),
-      ...(telefone  !== undefined && { telefone }),
-      ...(cidade    !== undefined && { cidade }),
-      ...(estado    !== undefined && { estado }),
-    };
-
-    if (tipo === "produtor") {
-      await prisma.vendedor.update({ where: { email }, data });
-    } else if (tipo === "mercado") {
-      await prisma.cliente.update({ where: { email }, data });
-    }
-
-    return NextResponse.json({ message: "Usuário atualizado com sucesso" }, { status: 200 });
-  } catch (error) {
-    console.error("Erro no PATCH /api/admin/usuarios:", error);
-    return NextResponse.json({ error: "Erro ao atualizar usuário" }, { status: 500 });
+    if (prismaCode(error) === "P2025") return fail(404, "Usuário não encontrado.");
+    // Produtor com ofertas ou mercado com pedidos não pode sumir: o histórico depende dele.
+    if (prismaCode(error) === "P2003") return fail(409, "Não dá para excluir: há pedidos ou itens ligados a esta conta. Suspenda-a em vez disso.");
+    return serverError("admin.usuarios.excluir", error, "Erro ao excluir.");
   }
 }

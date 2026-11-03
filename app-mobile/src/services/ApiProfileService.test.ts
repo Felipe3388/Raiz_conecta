@@ -24,7 +24,7 @@ describe("ApiProfileService", () => {
     expect(profile).toMatchObject({ nomeFantasia: "Sítio X", tipoDoc: "CNPJ", rua: "" });
   });
 
-  it("salva com PUT (e senha nova só se houver) e lê de novo", async () => {
+  it("salva com PUT (e troca de senha só se houver, com a senha atual) e lê de novo", async () => {
     const api = {
       get: jest.fn().mockResolvedValue({ ...vendedor, nomeFantasia: "Sítio Y" }),
       put: jest.fn().mockResolvedValue({}),
@@ -32,17 +32,19 @@ describe("ApiProfileService", () => {
     };
     const service = new ApiProfileService(api);
 
-    const updated = await service.updateProfile("a@b.c", changes, "Nova@123");
+    const updated = await service.updateProfile("a@b.c", changes, { current: "Antiga@123", next: "Nova@123" });
     expect(api.put).toHaveBeenCalledWith("/api/perfil/meus-dados", {
       email: "a@b.c",
       tipoUser: "produtor",
       ...changes,
+      senhaAtual: "Antiga@123",
       novaSenha: "Nova@123",
     });
     expect(updated.nomeFantasia).toBe("Sítio Y");
 
     await service.updateProfile("a@b.c", changes);
     expect(api.put.mock.calls[1][1]).not.toHaveProperty("novaSenha");
+    expect(api.put.mock.calls[1][1]).not.toHaveProperty("senhaAtual");
   });
 
   it("exclui a conta com DELETE", async () => {

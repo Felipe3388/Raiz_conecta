@@ -1,7 +1,7 @@
 import { seedProfile } from "@/mocks/profileData";
 import type { EditableProfile, ProducerProfile } from "@/types/produtor";
 import { DEFAULT_MOCK_LATENCY_MS, wait } from "./mockLatency";
-import type { ProfileGateway } from "./ProfileGateway";
+import type { PasswordChange, ProfileGateway } from "./ProfileGateway";
 
 interface MockProfileOptions {
   latencyMs?: number;
@@ -21,8 +21,8 @@ export class MockProfileService implements ProfileGateway {
     return { ...this.find(email) };
   }
 
-  // A senha nova é aceita e descartada: o modo simulado não guarda senhas.
-  async updateProfile(email: string, changes: EditableProfile): Promise<ProducerProfile> {
+  // A troca de senha é aceita e descartada: o modo simulado não guarda senhas.
+  async updateProfile(email: string, changes: EditableProfile, _password?: PasswordChange): Promise<ProducerProfile> {
     await wait(this.latencyMs);
     const updated = { ...this.find(email), ...changes };
     this.profiles.set(email, updated);

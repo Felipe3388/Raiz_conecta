@@ -4,6 +4,7 @@ import { PressableScale } from "@/components/motion/PressableScale";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { FormScreen } from "@/components/ui/FormScreen";
+import { Input } from "@/components/ui/Input";
 import { LoadError } from "@/components/ui/LoadError";
 import { PageLoader } from "@/components/ui/PageLoader";
 import { ScaleCard } from "@/components/produtor/ScaleCard";
@@ -50,34 +51,59 @@ export default function BalancaScreen() {
 
       {add.isOpen ? (
         add.step === 1 ? (
-          <SectionCard title={`Passo 1 de 2 · ${SCALE_SETUP.steps.find.title}`} icon="radio-outline">
-            <Text style={styles.hint}>{SCALE_SETUP.steps.find.hint}</Text>
+          add.mode === "label" ? (
+            <SectionCard title={`Passo 1 de 2 · ${SCALE_SETUP.label.title}`} icon="pricetag-outline">
+              <Text style={styles.hint}>{SCALE_SETUP.label.hint}</Text>
+              <Input
+                label={SCALE_SETUP.label.deviceLabel}
+                value={add.label.device}
+                onChangeText={add.label.changeDevice}
+                placeholder={SCALE_SETUP.label.devicePlaceholder}
+                autoCapitalize="characters"
+              />
+              <Input
+                label={SCALE_SETUP.label.codeLabel}
+                value={add.label.code}
+                onChangeText={add.label.changeCode}
+                placeholder={SCALE_SETUP.label.codePlaceholder}
+                autoCapitalize="characters"
+                maxLength={9}
+                error={add.label.error ?? undefined}
+                onSubmitEditing={add.label.submit}
+              />
+              <Button label={SCALE_SETUP.label.next} onPress={add.label.submit} />
+              {add.canCancel && <Button label={SCALE_SETUP.cancelAdd} variant="ghost" onPress={add.cancel} />}
+            </SectionCard>
+          ) : (
+            <SectionCard title={`Passo 1 de 2 · ${SCALE_SETUP.steps.find.title}`} icon="radio-outline">
+              <Text style={styles.hint}>{SCALE_SETUP.steps.find.hint}</Text>
 
-            {add.isSearching && <Text style={styles.hint}>{SCALE_SETUP.searching}</Text>}
-            {!add.isSearching && add.hasSearched && add.devices.length === 0 && (
-              <Text style={styles.hint}>{SCALE_SETUP.none}</Text>
-            )}
+              {add.isSearching && <Text style={styles.hint}>{SCALE_SETUP.searching}</Text>}
+              {!add.isSearching && add.hasSearched && add.devices.length === 0 && (
+                <Text style={styles.hint}>{SCALE_SETUP.none}</Text>
+              )}
 
-            {add.devices.map((device) => (
-              <PressableScale
-                key={device.id}
-                accessibilityRole="button"
-                accessibilityLabel={`Escolher ${device.name}`}
-                onPress={() => add.select(device)}
-                pressedScale={0.985}
-                style={styles.option}
-              >
-                <Ionicons name="scale-outline" size={26} color={colors.primaryPressed} />
-                <View style={styles.deviceText}>
-                  <Text style={styles.deviceName}>{device.name}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.textSubtle} />
-              </PressableScale>
-            ))}
+              {add.devices.map((device) => (
+                <PressableScale
+                  key={device.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Escolher ${device.name}`}
+                  onPress={() => add.select(device)}
+                  pressedScale={0.985}
+                  style={styles.option}
+                >
+                  <Ionicons name="scale-outline" size={26} color={colors.primaryPressed} />
+                  <View style={styles.deviceText}>
+                    <Text style={styles.deviceName}>{device.name}</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={colors.textSubtle} />
+                </PressableScale>
+              ))}
 
-            <Button label={SCALE_SETUP.search} variant="outline" isLoading={add.isSearching} onPress={add.search} />
-            {add.canCancel && <Button label={SCALE_SETUP.cancelAdd} variant="ghost" onPress={add.cancel} />}
-          </SectionCard>
+              <Button label={SCALE_SETUP.search} variant="outline" isLoading={add.isSearching} onPress={add.search} />
+              {add.canCancel && <Button label={SCALE_SETUP.cancelAdd} variant="ghost" onPress={add.cancel} />}
+            </SectionCard>
+          )
         ) : (
           <SectionCard title={`Passo 2 de 2 · ${SCALE_SETUP.steps.confirm.title}`} icon="shield-checkmark-outline">
             <Text style={styles.hint}>{SCALE_SETUP.steps.confirm.hint}</Text>

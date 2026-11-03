@@ -17,7 +17,7 @@ import {
   startRun,
   type RunState,
 } from "@/lib/delivery/session";
-import { betweenPrompt, getSpeaker, RUN_FINISHED_PROMPT, weighPrompt } from "@/lib/speech";
+import { betweenPrompt, getSpeaker, planNarration, RUN_FINISHED_PROMPT, weighPrompt } from "@/lib/speech";
 import { CELEBRATION_TEXTS, RUN_TEXTS } from "@/content/deliveryTexts";
 import { formatKg } from "@/lib/format/weight";
 import type { WeighingInput } from "@/types/delivery";
@@ -201,18 +201,34 @@ export function useWeighRun({ cards }: Options) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reage ao peso, ao passo, ao modo e à contagem
   }, [run, auto, source, candidate, judgement.verdict, isSaving, held, celebrating]);
 
-  // A voz diz o que pesar e de qual mercado a cada produto novo, e na pausa entre pedidos avisa o próximo.
+  // A voz diz o que pesar e de qual mercado a cada produto novo, e na pausa entre pedidos avisa o próximo. Só fala
+  // quando o produto já está visível: durante a confirmação verde e a troca animada de passo ela fica em silêncio (e
+  // corta o que ainda estivesse falando); passada a confirmação, espera a troca terminar (ver lib/speech/narration).
   const speakerOn = run !== null && !muted;
   useEffect(() => {
     if (!speakerOn) return;
-    if (between) {
-      getSpeaker().say(betweenPrompt(between.finishedMercado, between.nextMercado, BETWEEN_ORDERS_SECONDS));
+    const plan = planNarration({
+      enabled: true,
+      celebrating,
+      between: between !== null,
+      phase: run?.phase,
+      hasItem: step !== undefined && card !== null,
+    });
+    if (!plan) {
+      getSpeaker().stop();
       return;
     }
-    if (!step || !card || run?.phase !== "weigh") return;
-    getSpeaker().say(weighPrompt({ mercado: step.mercado, produto: step.produto, expectedKg: card.expectedKg }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- fala quando muda o produto, a fase, a pausa ou o mudo
-  }, [speakerOn, run?.index, run?.phase, run?.skipped]);
+    const text =
+      plan.kind === "between" && between
+        ? betweenPrompt(between.finishedMercado, between.nextMercado, BETWEEN_ORDERS_SECONDS)
+        : step && card
+          ? weighPrompt({ mercado: step.mercado, produto: step.produto, expectedKg: card.expectedKg })
+          : null;
+    if (!text) return;
+    const timer = setTimeout(() => getSpeaker().say(text), plan.delayMs);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fala quando muda o produto, a fase, a pausa, a confirmação ou o mudo
+  }, [speakerOn, celebrating, run?.index, run?.phase, run?.skipped]);
 
   // Pausa entre pedidos: conta de 5 até 0 e, no zero, começa sozinha o pedido seguinte. A conta só anda depois da
   // confirmação verde de "pedido fechado" sair da tela.

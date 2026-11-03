@@ -20,16 +20,19 @@ export function SearchBar({ value, onChange, placeholder = "Buscar...", classNam
     <div className={`relative ${className}`}>
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={17} />
       <input
-        type="text"
+        type="search"
+        aria-label={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`rc-search-input focus:ring-2 outline-none ${accentRing[accent]}`}
+        className={`rc-search-input focus:ring-2 outline-none [&::-webkit-search-cancel-button]:hidden ${accentRing[accent]}`}
       />
       {value && (
         <button
+          type="button"
           onClick={() => onChange("")}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+          aria-label="Limpar busca"
+          className="absolute right-1 top-1/2 -translate-y-1/2 grid h-9 w-9 place-items-center rounded-lg text-gray-400 hover:text-gray-600 transition-colors"
         >
           <X size={15} />
         </button>

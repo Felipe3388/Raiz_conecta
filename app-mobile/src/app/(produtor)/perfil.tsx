@@ -105,6 +105,14 @@ export default function PerfilScreen() {
 
       <SectionCard title="Senha e Segurança" icon="shield-checkmark-outline" iconColor={colors.warning}>
         <Input
+          label="Senha Atual"
+          placeholder="Só para trocar a senha"
+          secure
+          autoComplete="current-password"
+          value={perfil.currentPassword}
+          onChangeText={perfil.setCurrentPassword}
+        />
+        <Input
           label="Nova Senha"
           placeholder="Mínimo 8 caracteres"
           secure

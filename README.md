@@ -1,531 +1,392 @@
 <div align="center">
 
-<br>
-
-# 🌱 Raiz Conecta
-
-### Plataforma B2B que conecta produtores rurais diretamente a mercados e hortifrutis, eliminando intermediários.
+<img src="docs/readme/banner.svg" alt="Raiz Conecta — do produtor rural direto ao mercado, com cotação, ofertas, entregas e pesagem conectada" width="100%">
 
 <br>
 
-![Next.js](https://img.shields.io/badge/Next.js-16.2-black?style=for-the-badge&logo=nextdotjs)
-![React](https://img.shields.io/badge/React-19.2-61DAFB?style=for-the-badge&logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript)
-![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?style=for-the-badge&logo=prisma)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-336791?style=for-the-badge&logo=postgresql)
-![Tailwind](https://img.shields.io/badge/Tailwind-v4-38BDF8?style=for-the-badge&logo=tailwindcss)
-![JWT](https://img.shields.io/badge/JWT-Auth-F7B93E?style=for-the-badge&logo=jsonwebtokens)
-![Vercel](https://img.shields.io/badge/Deploy-Vercel-000?style=for-the-badge&logo=vercel)
+**O mercado diz o que precisa. O produtor da região responde. A balança confere o peso.**
+
+O Raiz Conecta liga **produtores rurais** a **mercados e hortifrutis** sem atravessador:<br>
+o mercado monta uma cotação, os produtores fazem as ofertas e, no dia da entrega, o app guia a pesagem produto por produto.
+
+<br>
+
+![Next.js](https://img.shields.io/badge/Next.js-16-14532d?style=flat-square&logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-14532d?style=flat-square&logo=react&logoColor=white)
+![Expo](https://img.shields.io/badge/Expo-SDK_57-14532d?style=flat-square&logo=expo&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-estrito-14532d?style=flat-square&logo=typescript&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-PostgreSQL-14532d?style=flat-square&logo=prisma&logoColor=white)
+![ESP32](https://img.shields.io/badge/IoT-ESP32-f59e0b?style=flat-square&logo=espressif&logoColor=white)
+![Testes](https://img.shields.io/badge/testes-1.425_passando-22c55e?style=flat-square&logo=vitest&logoColor=white)
+
+[**Ver em ação**](#-veja-em-ação) ·
+[**Recursos**](#-o-que-ele-faz) ·
+[**Rodar em 1 minuto**](#-rodar-em-1-minuto) ·
+[**Como funciona**](#%EF%B8%8F-como-funciona-por-dentro) ·
+[**Documentação**](#-documentação)
 
 </div>
 
 ---
 
-## Curso Superior de Desenvolvimento de Software Multiplataforma — Fatec Votorantim
+## 🎬 Veja em ação
 
-**Projeto Interdisciplinar** · Engenharia de Software II · Desenvolvimento Web III · Gestão Ágil de Projetos de Software
-
-| Integrantes |
-|---|
-| Daniel Henrique Domingues Nogueira 
-| Felipe Gomes Felix 
-| Guilherme Vinícius Baeza de Oliveira 
-| Gustavo Henrique Bauch 
-| Jhonatan Melo de Oliveira 
-
-**Votorantim — Junho, 2026**
-
----
-
-## Resumo
-
-O presente documento descreve o desenvolvimento do **Raiz Conecta**, uma plataforma digital B2B concebida para conectar produtores rurais diretamente a mercados e hortifrutis, eliminando intermediários e democratizando o acesso ao comércio justo de hortifruti. A solução abrange cadastro com validação manual, catálogo dinâmico, fluxo de demanda reversa, gestão de ofertas fracionadas, avaliação de entregas e microsserviço de notificação por e-mail, tudo construído com arquitetura fullstack moderna, autenticação JWT e deploy em nuvem.
+<table>
+<tr>
+<td width="30%" valign="top" align="center">
+<img src="docs/readme/demo-app-pesagem.gif" alt="App do produtor: entrar, abrir Entregas, iniciar a pesagem, colocar o produto na balança, esperar o peso firmar e ver a confirmação verde" width="100%"><br>
+<sub><b>App do produtor</b> · a pesagem diz o que pesar, mostra a faixa aceita, espera o peso <b>parar 5 s</b> e confirma sozinha</sub>
+</td>
+<td width="70%" valign="top" align="center">
+<img src="docs/readme/demo-site-cotacao.gif" alt="Site do mercado: buscar produtos, escolher as quantidades, revisar e disparar a cotação para os produtores" width="100%"><br>
+<sub><b>Site do mercado</b> · busca, quantidade, <b>Revisar e disparar</b>: os produtores da região recebem o pedido</sub>
+<br><br>
+<img src="docs/readme/demo-site-balanca.gif" alt="Site do produtor: Minha balança com o peso ao vivo subindo, oscilando e parando" width="100%"><br>
+<sub><b>Peso ao vivo</b> · o módulo ESP32 manda a leitura para o servidor; o site e o app mostram o mesmo número</sub>
+</td>
+</tr>
+</table>
 
 ---
 
-## 🔗 Links do Projeto
+## 🧭 Por que existe
 
-| Recurso | Link |
-|---|---|
-| 🌐 **Aplicação em produção** | https://raiz-conecta-qa94.vercel.app |
-| 📖 **API Docs (Swagger)** | https://raiz-conecta-qa94.vercel.app/api-docs |
-| 📋 **Confluence** | https://raizconectado.atlassian.net/wiki/spaces/GGP |
-| 🗂️ **Jira** | https://raizconectado.atlassian.net/jira/software/projects/SCRUM/boards/1 |
-| 📦 **Repositório GitHub** | https://github.com/Felipe3388/Raiz_conecta |
-| 📸 **Instagram** | [@raizconecta_dsm](https://www.instagram.com/raizconecta_dsm) |
+<table>
+<tr>
+<td width="50%" valign="top">
 
----
+### Antes
 
-## Sobre o Projeto
+- O produtor vende para o **atravessador**, que fica com boa parte da margem
+- O mercado compra caro e sem saber quem plantou
+- Pedido combinado por telefone ou mensagem, sem registro
+- Peso anotado à mão: a diferença só aparece na hora de receber
 
-### Problema a ser solucionado
+</td>
+<td width="50%" valign="top">
 
-A cadeia de distribuição de alimentos frescos no Brasil apresenta ineficiências estruturais que prejudicam ambas as pontas do comércio:
+### Com o Raiz Conecta
 
-- **Produtores rurais** dependem de intermediários que reduzem drasticamente sua margem de lucro
-- **Mercados locais** arcam com custos elevados de aquisição por não ter acesso direto a fornecedores confiáveis
-- **Desperdício de alimentos** causado pela ineficiência logística na cadeia de distribuição
+- O mercado **publica a cotação** e os produtores próximos ofertam direto
+- Cada conta passa por **aprovação** (documento conferido pela equipe)
+- Pedido, oferta e entrega ficam registrados, com **avaliação** do produtor
+- A **balança conectada** pesa cada produto e o app confere a tolerância (±2%)
 
-### Público-alvo
-
-A plataforma destina-se a dois grupos primários: estabelecimentos comerciais de pequeno e médio porte (mercados, hortifrutis) e produtores rurais que buscam escoar sua produção com maior autonomia e retorno financeiro.
-
-### Solução Proposta
-
-O **Raiz Conecta** atua como ponte digital entre quem planta e quem vende ao consumidor final, utilizando um fluxo de **demanda reversa**: o mercado publica o que precisa e os produtores ofertam diretamente, sem intermediários.
-
-### Diferenciais
-
-- Esteira de aprovação manual pelo Admin — segurança contra cadastros fraudulentos
-- Fluxo de demanda reversa — mercado publica, produtor responde com oferta
-- Microsserviço de e-mail independente — desempenho sem bloqueio do fluxo principal
-- Design system próprio com classes `.rc-*` sobre Tailwind CSS v4
-- Documentação de API pública via Swagger com autenticação JWT sob demanda
-
-### Justificativa
-
-O desenvolvimento do Raiz Conecta justifica-se pela necessidade de modernizar e desburocratizar a relação comercial entre produtores rurais e estabelecimentos varejistas, promovendo inclusão digital no agronegócio, redução de desperdício alimentar e geração de renda justa — em alinhamento com os **Objetivos de Desenvolvimento Sustentável (ODS)** da ONU.
+</td>
+</tr>
+</table>
 
 ---
 
-## Funcionalidades
+## 🧩 O que ele faz
 
-### Tela Inicial — Landing Page
+Três partes que usam a **mesma API**: o site (mercado, produtor e administração), o app do produtor e o módulo da balança.
 
-- Apresentação da plataforma com proposta de valor e fluxo de 3 passos animado
-- Redirecionamento dinâmico: usuário logado vai direto ao seu painel
-- Link para [@raizconecta_dsm](https://www.instagram.com/raizconecta_dsm) no hero e no footer
+### 🌐 Site
 
-### Criar Conta — Cadastro em 2 Passos
+<table>
+<tr>
+<td width="33%" valign="top">
+<img src="docs/readme/site-mercado-catalogo.png" alt="Catálogo do mercado com a cotação ao lado">
 
-**Passo 1 — Dados de acesso:**
+**🛒 Cotação do mercado**<br>
+<sub>Catálogo com busca, categoria e ordem por preço. A cotação fica ao lado e sobrevive a um recarregar.</sub>
+</td>
+<td width="33%" valign="top">
+<img src="docs/readme/site-mercado-checkout.png" alt="Confirmação da cotação">
 
-O usuário seleciona seu perfil de forma visual (botões 🌱 Produtor Rural / 🏪 Mercado), informa nome, e-mail, telefone com máscara automática e cria uma senha. O sistema valida o e-mail por regex em tempo real e exibe um **indicador de força de senha com 5 níveis** (Muito fraca → Muito forte), exigindo no mínimo 8 caracteres com maiúscula, minúscula, número e símbolo especial. A senha é confirmada em um segundo campo com feedback visual instantâneo.
+**📨 Revisar e disparar**<br>
+<sub>Quantidades, endereço de entrega e a estimativa pelo preço de referência. Depois, <b>Minhas cotações</b> acompanha as ofertas.</sub>
+</td>
+<td width="33%" valign="top">
+<img src="docs/readme/site-produtor-ofertas.png" alt="Ofertas do produtor">
 
-**Passo 2 — Onboarding:**
+**🤝 Ofertas do produtor**<br>
+<sub>Os pedidos abertos da região, quanto já foi garantido e quanto falta. O produtor oferta só a parte que tem.</sub>
+</td>
+</tr>
+<tr>
+<td valign="top">
+<img src="docs/readme/site-produtor-inicio.png" alt="Painel do produtor">
 
-Preenchimento de CPF ou CNPJ com máscara automática, endereço com autocompletar via API ViaCEP e upload do documento de identificação para validação manual pelo Administrador. Um badge no topo confirma o tipo de perfil selecionado no Passo 1.
+**📊 Painel do produtor**<br>
+<sub>Receita estimada, o que responder primeiro e a receita por produto — as mesmas abas e a mesma ordem do app.</sub>
+</td>
+<td valign="top">
+<img src="docs/readme/site-produtor-balanca.png" alt="Minha balança com o peso ao vivo">
 
-A conta é criada com status `EM_ANALISE` e aguarda aprovação do Admin.
+**⚖️ Minha balança**<br>
+<sub>Conectar pela etiqueta (endereço + código, ou o texto do QR), renomear, trocar e ver o <b>peso ao vivo</b>.</sub>
+</td>
+<td valign="top">
+<img src="docs/readme/site-admin-balancas.png" alt="Balanças no painel do administrador">
 
-### Entrar — Login
+**🛡️ Administração**<br>
+<sub>Aprovar contas, gerir usuários, produtos, sugestões e balanças (cadastrar o módulo, gerar o segredo, liberar).</sub>
+</td>
+</tr>
+</table>
 
-- Autenticação com e-mail e senha via hash bcrypt
-- Geração de token JWT com expiração de 2 horas
-- Redirecionamento automático para o painel correto (Admin / Produtor / Mercado)
+### 📱 App do produtor
 
-### Tela do Mercado — Catálogo e Cotações
+<table>
+<tr>
+<td align="center" width="20%"><img src="docs/readme/app-painel.png" alt="Painel do app" height="360"><br><sub><b>Painel</b> · receita e o que vem a seguir</sub></td>
+<td align="center" width="20%"><img src="docs/readme/app-ofertas.png" alt="Ofertas no app" height="360"><br><sub><b>Ofertas</b> · aceitar só uma parte do pedido</sub></td>
+<td align="center" width="20%"><img src="docs/readme/app-entregas.png" alt="Entregas no app" height="360"><br><sub><b>Entregas</b> · por dia e por mercado</sub></td>
+<td align="center" width="20%"><img src="docs/readme/app-pesagem.png" alt="Pesagem: o que o mercado pediu e a faixa aceita" height="360"><br><sub><b>Pesagem</b> · pedido em destaque e tolerância ±2%</sub></td>
+<td align="center" width="20%"><img src="docs/readme/app-pesado.png" alt="Confirmação verde do produto pesado" height="360"><br><sub><b>Confirmação</b> · retire o produto, vem o próximo</sub></td>
+</tr>
+</table>
 
-Ao acessar o painel, o mercado visualiza a vitrine de produtos com:
+<details>
+<summary><b>Mais telas: cadastro, Mais, balança, site no celular</b></summary>
 
-- **Filtros avançados:** busca por nome, filtro por categoria (Frutas, Verduras, Legumes, Grãos) e ordenação por preço crescente, decrescente ou ordem alfabética
-- **Stepper de quantidade** `+ / −` em cada produto
-- **Carrinho lateral** persistente via `localStorage`
-- **Acompanhamento de cotações** com barra de progresso de preenchimento e lista de produtores que ofertaram
-- **Cancelamento de pedido** dentro do prazo de **7 dias úteis** (cálculo real, excluindo fins de semana)
-- **Avaliação do produtor** com nota de 1 a 5 estrelas após confirmar o recebimento
+<table>
+<tr>
+<td align="center"><img src="docs/readme/app-login.png" alt="Login do app" height="320"><br><sub>Login</sub></td>
+<td align="center"><img src="docs/readme/app-cadastro.png" alt="Cadastro do app" height="320"><br><sub>Cadastro em 2 passos</sub></td>
+<td align="center"><img src="docs/readme/app-estabilizando.png" alt="Peso estabilizando" height="320"><br><sub>Peso firmando (5 s)</sub></td>
+<td align="center"><img src="docs/readme/app-mais.png" alt="Aba Mais do app" height="320"><br><sub>Mais</sub></td>
+<td align="center"><img src="docs/readme/app-balanca.png" alt="Balança no app" height="320"><br><sub>Minhas balanças</sub></td>
+<td align="center"><img src="docs/readme/site-celular-inicio.png" alt="Site do produtor no celular" height="320"><br><sub>Site no celular</sub></td>
+</tr>
+</table>
 
-**Check-out:**
+| Tela inicial | Entrar | Cadastro enviado |
+| --- | --- | --- |
+| ![Tela inicial do site](docs/readme/site-landing.png) | ![Login do site](docs/readme/site-login.png) | ![Cadastro enviado](docs/readme/site-cadastro-enviado.png) |
 
-Exibe todos os itens selecionados com nome, quantidade e preço estimado. Os dados de entrega são preenchidos automaticamente com as informações do perfil. Ao confirmar, são criadas demandas `ABERTAS` no banco para cada item do carrinho.
+</details>
 
-### Tela do Produtor — Mural e Catálogo
-
-Ao acessar o painel, o produtor encontra três abas:
-
-- **Mural de Oportunidades:** lista as demandas abertas compatíveis com os produtos que o produtor selecionou em seu catálogo, com barra de progresso de preenchimento da carga e campo numérico para registrar oferta parcial ou total
-- **Meu Catálogo:** grid de todos os produtos do catálogo oficial para seleção dos que produz, com campo de busca e contador de itens selecionados
-- **Ofertas Fechadas:** histórico de todas as demandas onde o produtor já se comprometeu
-
-O produtor também pode sugerir novos produtos ao catálogo oficial via formulário com nome, preço sugerido, descrição e foto.
-
-### Meus Dados — Perfil
-
-- Edição de nome, telefone e endereço
-- E-mail e documento bloqueados para edição (segurança e conformidade LGPD)
-- Alteração de senha
-- Exclusão de conta com dupla confirmação
-
-### Painel Administrativo
-
-**Dashboard:** estatísticas em tempo real — total de usuários, produtores ativos, mercados ativos e produtos no catálogo.
-
-**Aprovações Pendentes:** lista de cadastros aguardando validação, com visualização do documento enviado, aprovação ou rejeição com disparo automático de e-mail de notificação.
-
-**Gestão de Usuários:** busca por nome ou e-mail, filtros por tipo (Produtor/Mercado/Admin) e por status (Aprovado/Suspenso/Rejeitado), visualização de CPF/CNPJ, ações de suspender, reativar ou excluir contas permanentemente.
-
-**Catálogo Oficial:** cadastro de produtos com foto, edição completa incluindo troca de imagem (upload no Cloudinary com remoção automática da foto anterior), e remoção de produtos.
-
-**Sugestões:** revisão, edição e promoção de sugestões dos produtores ao catálogo oficial, ou descarte com um clique.
-
----
-
-## Descrição do Projeto
-
-### Proposta do Software
-
-O Raiz Conecta consiste em uma plataforma digital de natureza B2B desenvolvida com o objetivo de modernizar a relação comercial entre produtores rurais e estabelecimentos varejistas. Em sua versão atual (MVP), a plataforma está delimitada ao escopo de pequenos e médios produtores e mercados, sem contemplar módulo de entregadores e pagamento integrado, previstos para versões futuras.
-
-### Objetivos de Desenvolvimento Sustentável (ODS)
-
-O projeto contribui diretamente para os ODS da ONU, especialmente:
-- **ODS 2** — Fome zero e agricultura sustentável
-- **ODS 8** — Trabalho decente e crescimento econômico
-- **ODS 12** — Consumo e produção responsáveis
-
----
-
-## Projeto do Software
-
-### Tecnologias Utilizadas
-
-**Front-end**
-
-| Tecnologia | Versão | Finalidade |
-|---|---|---|
-| Next.js | 16.2 | Framework fullstack — SSR, App Router, Route Handlers |
-| React | 19.2 | Biblioteca de componentes de interface |
-| TypeScript | 5 | Tipagem estática — reduz erros em runtime |
-| Tailwind CSS | v4 | Utilitários CSS + design system `.rc-*` próprio |
-| Framer Motion | 12 | Animações de transição em tabs e modais |
-| Lucide React | — | Ícones SVG consistentes |
-| Sonner | — | Toasts de feedback ao usuário |
-
-**Back-end**
-
-| Tecnologia | Versão | Finalidade |
-|---|---|---|
-| Node.js + Express | 5 | Microsserviço de e-mail independente |
-| Prisma ORM | 6 | Mapeamento objeto-relacional e migrations |
-| PostgreSQL (Neon) | serverless | Banco relacional em nuvem |
-| jsonwebtoken | 9 | Geração e verificação de tokens JWT |
-| bcryptjs | 3 | Hash de senhas com salt — nunca texto puro |
-| Cloudinary | 2 | Upload e armazenamento de fotos e documentos |
-| Nodemailer + Mailtrap | — | Envio de e-mails transacionais |
-| Swagger UI React | — | Documentação interativa de API em `/api-docs` |
-
-### Arquitetura
-
-O projeto é um **monorepo** com dois serviços independentes:
-
-```
-raiz-conecta/
-├── app-principal/     # Next.js 16 — Frontend + API RESTful
-└── microservico/      # Node.js + Express — Microsserviço de e-mail
-```
-
-**Fluxo Principal (Web):**
-
-```
-Navegador (React/Next.js)
-  → Route Handlers Next.js (/api/*)    ← Controller
-    → Prisma ORM                        ← Model
-      → PostgreSQL (Neon serverless)
-```
-
-**Fluxo de Notificações (Microsserviço):**
-
-```
-Evento (cadastro / aprovação / rejeição)
-  → app-principal chama MICROSERVICE_URL
-    → Express.js recebe a requisição
-      → Nodemailer envia e-mail via Mailtrap
-```
-
-### Padrão MVC no Next.js App Router
-
-| Camada | Implementação | Localização |
-|---|---|---|
-| **Model** | Schema Prisma + queries nos Route Handlers | `prisma/schema.prisma` |
-| **View** | Componentes React — SSR + CSR | `src/app/*/page.tsx` |
-| **Controller** | Route Handlers REST (GET/POST/PUT/DELETE) | `src/app/api/*/route.ts` |
-
-### Autenticação JWT
-
-1. **Login** → API valida senha com bcrypt → gera JWT com `{ email, tipoUser, nome }` → token salvo no `localStorage`
-2. **Requisições** → frontend envia `Authorization: Bearer <token>` em rotas protegidas
-3. **Middleware** → `src/middleware.ts` intercepta e valida o JWT antes de servir as páginas
-4. **Expiração** → token expira em 24 horas; após isso o usuário precisa logar novamente
-5. **Segredo** → `JWT_SECRET` fica exclusivamente no arquivo `.env` — nunca no código-fonte
-
-**Rotas protegidas pelo middleware:**
-
-| Rota | Perfil exigido |
-|---|---|
-| `/admin/*` | `tipoUser === 'admin'` |
-| `/produtor/*` | `tipoUser === 'produtor'` |
-| `/catalogo/*` e `/mercado/*` | `tipoUser === 'mercado'` |
-| `/perfil/*` e `/checkout/*` | Qualquer usuário autenticado |
-| `/api-docs` | Pública — token opcional (endpoints admin exigem JWT) |
-
-### API RESTful — Endpoints
-
-| Método | Endpoint | Descrição | Auth |
-|---|---|---|---|
-| `POST` | `/api/auth/cadastro` | Criar usuário (Produtor ou Mercado) | Pública |
-| `POST` | `/api/auth/login` | Autenticar e retornar JWT | Pública |
-| `GET` | `/api/produtos` | Listar catálogo oficial | Pública |
-| `POST` | `/api/produtos` | Admin: criar produto com foto | Admin JWT |
-| `PUT` | `/api/produtos` | Admin: editar produto + troca de foto | Admin JWT |
-| `DELETE` | `/api/produtos` | Admin: remover produto do catálogo | Admin JWT |
-| `GET` | `/api/admin/usuarios` | Listar todos os usuários | Admin JWT |
-| `PUT` | `/api/admin/usuarios` | Aprovar / rejeitar / suspender usuário | Admin JWT |
-| `PATCH` | `/api/admin/usuarios` | Editar dados de usuário | Admin JWT |
-| `DELETE` | `/api/admin/usuarios` | Excluir usuário permanentemente | Admin JWT |
-| `POST` | `/api/admin/novo-admin` | Criar nova conta de administrador | Admin JWT |
-| `POST` | `/api/admin/promover-sugestao` | Promover sugestão a produto oficial | Admin JWT |
-| `GET` | `/api/mercado/demandas` | Listar demandas abertas | Autenticado |
-| `POST` | `/api/mercado/demandas` | Criar demanda — checkout | Mercado JWT |
-| `PATCH` | `/api/mercado/cancelar` | Cancelar pedido (até 7 dias úteis) | Mercado JWT |
-| `PATCH` | `/api/mercado/avaliar` | Avaliar entrega do produtor | Mercado JWT |
-| `GET` | `/api/mercado/perfil` | Dados do mercado logado | Mercado JWT |
-| `GET` | `/api/produtor/meus-produtos` | Catálogo selecionado pelo produtor | Produtor JWT |
-| `POST` | `/api/produtor/meus-produtos` | Salvar catálogo do produtor | Produtor JWT |
-| `POST` | `/api/produtor/ofertas` | Enviar oferta para demanda aberta | Produtor JWT |
-| `GET` | `/api/produtor/sugestao` | Listar sugestões de produto | Admin JWT |
-| `POST` | `/api/produtor/sugestao` | Enviar sugestão de novo produto | Produtor JWT |
-| `DELETE` | `/api/produtor/sugestao` | Descartar sugestão | Admin JWT |
-| `GET` | `/api/vendedor/perfil` | Dados do produtor logado | Produtor JWT |
-| `GET` | `/api/perfil/meus-dados` | Dados do usuário logado | Autenticado |
-| `PATCH` | `/api/perfil/completar` | Atualizar dados do perfil | Autenticado |
-
-### Banco de Dados — Modelos Prisma
-
-| Modelo | Tabela | Descrição |
-|---|---|---|
-| `Cliente` | `cliente` | Mercados e hortifrutis cadastrados |
-| `Vendedor` | `vendedor` | Produtores rurais cadastrados |
-| `Acesso` | `acesso` | Credenciais de login (hash bcrypt + tipoUser) |
-| `Produto` | `produtos` | Catálogo oficial — nome, tipo, preço, foto (Cloudinary) |
-| `Demanda` | `demanda` | Cotações abertas pelo mercado no checkout |
-| `Oferta` | `oferta` | Respostas dos produtores às demandas |
-| `Sugestao` | `sugestoes` | Sugestões de novos produtos enviadas por produtores |
-| `Pedido` | `pedidos` | Pedidos consolidados (estrutura para evolução futura) |
-| `Entregador` | `entregador` | Estrutura preparada para módulo futuro de logística |
-| `Rota` | `rota` | Rotas de entrega (módulo futuro) |
-
-### Estrutura de Pastas
-
-```
-app-principal/
-├── prisma/
-│   └── schema.prisma              # Modelos do banco de dados
-├── src/
-│   ├── app/
-│   │   ├── api/                   # Route Handlers (Controller)
-│   │   │   ├── auth/              # cadastro, login
-│   │   │   ├── admin/             # usuarios, produtos, sugestoes
-│   │   │   ├── mercado/           # demandas, cancelar, avaliar
-│   │   │   ├── produtor/          # ofertas, meus-produtos, sugestao
-│   │   │   ├── perfil/            # meus-dados, completar
-│   │   │   └── produtos/          # catálogo público
-│   │   ├── admin/                 # Painel administrativo (View)
-│   │   ├── catalogo/              # Painel do mercado (View)
-│   │   ├── produtor/              # Painel do produtor (View)
-│   │   ├── perfil/                # Edição de perfil (View)
-│   │   ├── login/                 # Autenticação (View)
-│   │   ├── completar-perfil/      # Onboarding passo 2 (View)
-│   │   ├── api-docs/              # Swagger UI
-│   │   ├── page.tsx               # Landing page
-│   │   ├── layout.tsx             # Layout global
-│   │   └── globals.css            # Design system (.rc-*)
-│   ├── components/
-│   │   ├── ui/                    # Componentes reutilizáveis
-│   │   │   ├── Button.tsx         # Botão com variantes e loading
-│   │   │   ├── Card.tsx           # Card com variante flat/hover
-│   │   │   ├── Input.tsx          # Input com ícone, hint e error
-│   │   │   ├── Badge.tsx          # Badge com variantes de cor
-│   │   │   ├── Modal.tsx          # Modal genérico
-│   │   │   ├── ConfirmModal.tsx   # Modal de confirmação
-│   │   │   ├── StatCard.tsx       # Card de estatística
-│   │   │   ├── TabNav.tsx         # Navegação por abas
-│   │   │   ├── SearchBar.tsx      # Barra de busca com clear
-│   │   │   ├── EmptyState.tsx     # Estado vazio com ação
-│   │   │   ├── QuantityInput.tsx  # Stepper de quantidade
-│   │   │   ├── ProgressBar.tsx    # Barra de progresso
-│   │   │   ├── Select.tsx         # Select padronizado
-│   │   │   ├── InfoRow.tsx        # Linha label/valor
-│   │   │   ├── PageLoader.tsx     # Tela de carregamento
-│   │   │   └── StatusBanner.tsx   # Banner de status da conta
-│   │   ├── layout/                # SiteHeader, SiteFooter
-│   │   └── shared/                # PageLoader, StatusBanner
-│   ├── lib/
-│   │   └── prisma.ts              # Instância singleton do Prisma
-│   ├── middleware.ts              # Proteção JWT de rotas
-│   └── swagger.json               # Especificação OpenAPI
-└── public/                        # Assets estáticos
-```
+> [!TIP]
+> **Pesagem sem susto.** O app só registra quando o peso **fica parado 5 segundos dentro da faixa**. Fora dela, o botão fica laranja (abaixo do mínimo) ou vermelho (acima do pedido) e nada é gravado sozinho. A voz fala o próximo produto só quando ele aparece na tela.
 
 ---
 
-## Gestão Ágil — Sprints
+## 🚀 Rodar em 1 minuto
 
-| Sprint | Objetivo | Início | Fim |
-|---|---|---|---|
-| **Sprint 1** | Autenticação, cadastro, painel admin, catálogo, carrinho, checkout, painel produtor, landing page, avaliações, microsserviço de e-mail | 08/04/2026 | 29/04/2026 |
-| **Sprint 2** | Melhorias pós-banca: componentização, design system `.rc-*`, filtros avançados, validação regex, cancelamento de pedido, API docs JWT, correções SCRUM-144 a 147 | 29/04/2026 | 02/06/2026 |
+### Só o app, sem servidor (dados simulados)
 
-**Total:** 14+ histórias entregues · 49+ story points · 2 sprints ·
-
-### Principais entregas da Sprint 2
-
-| SCRUM | Descrição |
-|---|---|
-| **SCRUM-144** | Correção do bug `"Aprovações Pendentes0"` — número zero colado no título da aba |
-| **SCRUM-145** | Campo de busca na aba de produtos do produtor e do mercado |
-| **SCRUM-146** | Campo de confirmação de senha com feedback visual em tempo real |
-| **SCRUM-147** | Correção do alinhamento dos botões no banner Meu Catálogo |
-| **Design System** | 20+ classes `.rc-*` no `globals.css` — componentes padronizados |
-| **Filtros avançados** | Catálogo com busca + categoria + ordenação por preço |
-| **Segurança** | Indicador de força de senha, regex de e-mail, validação de tipoUsuario na API |
-| **Admin** | Troca de foto de produto, coluna de documento, filtros por tipo e status |
-| **Cancelamento** | API com cálculo real de 7 dias úteis (segunda a sexta) |
-| **Instagram** | Link `@raizconecta_dsm` no footer e na landing page |
-
-### Resultados Alcançados
-
-- Funcionamento completo da conexão entre produtores e mercados via fluxo de demanda reversa
-- Sistema de autenticação seguro com JWT e bcrypt, aprovação manual de cadastros e notificações por e-mail
-- Catálogo dinâmico integrado ao PostgreSQL (Neon.tech) com filtros por categoria e busca em tempo real
-- Microsserviço de e-mail desacoplado com templates HTML para boas-vindas, aprovação, rejeição e sugestão
-- Gestão ágil com Scrum: 2 sprints concluídas, 14+ histórias entregues, 49+ story points e 0 bugs críticos em produção
-
----
-
-## Como Executar o Projeto
-
-### Pré-requisitos
-
-- Node.js 18 ou superior
-- npm
-- Conta no [Neon](https://neon.tech) — PostgreSQL serverless gratuito
-- Conta no [Cloudinary](https://cloudinary.com) — upload de imagens gratuito
-- Conta no [Mailtrap](https://mailtrap.io) — sandbox de e-mails para testes
-
-### Passo 1 — Clonar o repositório
+Requisito: **Node.js 20+**. Nenhum banco, nenhuma chave.
 
 ```bash
-git clone <URL_DO_REPOSITORIO>
-cd raiz-conecta
-```
-
-### Passo 2 — Rodar a Aplicação Principal (Next.js)
-
-```bash
-cd \app-principal\
+cd app-mobile
 npm install
+cp .env.example .env      # já vem com EXPO_PUBLIC_USE_MOCKS=true
+npx expo start            # abra no Expo Go, no emulador ou aperte "w" para o navegador
 ```
 
-Crie o arquivo `.env` na raiz de `app-principal/`:
+No modo simulado **qualquer e-mail e senha entram** como produtor aprovado, e a pesagem tem um **simulador de balança** na própria tela. Para ver os bloqueios: e-mails que começam com `analise@`, `rejeitado@` ou `suspenso@`.
 
-```env
-DATABASE_URL="postgresql://usuario:senha@host/banco"
-JWT_SECRET="sua_chave_secreta_minimo_32_caracteres"
-CLOUDINARY_CLOUD_NAME="seu_cloud_name"
-CLOUDINARY_API_KEY="sua_api_key"
-CLOUDINARY_API_SECRET="seu_api_secret"
-MICROSERVICE_URL="http://localhost:3001"
-ADMIN_SENHA_INICIAL="senha_do_primeiro_admin"
-```
+### O site e a API
+
+Requisito: **Node.js 20+** e um **PostgreSQL** (o projeto usa Neon).
 
 ```bash
+cd app-principal
+npm install
+cp .env.example .env.local    # DATABASE_URL, JWT_SECRET, ADMIN_SENHA_INICIAL, CLOUDINARY_*
 npx prisma generate
-npx prisma db push        # cria as tabelas no banco caso não possua
-npm run dev               # http://localhost:3000
-
-npx prisma studio         # interface visual do banco de dados — http://localhost:5555
+npx prisma db push            # cria as tabelas (inclui as das balanças)
+npm run dev                   # http://localhost:3000
 ```
 
-### Passo 3 — Rodar o Microsserviço de E-mail (Express.js)
+Abra `/api/setup-admin` uma vez para criar o primeiro administrador. A documentação da API, testável, fica em **`/api-docs`**.
 
-```bash
-cd microservico
-npm install
-cd \src\app\
-node server.js            # http://localhost:3001
-```
+<details>
+<summary><b>Ligar o app ao site</b></summary>
 
-Crie o arquivo `.env` em `microservico/`:
+No `app-mobile/.env`:
 
 ```env
-MAILTRAP_USER="seu_usuario_mailtrap"
-MAILTRAP_PASS="sua_senha_mailtrap"
-PORT=3001
+EXPO_PUBLIC_USE_MOCKS=false
+EXPO_PUBLIC_API_URL=http://SEU-IP:3000      # emulador Android: http://10.0.2.2:3000
 ```
 
-### Passo 4 — Criar o primeiro Admin
+Reinicie com `npx expo start -c`. Login, cadastro, catálogo, sugestão, perfil e **balança** passam a usar o servidor. Propostas, entregas e o registro da pesagem continuam simulados até o site ter essas rotas.
 
-Após iniciar o app-principal, acesse **uma única vez**:
+</details>
 
-```
-http://localhost:3000/api/setup-admin
-```
+<details>
+<summary><b>A balança (ESP32 + célula de carga)</b></summary>
 
-> ⚠️ Esse endpoint usa `ADMIN_SENHA_INICIAL` do `.env`. Remova ou proteja após o primeiro uso.
+1. No site, como admin: **Balanças → Cadastrar balança** com o endereço MAC do módulo. O **segredo** aparece uma única vez: grave-o no módulo.
+2. O módulo envia as leituras para `POST /api/iot/leituras` (firmware de exemplo em [`app-principal/docs/iot/`](app-principal/docs/iot/raiz_balanca)).
+3. O produtor conecta a balança em **Mais → Minha balança** com o endereço e o código da etiqueta.
+
+Sem hardware, dá para fazer de conta com `curl`: o roteiro está em [`docs/IOT.md`](app-principal/docs/IOT.md#testar-sem-hardware).
+
+</details>
+
+<details>
+<summary><b>Publicar (Vercel) e gerar o app (EAS)</b></summary>
+
+| O quê | Como |
+| --- | --- |
+| Site e API | Vercel com a raiz em `app-principal`, build `next build`. Configure as variáveis em **Production e Preview** — sem `JWT_SECRET` o site recusa logins de propósito |
+| Banco | `npx prisma db push` (ou `migrate deploy`) uma vez por mudança, fora do build |
+| App Android | `npx eas-cli@latest build -p android --profile preview` (gera o APK) |
+
+</details>
+
+> [!IMPORTANT]
+> `JWT_SECRET` é **obrigatória** em produção: assina os logins e gera os códigos das etiquetas das balanças. Trocar a chave invalida as sessões e muda os códigos impressos.
 
 ---
 
-## Deploy em Produção — Vercel
+## 👥 Quem faz o quê
 
-Configure as variáveis em **Vercel → Settings → Environment Variables**:
+| Perfil | Onde | O que pode fazer |
+| --- | --- | --- |
+| 🏪 **Mercado** | Site | Montar e disparar cotações, acompanhar as ofertas, avaliar o produtor, cancelar em até 7 dias úteis |
+| 🌱 **Produtor** | App e site | Escolher o que vende, ofertar nos pedidos, separar e **pesar** as entregas, sugerir produtos, conectar a balança |
+| 🛡️ **Administrador** | Site | Aprovar ou recusar cadastros, editar usuários, cuidar do catálogo e das sugestões, cadastrar e liberar balanças |
+| ⚖️ **Balança** | Módulo ESP32 | Enviar o peso, com segredo próprio (só o hash fica no servidor) |
 
-| Variável | Descrição |
-|---|---|
-| `DATABASE_URL` | String de conexão PostgreSQL (Neon) |
-| `JWT_SECRET` | Chave secreta JWT (mín. 32 caracteres) |
-| `CLOUDINARY_CLOUD_NAME` | Nome do cloud Cloudinary |
-| `CLOUDINARY_API_KEY` | API Key Cloudinary |
-| `CLOUDINARY_API_SECRET` | API Secret Cloudinary |
-| `MICROSERVICE_URL` | URL do microsserviço hospedado (Railway, Render) |
-| `ADMIN_SENHA_INICIAL` | Senha para criação do primeiro admin |
+Passo a passo de cada perfil, com capturas: [**Guia de uso**](docs/GUIA-DE-USO.md).
 
-**Comando de build:**
+---
 
-```bash
-npx prisma generate && next build
+## ⚙️ Como funciona por dentro
+
+Uma regra guia os dois projetos: **regras de negócio em funções puras e testadas; as telas só montam componentes.**
+
+```mermaid
+flowchart LR
+    APP["App do produtor<br/>Expo · React Native"] -->|HTTPS + Bearer| API
+    SITE["Site<br/>Next.js · React"] -->|cookie httpOnly| API
+    ESP["Módulo da balança<br/>ESP32 + célula de carga"] -->|Device + segredo| API
+    API["API<br/>rotas do Next.js"] --> DB[("PostgreSQL<br/>Prisma")]
+    API --> CLD["Cloudinary<br/>fotos e documentos"]
+    API -. e-mails .-> MS["Microsserviço<br/>app-node"]
+    style API fill:#16a34a,stroke:#14532d,color:#fff
+    style DB fill:#dcfce7,stroke:#16a34a,color:#14532d
 ```
 
+O caminho de um peso, do prato da balança até a tela:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as Balança (ESP32)
+    participant A as API
+    participant D as Banco
+    participant P as App / site do produtor
+    B->>A: POST /api/iot/leituras (X-Device-Id + segredo)
+    A->>D: guarda o último peso e, se mudou e estava estável, o histórico
+    loop a cada 0,5 s (2 s sem sinal)
+        P->>A: GET /api/produtor/balancas/{id}/leitura
+        A-->>P: { online, kg, estavel }
+    end
+    P-->>P: espera 5 s de peso parado dentro da faixa e registra
+```
+
+<details>
+<summary><b>Decisões que valem lembrar</b></summary>
+
+- **O e-mail vem sempre da sessão**, nunca do corpo da requisição. Recurso de outra pessoa responde 404, para não revelar o que existe.
+- **Sessão sem token no navegador**: o site usa cookie httpOnly; o app guarda o token no armazenamento seguro do aparelho.
+- **Falha fechada**: sem `JWT_SECRET` em produção, o login para de funcionar em vez de aceitar tokens forjados.
+- **Etiqueta da balança com código derivado do servidor** (HMAC): saber o MAC não basta para tomar a balança de outra pessoa.
+- **Mesmo contrato, dois clientes**: o app troca dados simulados por API real só pelo `.env` (`EXPO_PUBLIC_USE_MOCKS`), sem mexer nas telas.
+- **Cadastro em duas etapas sem guardar senha**: o passo 1 fica só na memória da página.
+- **Tentativas limitadas** em login, troca de senha e código da etiqueta.
+
+</details>
+
+<details>
+<summary><b>Estrutura do repositório</b></summary>
+
+```
+raiz_conecta/
+├── app-principal/      Site + API (Next.js 16, Prisma, Tailwind 4)   → ARQUITETURA.md
+│   ├── src/app/        páginas e rotas da API
+│   ├── src/components/ kit de UI e componentes por área
+│   ├── src/hooks/      controllers das telas
+│   ├── src/lib/        regras puras e testadas (auth, iot, perfil, mercado...)
+│   ├── prisma/         modelo do banco e migrações
+│   └── docs/           IOT.md e o firmware de exemplo do ESP32
+├── app-mobile/         App do produtor (Expo SDK 57, Expo Router)    → ARQUITETURA.md
+│   └── src/            app/ (telas) · components/ · hooks/ · services/ (API ou simulado) · lib/
+├── app-node/           Microsserviço de e-mails (Express)
+└── docs/               guia de uso, projeto interdisciplinar e imagens deste README
+```
+
+</details>
+
+### 🧰 Stack
+
+| Camada | Tecnologia |
+| --- | --- |
+| Site | **Next.js 16** (App Router) + **React 19**, **Tailwind CSS 4**, framer-motion, sonner |
+| App | **Expo SDK 57** + **React Native 0.86**, Expo Router, expo-speech (voz da pesagem) |
+| API e dados | Rotas do Next.js, **Prisma 6**, **PostgreSQL** (Neon), JWT HS256, bcrypt, Cloudinary |
+| IoT | **ESP32** + célula de carga (HX711), envio por Wi-Fi com segredo por dispositivo |
+| Qualidade | **Vitest** (site), **Jest** (app), roteiros ponta a ponta com **Playwright**, ESLint, TypeScript estrito |
+
 ---
 
-## Limitações e Evolução Futura
+## ✅ Qualidade
 
-| Limitação atual | Evolução planejada |
-|---|---|
-| Entregador existe no banco mas sem painel de interface | Módulo completo de logística com rastreamento de rotas |
-| JWT sem blacklist server-side | Redis para token revocation em tempo real |
-| Sem notificação em tempo real | WebSockets ou SSE para alertas de novas demandas |
-| Sem pagamento integrado | Gateway de pagamento (Stripe, PagSeguro) |
-| E-mail via Mailtrap (sandbox) | SendGrid ou Amazon SES em produção |
+<div align="center">
 
----
+| 491 | 934 | 10 | 27 |
+| :---: | :---: | :---: | :---: |
+| testes do site e da API | testes do app | roteiros ponta a ponta do app | rotas da API documentadas no Swagger |
 
-## Documentação do Projeto (Confluence e Jira)
+</div>
 
-A gestão documental e o acompanhamento do progresso foram conduzidos nas plataformas Atlassian:
-
-- **Confluence — Wiki e Documentação:** https://raizconectado.atlassian.net/wiki/spaces/GGP
-- **Jira — Board Scrum:** https://raizconectado.atlassian.net/jira/software/projects/SCRUM/boards/1
-
-**Sprint PI (Sprint 1):** 11 histórias de usuário · 45 story points  
-**Sprint PI 2 (Sprint 2):** melhorias pós-banca · foco em qualidade, segurança e UX  
-**Total geral:** 14+ histórias · 49+ story points
+Os testes cobrem as regras (validação, tolerância da pesagem, preços, etiqueta da balança, sessão) e cada rota da API. Um teste falha se alguma rota ficar sem documentação no Swagger. Os roteiros ponta a ponta abrem o app no navegador e fazem o caminho de um produtor: entrar, aceitar ofertas, pesar um pedido inteiro, conectar a balança e testar telas de 320 px até tablet.
 
 ---
 
-## Referências
+## 📚 Documentação
 
-- SOMMERVILLE, Ian. *Engenharia de Software*. 8ª ed. Pearson, 2007.
-- SOMERVILLE, I. *Engenharia de software*. 10. ed. São Paulo: Pearson, 2016.
-- PRESSMAN, R. S.; MAXIM, B. *Engenharia de software: uma abordagem profissional*. 9. ed. Porto Alegre: McGraw-Hill Education, 2021.
-- DATE, C. J. *Introdução a sistemas de banco de dados*. 8. ed. Rio de Janeiro: Campus, 2004.
-- FREEMAN, A. *Pro React 18*. New York: Apress, 2022.
-- FLANAGAN, D. *JavaScript: o guia definitivo*. 8. ed. O'Reilly Media, 2024.
-- GARRETT, J. J. *Os elementos da experiência do usuário*. 2. ed. São Paulo: Voices That Matter, 2011.
+| | |
+| --- | --- |
+| 📖 [**Guia de uso**](docs/GUIA-DE-USO.md) | Passo a passo do mercado, do produtor (app e site), do administrador e da balança |
+| 🏗️ [**Arquitetura do site**](app-principal/ARQUITETURA.md) | Camadas, kit de componentes, padrão das rotas, como criar uma tela ou rota nova |
+| 📱 [**Arquitetura do app**](app-mobile/ARQUITETURA.md) | MVC com gateways, modo simulado, pesagem, animações e acessibilidade |
+| ⚖️ [**IoT — a balança**](app-principal/docs/IOT.md) | Autenticação do módulo, rotas, banco e como testar sem hardware |
+| 🔌 [**API (Swagger)**](https://raiz-conecta-qa94.vercel.app/api-docs) | Todas as rotas, testáveis com o token do login |
+| 🎓 [**Projeto Interdisciplinar**](docs/PROJETO-INTERDISCIPLINAR.md) | Problema, público, ODS, sprints, equipe e referências |
+| 📕 [**Documento do projeto (Word)**](Raiz_Conecta_Documentacao.docx) | A documentação acadêmica completa |
+
+---
+
+## 🗺️ Roadmap
+
+```mermaid
+flowchart LR
+    V1["Entregue<br/>cotação, ofertas, aprovação,<br/>app do produtor, pesagem guiada,<br/>balança conectada (API)"]
+    V2["Próximo<br/>propostas e entregas no servidor,<br/>registro da pesagem por pedido"]
+    V3["Depois<br/>peso em tempo real (SSE/WebSocket),<br/>pesagem do mercado no recebimento"]
+    V4["Futuro<br/>pagamento, logística<br/>e app do mercado"]
+    V1 --> V2 --> V3 --> V4
+    style V1 fill:#16a34a,stroke:#14532d,color:#fff
+```
+
+<details>
+<summary><b>Limites conhecidos</b></summary>
+
+- **Propostas com preço fixo, entregas e o registro da pesagem** ainda são simulados no app: o site não tem essas rotas.
+- O módulo real da balança ainda não foi testado em campo; o firmware de exemplo usa `setInsecure()` (só para bancada).
+- CPF e CNPJ são conferidos pelo tamanho, não pelo dígito verificador (o documento é analisado pela equipe).
+- Os limites de tentativas ficam na memória de cada instância do servidor; para um limite global, Redis.
+- As rotas não têm versão (`/api/v1`) para não quebrar o app já instalado.
+
+</details>
 
 ---
 
 <div align="center">
 
-🌱 **Raiz Conecta** · Fatec Votorantim · DSM · Projeto Integrador 2026
+<sub>Identidade visual: o <b>verde</b> da folha e do campo, o <b>broto com raízes de circuito</b> da logo — o rural e a tecnologia na mesma planta — e o <b>âmbar</b> da balança.</sub>
+
+<br><br>
+
+Feito por **Daniel Henrique Domingues Nogueira**, **Felipe Gomes Felix**, **[Guilherme Vinícius Baeza de Oliveira](https://github.com/IneGuilherme)**, **Gustavo Henrique Bauch** e **Jhonatan Melo de Oliveira**<br>
+<sub>Projeto Interdisciplinar · Desenvolvimento de Software Multiplataforma — Fatec Votorantim · 2026 · <a href="https://www.instagram.com/raizconecta_dsm">@raizconecta_dsm</a></sub>
 
 </div>

@@ -1,6 +1,6 @@
 import type { ApiClient } from "@/lib/http/ApiClient";
 import type { EditableProfile, ProducerProfile } from "@/types/produtor";
-import type { ProfileGateway } from "./ProfileGateway";
+import type { PasswordChange, ProfileGateway } from "./ProfileGateway";
 
 // O que GET /api/perfil/meus-dados devolve do produtor (a linha da tabela vendedor + tipoUser).
 interface VendedorDto {
@@ -41,12 +41,12 @@ export class ApiProfileService implements ProfileGateway {
     return toProducerProfile(email, dto);
   }
 
-  async updateProfile(email: string, changes: EditableProfile, newPassword?: string): Promise<ProducerProfile> {
+  async updateProfile(email: string, changes: EditableProfile, password?: PasswordChange): Promise<ProducerProfile> {
     await this.api.put("/api/perfil/meus-dados", {
       email,
       tipoUser: "produtor",
       ...changes,
-      ...(newPassword ? { novaSenha: newPassword } : {}),
+      ...(password ? { senhaAtual: password.current, novaSenha: password.next } : {}),
     });
     return this.getProfile(email);
   }

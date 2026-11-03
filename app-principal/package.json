@@ -7,24 +7,21 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "docs:api": "node scripts/build-swagger.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.10.0",
-    "formik": "^2.4.9",
     "framer-motion": "^12.40.0",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.8.0",
     "next": "16.2.3",
-    "next-swagger-doc": "^0.4.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "sonner": "^2.0.7",
-    "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-react": "^5.32.5",
-    "yup": "^1.7.1"
+    "swagger-ui-react": "^5.32.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

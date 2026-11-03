@@ -23,7 +23,10 @@ build/
 # ==========================================
 # 🗄️ PRISMA
 # ==========================================
-# Ignora arquivos de banco SQLite locais (caso decida usar para teste) agora nao tem nada sendo ignorado
+# O banco é PostgreSQL (Neon). Bancos SQLite locais e arquivos enviados em testes não vão para o Git.
+*.db
+*.db-journal
+public/uploads/
 
 # ==========================================
 # 🛠️ LOGS E SISTEMA OPERACIONAL
@@ -32,4 +35,4 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-.DS_Store   
+.DS_Store   *.tsbuildinfo

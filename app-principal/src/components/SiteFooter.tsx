@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Leaf } from "lucide-react";
+import { Wordmark } from "@/components/brand/Wordmark";
 
 // Ícone SVG do Instagram (lucide não tem a versão oficial)
 function InstagramIcon({ size = 20 }: { size?: number }) {
@@ -20,14 +20,7 @@ export function SiteFooter() {
 
           {/* Marca */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="bg-green-700 p-2 rounded-xl">
-                <Leaf className="text-green-300" size={22} />
-              </div>
-              <span className="text-xl font-black tracking-tight">
-                Raiz<span className="text-green-400">Conecta</span>
-              </span>
-            </div>
+            <div className="mb-4"><Wordmark look="dark" /></div>
             <p className="text-green-300 text-sm leading-relaxed">
               Conectando produtores rurais diretamente aos mercados. Sem atravessadores, com transparência e tecnologia.
             </p>

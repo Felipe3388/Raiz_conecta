@@ -1,8 +1,9 @@
 "use client";
 
+import { useId } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useDialog } from "@/hooks/useDialog";
 import { AlertTriangle, Trash2, CheckCircle2, Info, X, LucideIcon } from "lucide-react";
-import { Button } from "./Button";
 
 type ConfirmVariant = "danger" | "warning" | "success" | "info";
 
@@ -68,6 +69,12 @@ export function ConfirmModal({
 }: ConfirmModalProps) {
   const config = variantConfig[variant];
   const Icon = config.icon;
+  const titleId = useId();
+  const descriptionId = useId();
+  // Esc não fecha enquanto a ação está em andamento.
+  const ref = useDialog<HTMLDivElement>(isOpen, () => {
+    if (!isLoading) onClose();
+  });
 
   return (
     <AnimatePresence>
@@ -84,23 +91,31 @@ export function ConfirmModal({
 
           {/* Modal */}
           <motion.div
+            ref={ref}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            aria-describedby={descriptionId}
+            tabIndex={-1}
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: "spring", duration: 0.4, bounce: 0.25 }}
-            className="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
+            className="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden outline-none"
           >
             {/* Botão fechar */}
             <button
+              type="button"
               onClick={onClose}
               disabled={isLoading}
-              className="absolute top-4 right-4 text-gray-300 hover:text-gray-500 transition-colors disabled:opacity-50"
+              aria-label="Fechar"
+              className="absolute top-2 right-2 grid h-10 w-10 place-items-center rounded-lg text-gray-300 hover:text-gray-500 transition-colors disabled:opacity-50"
             >
               <X size={20} />
             </button>
 
             {/* Conteúdo */}
-            <div className="p-8 text-center space-y-4">
+            <div className="p-8 text-center space-y-4" data-dialog-body>
               {/* Ícone */}
               <motion.div
                 initial={{ scale: 0 }}
@@ -112,23 +127,27 @@ export function ConfirmModal({
               </motion.div>
 
               <div className="space-y-2">
-                <h3 className="text-xl font-black text-gray-900">{title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{description}</p>
+                <h3 id={titleId} className="text-xl font-black text-gray-900">{title}</h3>
+                <p id={descriptionId} className="text-sm text-gray-500 leading-relaxed">{description}</p>
               </div>
             </div>
 
             {/* Botões */}
             <div className={`px-8 pb-8 flex gap-3`}>
               <button
+                type="button"
                 onClick={onClose}
                 disabled={isLoading}
+                data-autofocus
                 className="flex-1 h-11 rounded-xl border-2 border-gray-200 text-gray-600 font-bold text-sm hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
                 {cancelLabel}
               </button>
               <button
+                type="button"
                 onClick={onConfirm}
                 disabled={isLoading}
+                aria-busy={isLoading}
                 className={`flex-1 h-11 rounded-xl font-bold text-sm transition-all active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2 ${config.confirmClass}`}
               >
                 {isLoading ? (

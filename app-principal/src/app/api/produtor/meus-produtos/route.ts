@@ -2,13 +2,19 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { parseCatalogPayload } from "@/lib/catalogo/parseCatalogPayload";
 import { planCatalogSync } from "@/lib/catalogo/planCatalogSync";
+import { emailMatches, forbiddenEmail, requireSession } from "@/lib/auth/session";
 
-// BUSCAR os produtos que o produtor já marcou que vende
+// BUSCAR os produtos que o produtor já marcou que vende.
+// Só o produtor logado lê o próprio catálogo; `?email=` ainda é aceito (apps antigos), mas precisa ser o da sessão.
+// Com `?detalhes=1` devolve também o preço de cada produto: [{ cdProduto, preco }].
 export async function GET(req: Request) {
-    const { searchParams } = new URL(req.url);
-    const email = searchParams.get('email');
+    const auth = await requireSession(req, ["produtor"]);
+    if (auth.error) return auth.error;
 
-    if (!email) return NextResponse.json({ error: "E-mail não fornecido" }, { status: 400 });
+    const { searchParams } = new URL(req.url);
+    if (!emailMatches(auth.session, searchParams.get('email'))) return forbiddenEmail();
+    const email = auth.session.email;
+    const detalhes = searchParams.get('detalhes') === '1';
 
     try {
         const vendedor = await prisma.vendedor.findUnique({
@@ -18,10 +24,16 @@ export async function GET(req: Request) {
 
         if (!vendedor) return NextResponse.json({ error: "Produtor não encontrado" }, { status: 404 });
 
+        if (detalhes) {
+            return NextResponse.json(
+                vendedor.Estoques.flatMap(e => e.cdProduto === null ? [] : [{ cdProduto: e.cdProduto, preco: e.preco ?? null }])
+            );
+        }
+
         // Retorna apenas um array com os IDs dos produtos que ele marcou (ex: [1, 4, 5])
         const meusProdutosIds = vendedor.Estoques.map(e => e.cdProduto);
         return NextResponse.json(meusProdutosIds);
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: "Erro ao buscar produtos" }, { status: 500 });
     }
 }
@@ -30,13 +42,17 @@ export async function GET(req: Request) {
 // Corpo: { email, produtos: [{ cdProduto, preco? }] }
 // Formato antigo ainda aceito: { email, produtosIds: [1, 4] }
 export async function POST(req: Request) {
+    const auth = await requireSession(req, ["produtor"]);
+    if (auth.error) return auth.error;
+
     try {
         const body = await req.json().catch(() => null);
 
-        const email = typeof body === "object" && body !== null && "email" in body && typeof body.email === "string"
+        const informado = typeof body === "object" && body !== null && "email" in body && typeof body.email === "string"
             ? body.email
             : null;
-        if (!email) return NextResponse.json({ error: "E-mail não fornecido" }, { status: 400 });
+        if (!emailMatches(auth.session, informado)) return forbiddenEmail();
+        const email = auth.session.email;
 
         const payload = parseCatalogPayload(body);
         if (!payload.ok) return NextResponse.json({ error: payload.error }, { status: 400 });

@@ -1,79 +1,101 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { emailMatches, forbiddenEmail, requireSession } from "@/lib/auth/session";
+import { buildMural, validateOffer } from "@/lib/produtor/mural";
+import { withSerializableRetry } from "@/lib/db/retry";
 
-export async function POST(req: Request) {
+// Só produtor com cadastro aprovado mexe em ofertas.
+async function approvedProducer(email: string) {
+  return prisma.vendedor.findUnique({
+    where: { email },
+    include: { Estoques: { include: { Produto: true } } },
+  });
+}
+
+const NOT_APPROVED = NextResponse.json({ error: "Seu cadastro ainda não foi aprovado." }, { status: 403 });
+
+// GET: o mural do produtor logado. Devolve só o que ele pode responder (pedidos abertos dos produtos do catálogo dele),
+// o que ele já ofertou e um resumo para o Painel. Não mostra e-mail de mercado nem de outros produtores.
+export async function GET(req: Request) {
+  const auth = await requireSession(req, ["produtor"]);
+  if (auth.error) return auth.error;
+
   try {
-    const { demandaId, quantidade, emailProdutor } = await req.json();
+    const vendedor = await approvedProducer(auth.session.email);
+    if (!vendedor) return NextResponse.json({ error: "Produtor não encontrado" }, { status: 404 });
+    if (vendedor.status !== "APROVADO") return NOT_APPROVED;
 
-    if (!demandaId || !quantidade || !emailProdutor) {
+    const demandas = await prisma.demanda.findMany({
+      include: { ofertas: { select: { quantidade: true, emailProdutor: true } } },
+      orderBy: { criadoEm: "desc" },
+    });
+    const nomes = vendedor.Estoques.flatMap((estoque) => (estoque.Produto?.nome ? [estoque.Produto.nome] : []));
+
+    return NextResponse.json({
+      ...buildMural(demandas, vendedor.email, nomes),
+      produtosNoCatalogo: vendedor.Estoques.length,
+    });
+  } catch (error) {
+    console.error("Erro ao montar o mural:", error);
+    return NextResponse.json({ error: "Erro ao buscar o mural" }, { status: 500 });
+  }
+}
+
+// POST: o produtor garante uma quantidade de um pedido. Corpo: { demandaId, quantidade }.
+// `emailProdutor` ainda é aceito (apps antigos), mas precisa ser o da própria sessão.
+export async function POST(req: Request) {
+  const auth = await requireSession(req, ["produtor"]);
+  if (auth.error) return auth.error;
+
+  try {
+    const body = await req.json().catch(() => null);
+    const { demandaId, quantidade, emailProdutor } = (body ?? {}) as {
+      demandaId?: string;
+      quantidade?: unknown;
+      emailProdutor?: string;
+    };
+
+    if (!demandaId || quantidade === undefined || quantidade === null) {
       return NextResponse.json({ error: "Dados incompletos" }, { status: 400 });
     }
+    if (!emailMatches(auth.session, emailProdutor)) return forbiddenEmail();
 
-    const qtdOfertada = Number(quantidade);
+    const vendedor = await approvedProducer(auth.session.email);
+    if (!vendedor) return NextResponse.json({ error: "Produtor não encontrado" }, { status: 404 });
+    if (vendedor.status !== "APROVADO") return NOT_APPROVED;
 
-    // Busca o pedido original para saber o tamanho da "fatia" que falta
-    const demanda = await prisma.demanda.findUnique({
-      where: { id: demandaId },
-      include: { ofertas: true },
-    });
+    // Conferir o saldo e gravar acontecem na mesma transação serializável: duas ofertas ao mesmo tempo para o último
+    // pedaço de um pedido não passam as duas. O prazo evita que um banco travado prenda a requisição.
+    const result = await withSerializableRetry(() =>
+      prisma.$transaction(
+        async (tx) => {
+          const demanda = await tx.demanda.findUnique({
+            where: { id: demandaId },
+            include: { ofertas: { select: { quantidade: true, emailProdutor: true } } },
+          });
+          if (!demanda) return { status: 404, error: "Demanda não encontrada" } as const;
 
-    if (!demanda) {
-      return NextResponse.json(
-        { error: "Demanda não encontrada" },
-        { status: 404 },
-      );
-    }
+          const problem = validateOffer(demanda, quantidade, vendedor.email);
+          if (problem) return { status: 400, error: problem } as const;
 
-    if (demanda.status === "CONCLUIDA") {
-      return NextResponse.json(
-        { error: "Este pedido já foi totalmente atendido." },
-        { status: 400 },
-      );
-    }
+          const qtdOfertada = Number(quantidade);
+          const jaAtendida = demanda.ofertas.reduce((total, oferta) => total + oferta.quantidade, 0);
 
-    // Calcula quanto já foi garantido por outros produtores
-    const qtdJaAtendida = demanda.ofertas.reduce(
-      (acc, oferta) => acc + oferta.quantidade,
-      0,
-    );
-    const qtdFaltante = demanda.quantidade - qtdJaAtendida;
-
-    // Não deixa o produtor ofertar mais do que o mercado precisa
-    if (qtdOfertada > qtdFaltante) {
-      return NextResponse.json(
-        {
-          error: `O mercado só precisa de mais ${qtdFaltante} ${demanda.unidade} deste item.`,
+          await tx.oferta.create({ data: { quantidade: qtdOfertada, emailProdutor: vendedor.email, demandaId } });
+          // O pedido fecha quando a última oferta completa a quantidade.
+          if (jaAtendida + qtdOfertada >= demanda.quantidade) {
+            await tx.demanda.update({ where: { id: demandaId }, data: { status: "CONCLUIDA" } });
+          }
+          return null;
         },
-        { status: 400 },
-      );
-    }
-
-    // Salva a oferta do produtor no banco
-    await prisma.oferta.create({
-      data: {
-        quantidade: qtdOfertada,
-        emailProdutor,
-        demandaId,
-      },
-    });
-
-    //  Fecha a demanda automaticamente se já tiver sido totalmente atendida
-    if (qtdJaAtendida + qtdOfertada >= demanda.quantidade) {
-      await prisma.demanda.update({
-        where: { id: demandaId },
-        data: { status: "CONCLUIDA" },
-      });
-    }
-
-    return NextResponse.json(
-      { message: "Sua oferta foi registrada com sucesso!" },
-      { status: 201 },
+        { isolationLevel: "Serializable", maxWait: 2_000, timeout: 5_000 },
+      ),
     );
+    if (result) return NextResponse.json({ error: result.error }, { status: result.status });
+
+    return NextResponse.json({ message: "Sua oferta foi registrada com sucesso!" }, { status: 201 });
   } catch (error) {
     console.error("Erro ao registrar oferta:", error);
-    return NextResponse.json(
-      { error: "Erro interno no servidor" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Erro interno no servidor" }, { status: 500 });
   }
 }

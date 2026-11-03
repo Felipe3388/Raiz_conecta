@@ -247,3 +247,44 @@ model Sugestao {
 
   @@map("sugestoes")
 }
+
+// 🔌 IOT: BALANÇAS (módulo ESP32 + célula de carga)
+// O módulo fala com o servidor por HTTPS (ver docs/IOT.md). O servidor guarda só o HASH do segredo do módulo; o segredo
+// aparece uma única vez, quando o administrador cadastra a balança.
+
+model Balanca {
+  id            String    @id @default(uuid())
+  deviceId      String    @unique // endereço MAC sem separadores e em maiúsculas: A4CF129B07E1
+  nome          String // nome de fábrica: "Balança RC-01"
+  segredoHash   String // SHA-256 do segredo do módulo
+  emailProdutor String? // dono atual; null = livre para vincular
+  apelido       String? // nome que o produtor deu
+  conectada     Boolean   @default(false) // a balança que a pesagem do produtor usa
+  vinculadaEm   DateTime?
+  firmware      String?
+  ultimoContato DateTime? // última vez que o módulo falou com o servidor
+  // Última leitura recebida (a que o app mostra ao vivo). As leituras estáveis ficam guardadas em LeituraPeso.
+  ultimoKg      Float?
+  ultimoEstavel Boolean   @default(false)
+  ultimaLeitura DateTime?
+  criadoEm      DateTime  @default(now())
+
+  leituras LeituraPeso[]
+
+  @@index([emailProdutor])
+  @@map("balancas")
+}
+
+// Cada vez que o peso "parou" (leitura estável): o registro de uma pesagem.
+model LeituraPeso {
+  id         Int      @id @default(autoincrement())
+  balancaId  String
+  kg         Float
+  medidoEm   DateTime
+  recebidoEm DateTime @default(now())
+
+  balanca Balanca @relation(fields: [balancaId], references: [id], onDelete: Cascade)
+
+  @@index([balancaId, medidoEm])
+  @@map("leituras_peso")
+}

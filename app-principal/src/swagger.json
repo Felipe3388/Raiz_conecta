@@ -1,48 +1,56 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "Raiz Conecta API",
-    "version": "1.0.0",
-    "description": "API da plataforma Raiz Conecta — conecta produtores rurais e mercados. Gerencia autenticação, perfis, demandas, ofertas e administração de usuários."
+    "title": "Raiz Conecta — API",
+    "version": "2.0.0",
+    "description": "API do site e do app mobile. **Autenticação:** o login devolve um JWT (HS256, 2 h). O app envia `Authorization: Bearer <token>`; o site usa o cookie httpOnly `token`. **Erros:** sempre `{ \"error\": \"mensagem\" }`. **Balanças:** o módulo ESP32 usa `X-Device-Id` + `Authorization: Device <segredo>` (ver docs/IOT.md)."
   },
   "servers": [
     {
-      "url": "https://seu-app.vercel.app",
-      "description": "Produção (Vercel)"
-    },
-    {
-      "url": "http://localhost:3000",
-      "description": "Desenvolvimento local"
+      "url": "/",
+      "description": "Servidor atual"
     }
   ],
   "tags": [
     {
       "name": "Auth",
-      "description": "Cadastro e login de usuários"
+      "description": "Cadastro, login e sessão"
     },
     {
       "name": "Perfil",
-      "description": "Dados e gestão do perfil do usuário logado"
+      "description": "Dados e segurança da própria conta"
     },
     {
       "name": "Produtor",
-      "description": "Operações exclusivas do produtor"
+      "description": "Catálogo, mural, ofertas e sugestões do produtor"
     },
     {
       "name": "Mercado",
-      "description": "Operações exclusivas do mercado"
+      "description": "Cotações, avaliação e cancelamento"
     },
     {
       "name": "Produtos",
-      "description": "Catálogo de produtos disponíveis"
+      "description": "Catálogo oficial"
+    },
+    {
+      "name": "Balanças",
+      "description": "Balanças IoT do produtor"
+    },
+    {
+      "name": "Balanças (admin)",
+      "description": "Cadastro e manutenção das balanças"
+    },
+    {
+      "name": "IoT",
+      "description": "Chamadas feitas pelo módulo da balança (ESP32)"
     },
     {
       "name": "Admin",
-      "description": "Painel administrativo — gestão de usuários"
+      "description": "Gestão de usuários e catálogo"
     },
     {
       "name": "Utilitários",
-      "description": "Endpoints auxiliares de setup"
+      "description": "Setup inicial"
     }
   ],
   "paths": {
@@ -51,62 +59,58 @@
         "tags": [
           "Auth"
         ],
-        "summary": "Cadastrar novo usuário",
-        "description": "Cria uma conta de produtor ou mercado. O status inicial é `EM_ANALISE` — o admin precisa aprovar antes do primeiro acesso.",
+        "summary": "Cria a conta (passo final do cadastro)",
+        "description": "Multipart: dados do passo 1 e 2 + foto/PDF do documento (até 5 MB). A conta nasce EM_ANALISE até a administração aprovar.",
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
                 "$ref": "#/components/schemas/CadastroInput"
-              },
-              "example": {
-                "tipoUsuario": "produtor",
-                "nome": "Fazenda Boa Vista",
-                "email": "fazenda@email.com",
-                "senha": "Senha@123"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Cadastro realizado com sucesso",
+            "description": "Conta criada.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MensagemSucesso"
-                },
-                "example": {
-                  "message": "Cadastro realizado com sucesso!"
+                  "$ref": "#/components/schemas/Mensagem"
                 }
               }
             }
           },
           "400": {
-            "description": "Dados inválidos ou e-mail já cadastrado",
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Erro"
-                },
-                "examples": {
-                  "camposVazios": {
-                    "value": {
-                      "error": "Preencha todos os campos obrigatórios."
-                    }
-                  },
-                  "emailExistente": {
-                    "value": {
-                      "error": "Este e-mail já está cadastrado."
-                    }
-                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito com o estado atual.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
                 }
               }
             }
           },
           "500": {
-            "$ref": "#/components/responses/ErroInterno"
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
           }
         }
       }
@@ -116,115 +120,148 @@
         "tags": [
           "Auth"
         ],
-        "summary": "Fazer login",
-        "description": "Autentica o usuário com e-mail e senha. Retorna o tipo de usuário para redirecionar ao painel correto.",
+        "summary": "Entra na conta",
+        "description": "Devolve o token (usado pelo app mobile no cabeçalho Authorization) e também grava o cookie httpOnly `token` (usado pelo site). 5 senhas erradas em 15 min travam novas tentativas.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/LoginInput"
-              },
-              "example": {
-                "email": "fazenda@email.com",
-                "senha": "Senha@123"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Login realizado com sucesso",
+            "description": "Login realizado.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/LoginResponse"
-                },
-                "example": {
-                  "message": "Login realizado com sucesso!",
-                  "tipoUser": "produtor"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Senha incorreta",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                },
-                "example": {
-                  "error": "Senha incorreta."
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "E-mail não encontrado",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                },
-                "example": {
-                  "error": "E-mail não encontrado."
-                }
-              }
-            }
-          },
-          "500": {
-            "$ref": "#/components/responses/ErroInterno"
-          }
-        }
-      }
-    },
-    "/api/perfil/completar": {
-      "post": {
-        "tags": [
-          "Perfil"
-        ],
-        "summary": "Completar perfil após cadastro",
-        "description": "Recebe dados complementares (documento, endereço) e um arquivo de documento via `multipart/form-data`. Coloca o usuário em status `EM_ANALISE` aguardando aprovação do admin.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/CompletarPerfilInput"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Perfil atualizado com sucesso",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MensagemSucesso"
-                },
-                "example": {
-                  "message": "Perfil atualizado com sucesso!"
                 }
               }
             }
           },
           "400": {
-            "description": "Dados obrigatórios ausentes",
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Erro"
-                },
-                "example": {
-                  "error": "Dados obrigatórios incompletos"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Muitas tentativas; veja o cabeçalho Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
                 }
               }
             }
           },
           "500": {
-            "$ref": "#/components/responses/ErroInterno"
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Sai da conta",
+        "description": "Apaga o cookie da sessão.",
+        "responses": {
+          "200": {
+            "description": "Sessão encerrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mensagem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Quem está logado agora",
+        "description": "Nome e situação da conta vêm do banco (não do token), então refletem aprovação e troca de nome.",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sessão atual.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessaoAtual"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
           }
         }
       }
@@ -234,59 +271,77 @@
         "tags": [
           "Perfil"
         ],
-        "summary": "Buscar dados do usuário logado",
-        "description": "Retorna os dados completos do produtor ou mercado com base no e-mail. O tipo de usuário (`tipoUser`) é incluído na resposta.",
+        "summary": "Dados da própria conta",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "email",
             "in": "query",
-            "required": true,
+            "required": false,
+            "description": "Aceito só por compatibilidade com apps antigos; precisa ser o e-mail da própria sessão.",
             "schema": {
               "type": "string",
-              "format": "email"
-            },
-            "example": "fazenda@email.com"
+              "example": "maria@exemplo.com"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Dados do usuário",
+            "description": "Dados do produtor ou mercado (sem senha nem link do documento).",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UsuarioCompleto"
+                  "$ref": "#/components/schemas/PerfilCompleto"
                 }
               }
             }
           },
-          "400": {
-            "description": "E-mail não informado",
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Erro"
-                },
-                "example": {
-                  "error": "Email não informado"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
                 }
               }
             }
           },
           "404": {
-            "description": "Usuário não encontrado",
+            "description": "Não encontrado.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Erro"
-                },
-                "example": {
-                  "error": "Usuário não encontrado"
                 }
               }
             }
           },
           "500": {
-            "$ref": "#/components/responses/ErroInterno"
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
           }
         }
       },
@@ -294,47 +349,96 @@
         "tags": [
           "Perfil"
         ],
-        "summary": "Atualizar dados e senha do usuário",
-        "description": "Atualiza dados de contato e endereço. Se `novaSenha` for informada, a senha de acesso também é alterada.",
+        "summary": "Altera dados e/ou senha",
+        "description": "Só os campos editáveis entram. Para trocar a senha é obrigatório enviar `senhaAtual` (5 erros em 15 min travam). Dados e senha são gravados juntos ou nenhum.",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AtualizarPerfilInput"
-              },
-              "example": {
-                "email": "fazenda@email.com",
-                "tipoUser": "produtor",
-                "nomeFantasia": "Fazenda Boa Vista",
-                "telefone": "15999990000",
-                "cep": "18000-000",
-                "rua": "Estrada Rural",
-                "numero": "100",
-                "bairro": "Zona Rural",
-                "cidade": "Sorocaba",
-                "estado": "SP",
-                "novaSenha": "NovaSenha@456"
+                "$ref": "#/components/schemas/PerfilInput"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Perfil atualizado com sucesso",
+            "description": "Perfil atualizado.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MensagemSucesso"
-                },
-                "example": {
-                  "message": "Perfil atualizado com sucesso!"
+                  "$ref": "#/components/schemas/Mensagem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Muitas tentativas; veja o cabeçalho Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
                 }
               }
             }
           },
           "500": {
-            "$ref": "#/components/responses/ErroInterno"
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
           }
         }
       },
@@ -342,62 +446,88 @@
         "tags": [
           "Perfil"
         ],
-        "summary": "Excluir própria conta",
-        "description": "Remove permanentemente o perfil e o acesso de login do usuário. Pode falhar se houver pedidos vinculados.",
+        "summary": "Exclui a própria conta",
+        "description": "Apaga login e perfil numa transação e o cookie. Responde 409 se houver pedidos ou ofertas ligados.",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "email",
             "in": "query",
-            "required": true,
+            "required": false,
+            "description": "Aceito só por compatibilidade com apps antigos; precisa ser o e-mail da própria sessão.",
             "schema": {
               "type": "string",
-              "format": "email"
-            },
-            "example": "fazenda@email.com"
+              "example": "maria@exemplo.com"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Conta excluída com sucesso",
+            "description": "Conta excluída.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MensagemSucesso"
-                },
-                "example": {
-                  "message": "Conta excluída com sucesso!"
+                  "$ref": "#/components/schemas/Mensagem"
                 }
               }
             }
           },
-          "400": {
-            "description": "E-mail não informado",
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Erro"
-                },
-                "example": {
-                  "error": "Email não informado"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
                 }
               }
             }
           },
           "404": {
-            "description": "Usuário não encontrado",
+            "description": "Não encontrado.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Erro"
-                },
-                "example": {
-                  "error": "Usuário não encontrado"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito com o estado atual.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
                 }
               }
             }
           },
           "500": {
-            "$ref": "#/components/responses/ErroInterno"
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
           }
         }
       }
@@ -407,399 +537,67 @@
         "tags": [
           "Produtor"
         ],
-        "summary": "Buscar perfil do produtor",
-        "description": "Retorna os dados do produtor (vendedor) pelo e-mail.",
+        "summary": "Resumo do produtor logado",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "email",
             "in": "query",
-            "required": true,
+            "required": false,
+            "description": "Aceito só por compatibilidade com apps antigos; precisa ser o e-mail da própria sessão.",
             "schema": {
               "type": "string",
-              "format": "email"
-            },
-            "example": "fazenda@email.com"
+              "example": "maria@exemplo.com"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Dados do produtor",
+            "description": "Nome, status, telefone, cidade e estado.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Vendedor"
+                  "$ref": "#/components/schemas/ResumoProdutor"
                 }
               }
             }
           },
-          "400": {
-            "description": "E-mail não fornecido",
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Erro"
-                },
-                "example": {
-                  "error": "E-mail não fornecido"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
                 }
               }
             }
           },
           "500": {
-            "$ref": "#/components/responses/ErroInterno"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Produtor"
-        ],
-        "summary": "Upload de documento do produtor",
-        "description": "Recebe um arquivo de documento via `multipart/form-data`, salva em `/uploads/docs/` e atualiza o status do produtor para `A_ANALISE`.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "email",
-                  "file"
-                ],
-                "properties": {
-                  "email": {
-                    "type": "string",
-                    "format": "email"
-                  },
-                  "file": {
-                    "type": "string",
-                    "format": "binary",
-                    "description": "Arquivo do documento (PDF, imagem, etc.)"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Documento enviado com sucesso",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MensagemSucesso"
-                },
-                "example": {
-                  "message": "Documento enviado com sucesso!"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Dados ou arquivo faltando",
+            "description": "Erro interno (sem detalhes).",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Erro"
-                },
-                "example": {
-                  "error": "Dados ou arquivo faltando"
                 }
               }
             }
-          },
-          "500": {
-            "$ref": "#/components/responses/ErroInterno"
-          }
-        }
-      }
-    },
-    "/api/produtor/ofertas": {
-      "post": {
-        "tags": [
-          "Produtor"
-        ],
-        "summary": "Registrar oferta em uma demanda",
-        "description": "O produtor oferta uma quantidade de produto para atender uma demanda aberta do mercado. Se a oferta completar a demanda, ela é fechada automaticamente com status `CONCLUIDA`.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OfertaInput"
-              },
-              "example": {
-                "demandaId": "clxyz123",
-                "quantidade": 50,
-                "emailProdutor": "fazenda@email.com"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Oferta registrada com sucesso",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MensagemSucesso"
-                },
-                "example": {
-                  "message": "Sua oferta foi registrada com sucesso!"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Dados incompletos, demanda já concluída ou quantidade excedida",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                },
-                "examples": {
-                  "incompleto": {
-                    "value": {
-                      "error": "Dados incompletos"
-                    }
-                  },
-                  "concluida": {
-                    "value": {
-                      "error": "Este pedido já foi totalmente atendido."
-                    }
-                  },
-                  "excedido": {
-                    "value": {
-                      "error": "O mercado só precisa de mais 30 Kg deste item."
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Demanda não encontrada",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                },
-                "example": {
-                  "error": "Demanda não encontrada"
-                }
-              }
-            }
-          },
-          "500": {
-            "$ref": "#/components/responses/ErroInterno"
-          }
-        }
-      }
-    },
-    "/api/mercado/demandas": {
-      "get": {
-        "tags": [
-          "Mercado"
-        ],
-        "summary": "Listar todas as demandas",
-        "description": "Retorna todas as demandas cadastradas, incluindo as ofertas vinculadas a cada uma. Ordenadas da mais recente para a mais antiga.",
-        "responses": {
-          "200": {
-            "description": "Lista de demandas com ofertas",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DemandaComOfertas"
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "$ref": "#/components/responses/ErroInterno"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Mercado"
-        ],
-        "summary": "Disparar novas demandas (pedido do mercado)",
-        "description": "Cria uma ou mais demandas a partir do carrinho do mercado. Cada item do carrinho vira uma demanda independente com status `ABERTA`.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DemandaInput"
-              },
-              "example": {
-                "emailMercado": "mercado@email.com",
-                "carrinho": [
-                  {
-                    "nome": "Tomate",
-                    "qtd": 100,
-                    "unidade": "Kg",
-                    "precoEstimado": 7.5
-                  },
-                  {
-                    "nome": "Alface",
-                    "qtd": 50,
-                    "unidade": "Kg",
-                    "precoEstimado": 12.0
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Demandas disparadas com sucesso",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MensagemSucesso"
-                },
-                "example": {
-                  "message": "Demandas disparadas com sucesso!"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Dados inválidos ou carrinho vazio",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                },
-                "example": {
-                  "error": "Dados inválidos ou carrinho vazio"
-                }
-              }
-            }
-          },
-          "500": {
-            "$ref": "#/components/responses/ErroInterno"
-          }
-        }
-      }
-    },
-    "/api/mercado/perfil": {
-      "get": {
-        "tags": [
-          "Mercado"
-        ],
-        "summary": "Buscar perfil do mercado",
-        "description": "Retorna os dados do mercado (cliente) pelo e-mail.",
-        "parameters": [
-          {
-            "name": "email",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "email"
-            },
-            "example": "mercado@email.com"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Dados do mercado",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Cliente"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "E-mail não fornecido",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                },
-                "example": {
-                  "error": "E-mail não fornecido"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Mercado não encontrado",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                },
-                "example": {
-                  "error": "Mercado não encontrado"
-                }
-              }
-            }
-          },
-          "500": {
-            "$ref": "#/components/responses/ErroInterno"
-          }
-        }
-      }
-    },
-    "/api/mercado/avaliar": {
-      "patch": {
-        "tags": [
-          "Mercado"
-        ],
-        "summary": "Avaliar entrega de uma oferta",
-        "description": "O mercado confirma o recebimento de uma entrega e registra uma nota de 1 a 5. A oferta passa para o status `ENTREGUE`.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AvaliacaoInput"
-              },
-              "example": {
-                "ofertaId": "clxyz456",
-                "nota": 5
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Avaliação registrada com sucesso",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MensagemSucesso"
-                },
-                "example": {
-                  "message": "Recebimento e avaliação registrados com sucesso!"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Dados incompletos para avaliação",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                },
-                "example": {
-                  "error": "Dados incompletos para avaliação"
-                }
-              }
-            }
-          },
-          "500": {
-            "$ref": "#/components/responses/ErroInterno"
           }
         }
       }
@@ -809,11 +607,21 @@
         "tags": [
           "Produtos"
         ],
-        "summary": "Listar catálogo de produtos",
-        "description": "Retorna a lista fixa de produtos disponíveis na plataforma (frutas, verduras e legumes), com preço estimado e unidade padrão.",
+        "summary": "Catálogo oficial",
+        "description": "Quem não é administrador só vê produtos ativos. O administrador pode pedir todos com `?todos=1`.",
+        "parameters": [
+          {
+            "name": "todos",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "1"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Lista de produtos",
+            "description": "Lista de produtos.",
             "content": {
               "application/json": {
                 "schema": {
@@ -821,25 +629,1933 @@
                   "items": {
                     "$ref": "#/components/schemas/Produto"
                   }
-                },
-                "example": [
-                  {
-                    "cdProduto": 1,
-                    "nome": "Maçã Gala",
-                    "icone": "🍎",
-                    "unidadePadrao": "Kg",
-                    "categoria": "Frutas",
-                    "preco": 8.5
-                  },
-                  {
-                    "cdProduto": 2,
-                    "nome": "Laranja Pera",
-                    "icone": "🍊",
-                    "unidadePadrao": "Kg",
-                    "categoria": "Frutas",
-                    "preco": 4.2
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Produtos"
+        ],
+        "summary": "Cadastra produto (admin)",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ProdutoInput"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProdutoInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Produto criado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Produto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Produtos"
+        ],
+        "summary": "Edita, ativa ou desativa produto (admin)",
+        "description": "Com foto nova, a antiga só é apagada depois de gravar. `status`: ATIVO ou INATIVO (outros valores são ignorados).",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ProdutoInput"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProdutoInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Produto atualizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Produto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Produtos"
+        ],
+        "summary": "Apaga produto (admin)",
+        "description": "Sem ligações, apaga de vez. Com produtor ou pedido ligado, só desativa e devolve `desativado: true`.",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Produto apagado ou desativado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "desativado": {
+                      "type": "boolean"
+                    }
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/produtor/meus-produtos": {
+      "get": {
+        "tags": [
+          "Produtor"
+        ],
+        "summary": "Produtos do catálogo do produtor",
+        "description": "Sem `detalhes`: lista de ids. Com `detalhes=1`: [{ cdProduto, preco }].",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "description": "Aceito só por compatibilidade com apps antigos; precisa ser o e-mail da própria sessão.",
+            "schema": {
+              "type": "string",
+              "example": "maria@exemplo.com"
+            }
+          },
+          {
+            "name": "detalhes",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "1"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ids ou detalhes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "integer"
+                      }
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "cdProduto": {
+                            "type": "integer"
+                          },
+                          "preco": {
+                            "type": "number",
+                            "nullable": true
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Produtor"
+        ],
+        "summary": "Salva o catálogo do produtor",
+        "description": "Sincroniza: o que não vier na lista sai do catálogo dele.",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "produtos": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "cdProduto": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "preco": {
+                          "type": "number",
+                          "example": 5.9
+                        }
+                      },
+                      "required": [
+                        "cdProduto"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Catálogo salvo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mensagem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/produtor/ofertas": {
+      "get": {
+        "tags": [
+          "Produtor"
+        ],
+        "summary": "Mural de pedidos do produtor",
+        "description": "Pedidos abertos dos produtos do catálogo dele, o que ele já ofertou e um resumo. Não mostra e-mail de mercado nem de outros produtores.",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mural.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mural"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Produtor"
+        ],
+        "summary": "Garante uma quantidade de um pedido",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "demandaId": {
+                    "type": "string",
+                    "example": "c1x..."
+                  },
+                  "quantidade": {
+                    "type": "number",
+                    "example": 30
+                  }
+                },
+                "required": [
+                  "demandaId",
+                  "quantidade"
                 ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Oferta registrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mensagem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/produtor/sugestao": {
+      "get": {
+        "tags": [
+          "Produtor"
+        ],
+        "summary": "Lista sugestões de produto (admin)",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sugestões.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sugestao"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Produtor"
+        ],
+        "summary": "Sugere um produto novo",
+        "description": "Multipart com nome, descrição, preço por kg e foto opcional. O e-mail é o da sessão.",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nomeProduto": {
+                    "type": "string",
+                    "example": "Pitaya"
+                  },
+                  "descricao": {
+                    "type": "string"
+                  },
+                  "precoSugerido": {
+                    "type": "string",
+                    "example": "12,50"
+                  },
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "nomeProduto"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Sugestão enviada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mensagem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Produtor"
+        ],
+        "summary": "Apaga uma sugestão (admin)",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Apagada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mensagem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/produtor/balancas": {
+      "get": {
+        "tags": [
+          "Balanças"
+        ],
+        "summary": "Balanças do produtor",
+        "description": "Todas as vinculadas e qual está conectada. É o contrato `ScaleState` do app mobile.",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estado das balanças.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoBalancas"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Balanças"
+        ],
+        "summary": "Vincula uma balança",
+        "description": "Balança livre exige o `codigo` da etiqueta (HMAC do MAC). Código errado e balança inexistente respondem igual (404). Já sendo do produtor, só a deixa conectada. 5 erros em 15 min travam.",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "deviceId": {
+                    "type": "string",
+                    "example": "A4:CF:12:9B:07:E1"
+                  },
+                  "codigo": {
+                    "type": "string",
+                    "example": "K7M2-Q9XT"
+                  }
+                },
+                "required": [
+                  "deviceId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Balança vinculada e conectada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BalancaVinculada"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito com o estado atual.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Muitas tentativas; veja o cabeçalho Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/produtor/balancas/{id}": {
+      "patch": {
+        "tags": [
+          "Balanças"
+        ],
+        "summary": "Renomeia (apelido)",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Endereço MAC da balança (A4:CF:12:9B:07:E1 ou só os 12 caracteres).",
+            "schema": {
+              "type": "string",
+              "example": "A4:CF:12:9B:07:E1"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "apelido": {
+                    "type": "string",
+                    "example": "Balança do galpão"
+                  }
+                },
+                "required": [
+                  "apelido"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Balança atualizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BalancaVinculada"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Balanças"
+        ],
+        "summary": "Desvincula",
+        "description": "Libera a balança e apaga o histórico de pesagens dela.",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Endereço MAC da balança (A4:CF:12:9B:07:E1 ou só os 12 caracteres).",
+            "schema": {
+              "type": "string",
+              "example": "A4:CF:12:9B:07:E1"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Removida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mensagem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/produtor/balancas/{id}/conectada": {
+      "put": {
+        "tags": [
+          "Balanças"
+        ],
+        "summary": "Escolhe qual balança está em uso",
+        "description": "Só uma fica conectada por produtor (garantido por índice único no banco).",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Endereço MAC da balança (A4:CF:12:9B:07:E1 ou só os 12 caracteres).",
+            "schema": {
+              "type": "string",
+              "example": "A4:CF:12:9B:07:E1"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conectada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mensagem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/produtor/balancas/{id}/leitura": {
+      "get": {
+        "tags": [
+          "Balanças"
+        ],
+        "summary": "Peso ao vivo",
+        "description": "O app consulta a cada ~500 ms. `kg` é null quando a balança está offline (sem contato há mais de 15 s). Nunca vem do cache.",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Endereço MAC da balança (A4:CF:12:9B:07:E1 ou só os 12 caracteres).",
+            "schema": {
+              "type": "string",
+              "example": "A4:CF:12:9B:07:E1"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Última leitura.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeituraAoVivo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mercado/perfil": {
+      "get": {
+        "tags": [
+          "Mercado"
+        ],
+        "summary": "Dados do mercado logado",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "description": "Aceito só por compatibilidade com apps antigos; precisa ser o e-mail da própria sessão.",
+            "schema": {
+              "type": "string",
+              "example": "maria@exemplo.com"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Perfil do mercado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PerfilMercado"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mercado/demandas": {
+      "get": {
+        "tags": [
+          "Mercado"
+        ],
+        "summary": "Cotações do mercado logado",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pedidos com as ofertas recebidas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Pedido"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Mercado"
+        ],
+        "summary": "Dispara uma cotação",
+        "description": "Manda só `{ id, qtd }`: nome, unidade e preço de referência o servidor busca no catálogo. 400 se algum produto saiu do catálogo.",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "carrinho": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "qtd": {
+                          "type": "integer",
+                          "example": 50
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "qtd"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "carrinho"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Pedidos criados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mensagem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mercado/avaliar": {
+      "patch": {
+        "tags": [
+          "Mercado"
+        ],
+        "summary": "Confirma o recebimento e avalia o produtor",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ofertaId": {
+                    "type": "string",
+                    "example": "c1x..."
+                  },
+                  "nota": {
+                    "type": "integer",
+                    "example": 5
+                  }
+                },
+                "required": [
+                  "ofertaId",
+                  "nota"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Entrega confirmada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mensagem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito com o estado atual.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mercado/cancelar": {
+      "patch": {
+        "tags": [
+          "Mercado"
+        ],
+        "summary": "Cancela um pedido",
+        "description": "Vale em até 7 dias úteis após o pedido e só se nada foi entregue. Fora do prazo responde 422 com `prazoExpirado`, `diasPassados` e `prazoMaximo`.",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "demandaId": {
+                    "type": "string",
+                    "example": "c1x..."
+                  },
+                  "motivo": {
+                    "type": "string",
+                    "example": "Estoque já abastecido"
+                  }
+                },
+                "required": [
+                  "demandaId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cancelado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "reembolso": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Regra de negócio não atendida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
               }
             }
           }
@@ -851,11 +2567,18 @@
         "tags": [
           "Admin"
         ],
-        "summary": "Listar todos os usuários",
-        "description": "Retorna todos os produtores e mercados cadastrados, ordenados por nome. Cada item inclui o campo `tipo` indicando se é `produtor` ou `mercado`.",
+        "summary": "Lista produtores, mercados e administradores",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Lista de todos os usuários",
+            "description": "Usuários.",
             "content": {
               "application/json": {
                 "schema": {
@@ -867,90 +2590,279 @@
               }
             }
           },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
           "500": {
-            "$ref": "#/components/responses/ErroInterno"
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
           }
-        },
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ]
+        }
       },
       "put": {
         "tags": [
           "Admin"
         ],
-        "summary": "Atualizar status de um usuário",
-        "description": "Aprova, rejeita, suspende ou reativa um produtor ou mercado. Atualiza tanto a tabela do perfil quanto a tabela de acesso. Em caso de aprovação ou rejeição, dispara e-mail via microsserviço.",
+        "summary": "Aprova, rejeita ou suspende",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AtualizarStatusInput"
-              },
-              "example": {
-                "email": "fazenda@email.com",
-                "tipo": "produtor",
-                "novoStatus": "APROVADO"
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "tipo": {
+                    "type": "string",
+                    "example": "produtor"
+                  },
+                  "novoStatus": {
+                    "type": "string",
+                    "example": "APROVADO"
+                  },
+                  "motivo": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email",
+                  "tipo",
+                  "novoStatus"
+                ]
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Status atualizado com sucesso",
+            "description": "Status alterado.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MensagemSucesso"
-                },
-                "example": {
-                  "message": "Status alterado para APROVADO"
+                  "$ref": "#/components/schemas/Mensagem"
                 }
               }
             }
           },
           "400": {
-            "description": "Dados inválidos",
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Erro"
-                },
-                "example": {
-                  "error": "Dados inválidos"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
                 }
               }
             }
           },
           "500": {
-            "$ref": "#/components/responses/ErroInterno"
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
           }
-        },
+        }
+      },
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Corrige nome, telefone, cidade ou estado",
         "security": [
           {
             "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
           }
-        ]
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "tipo": {
+                    "type": "string",
+                    "example": "mercado"
+                  },
+                  "nomeFantasia": {
+                    "type": "string"
+                  },
+                  "telefone": {
+                    "type": "string"
+                  },
+                  "cidade": {
+                    "type": "string"
+                  },
+                  "estado": {
+                    "type": "string",
+                    "example": "SP"
+                  }
+                },
+                "required": [
+                  "email",
+                  "tipo"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Atualizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mensagem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
       },
       "delete": {
         "tags": [
           "Admin"
         ],
-        "summary": "Excluir usuário permanentemente",
-        "description": "Remove o perfil e o acesso de login do usuário. Pode falhar caso existam pedidos vinculados.",
+        "summary": "Exclui uma conta",
+        "description": "409 se houver pedidos ou itens ligados: suspenda em vez de excluir.",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "email",
             "in": "query",
             "required": true,
             "schema": {
-              "type": "string",
-              "format": "email"
-            },
-            "example": "fazenda@email.com"
+              "type": "string"
+            }
           },
           {
             "name": "tipo",
@@ -958,60 +2870,943 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": [
-                "produtor",
-                "mercado"
-              ]
-            },
-            "example": "produtor"
+              "example": "produtor"
+            }
+          },
+          {
+            "name": "motivo",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Usuário excluído com sucesso",
+            "description": "Excluído.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MensagemSucesso"
-                },
-                "example": {
-                  "message": "Usuário excluído com sucesso"
+                  "$ref": "#/components/schemas/Mensagem"
                 }
               }
             }
           },
           "400": {
-            "description": "Dados inválidos",
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Erro"
-                },
-                "example": {
-                  "error": "Dados inválidos"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito com o estado atual.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
                 }
               }
             }
           },
           "500": {
-            "description": "Erro interno — pode haver pedidos vinculados",
+            "description": "Erro interno (sem detalhes).",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/novo-admin": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Cria outro administrador",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "senha": {
+                    "type": "string",
+                    "example": "Raiz@2026!"
+                  }
                 },
-                "example": {
-                  "error": "Erro ao excluir. Pode haver pedidos vinculados."
+                "required": [
+                  "email",
+                  "senha"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Administrador criado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mensagem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito com o estado atual.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/promover-sugestao": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Transforma uma sugestão em produto",
+        "description": "Cria o produto e apaga a sugestão numa transação. Os campos ajustados valem; o que faltar vem da sugestão.",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "idSugestao": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "nome": {
+                    "type": "string"
+                  },
+                  "tipo": {
+                    "type": "string",
+                    "example": "Frutas"
+                  },
+                  "preco": {
+                    "type": "string",
+                    "example": "12,50"
+                  },
+                  "unidadePadrao": {
+                    "type": "string",
+                    "example": "Kg"
+                  }
+                },
+                "required": [
+                  "idSugestao"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Produto criado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mensagem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/balancas": {
+      "get": {
+        "tags": [
+          "Balanças (admin)"
+        ],
+        "summary": "Lista todas as balanças",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Balanças com código da etiqueta, vínculo e estado online.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BalancaAdmin"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Balanças (admin)"
+        ],
+        "summary": "Cadastra uma balança",
+        "description": "Devolve o `segredo` UMA vez (o banco guarda só o hash). Grave no firmware do ESP32; para ver outro, gere um novo.",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "deviceId": {
+                    "type": "string",
+                    "example": "A4:CF:12:9B:07:E1"
+                  },
+                  "nome": {
+                    "type": "string",
+                    "example": "Balança 01"
+                  }
+                },
+                "required": [
+                  "deviceId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Balança cadastrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "balanca": {
+                      "$ref": "#/components/schemas/BalancaAdmin"
+                    },
+                    "segredo": {
+                      "type": "string",
+                      "example": "rc_..."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito com o estado atual.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/balancas/{id}": {
+      "patch": {
+        "tags": [
+          "Balanças (admin)"
+        ],
+        "summary": "Libera a balança do produtor",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Endereço MAC da balança (A4:CF:12:9B:07:E1 ou só os 12 caracteres).",
+            "schema": {
+              "type": "string",
+              "example": "A4:CF:12:9B:07:E1"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "liberar": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                },
+                "required": [
+                  "liberar"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Liberada (histórico apagado).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BalancaAdmin"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Balanças (admin)"
+        ],
+        "summary": "Remove a balança",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Endereço MAC da balança (A4:CF:12:9B:07:E1 ou só os 12 caracteres).",
+            "schema": {
+              "type": "string",
+              "example": "A4:CF:12:9B:07:E1"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Removida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mensagem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/balancas/{id}/segredo": {
+      "post": {
+        "tags": [
+          "Balanças (admin)"
+        ],
+        "summary": "Gera um novo segredo",
+        "description": "O segredo anterior deixa de valer na hora.",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Endereço MAC da balança (A4:CF:12:9B:07:E1 ou só os 12 caracteres).",
+            "schema": {
+              "type": "string",
+              "example": "A4:CF:12:9B:07:E1"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Novo segredo (mostrado uma vez).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "segredo": {
+                      "type": "string",
+                      "example": "rc_..."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/iot/config": {
+      "get": {
+        "tags": [
+          "IoT"
+        ],
+        "summary": "Configuração do módulo",
+        "description": "Chamado pelo ESP32 ao ligar. Devolve a hora do servidor e os intervalos de envio. Toda falha de autenticação responde o mesmo 401.",
+        "security": [
+          {
+            "DeviceAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Device-Id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "A4:CF:12:9B:07:E1"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Configuração.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "hora": {
+                      "type": "integer",
+                      "example": 1761600000000
+                    },
+                    "vinculada": {
+                      "type": "boolean"
+                    },
+                    "intervaloAtivoMs": {
+                      "type": "integer",
+                      "example": 500
+                    },
+                    "intervaloOciosoMs": {
+                      "type": "integer",
+                      "example": 5000
+                    },
+                    "lote": {
+                      "type": "integer",
+                      "example": 10
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/iot/leituras": {
+      "post": {
+        "tags": [
+          "IoT"
+        ],
+        "summary": "Envia leituras de peso",
+        "description": "Até 50 leituras por envio (0–500 kg). Só leituras estáveis e que mudaram (≥ 0,005 kg) de balança vinculada entram no histórico (90 dias). Lista vazia vale como “estou vivo”.",
+        "security": [
+          {
+            "DeviceAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Device-Id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "A4:CF:12:9B:07:E1"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "firmware": {
+                    "type": "string",
+                    "example": "1.0.0"
+                  },
+                  "leituras": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "kg": {
+                          "type": "number",
+                          "example": 12.34
+                        },
+                        "estavel": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "t": {
+                          "type": "integer",
+                          "example": 1761600000000
+                        }
+                      },
+                      "required": [
+                        "kg"
+                      ]
+                    }
+                  }
                 }
               }
             }
           }
         },
-        "security": [
-          {
-            "BearerAuth": []
+        "responses": {
+          "200": {
+            "description": "Recebido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "hora": {
+                      "type": "integer"
+                    },
+                    "vinculada": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
           }
-        ]
+        }
       }
     },
     "/api/setup-admin": {
@@ -1019,114 +3814,173 @@
         "tags": [
           "Utilitários"
         ],
-        "summary": "Criar Super Admin inicial",
-        "description": "Cria o primeiro usuário administrador no banco de dados caso ainda não exista. **Use apenas na configuração inicial do ambiente.**",
+        "summary": "Cria o primeiro administrador",
+        "description": "Usa ADMIN_SENHA_INICIAL (obrigatória). Só cria se ainda não existir administrador.",
         "responses": {
           "200": {
-            "description": "Admin criado ou já existente",
+            "description": "Administrador criado ou já existente.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    },
-                    "login": {
-                      "type": "string"
-                    },
-                    "senha": {
-                      "type": "string"
-                    }
-                  }
-                },
-                "examples": {
-                  "criado": {
-                    "value": {
-                      "message": "✅ Super Admin criado com sucesso! Agora você pode fazer login pela tela normal.",
-                      "login": "admin@raizconecta.com.br",
-                      "senha": "Admin@123"
-                    }
-                  },
-                  "jaExiste": {
-                    "value": {
-                      "message": "O Admin já existe no banco de dados!",
-                      "login": "admin@raizconecta.com.br"
-                    }
-                  }
+                  "$ref": "#/components/schemas/Mensagem"
                 }
               }
             }
           },
           "500": {
-            "$ref": "#/components/responses/ErroInterno"
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
           }
         }
       }
     }
   },
   "components": {
-    "schemas": {
-      "MensagemSucesso": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string"
-          }
-        }
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Token do login (app mobile)."
       },
+      "CookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "token",
+        "description": "Cookie httpOnly gravado pelo login (site)."
+      },
+      "DeviceAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization",
+        "description": "`Device <segredo>` — o segredo mostrado uma vez ao cadastrar a balança."
+      }
+    },
+    "schemas": {
       "Erro": {
         "type": "object",
         "properties": {
           "error": {
-            "type": "string"
+            "type": "string",
+            "example": "Mensagem pronta para mostrar à pessoa"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "Mensagem": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Operação concluída."
           }
         }
       },
       "CadastroInput": {
         "type": "object",
-        "required": [
-          "tipoUsuario",
-          "nome",
-          "email",
-          "senha"
-        ],
         "properties": {
           "tipoUsuario": {
             "type": "string",
+            "example": "produtor",
             "enum": [
               "produtor",
               "mercado"
             ]
           },
           "nome": {
-            "type": "string"
+            "type": "string",
+            "example": "Fazenda São João"
           },
           "email": {
             "type": "string",
-            "format": "email"
+            "example": "maria@exemplo.com"
           },
           "senha": {
             "type": "string",
-            "minLength": 6
+            "example": "Raiz@2026!"
+          },
+          "telefone": {
+            "type": "string",
+            "example": "(14) 99999-9999"
+          },
+          "tipoDoc": {
+            "type": "string",
+            "example": "CPF",
+            "enum": [
+              "CPF",
+              "CNPJ"
+            ]
+          },
+          "documento": {
+            "type": "string",
+            "example": "12345678901"
+          },
+          "cep": {
+            "type": "string",
+            "example": "18110000"
+          },
+          "rua": {
+            "type": "string"
+          },
+          "numero": {
+            "type": "string",
+            "example": "12"
+          },
+          "bairro": {
+            "type": "string"
+          },
+          "cidade": {
+            "type": "string",
+            "example": "Votorantim"
+          },
+          "estado": {
+            "type": "string",
+            "example": "SP"
+          },
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "description": "Foto ou PDF do documento (JPG, PNG, WebP, HEIC ou PDF, até 5 MB)."
           }
-        }
+        },
+        "required": [
+          "tipoUsuario",
+          "nome",
+          "email",
+          "senha",
+          "tipoDoc",
+          "documento",
+          "cep",
+          "rua",
+          "numero",
+          "cidade",
+          "estado",
+          "file"
+        ]
       },
       "LoginInput": {
         "type": "object",
-        "required": [
-          "email",
-          "senha"
-        ],
         "properties": {
           "email": {
             "type": "string",
-            "format": "email"
+            "example": "maria@exemplo.com"
           },
           "senha": {
             "type": "string"
           }
-        }
+        },
+        "required": [
+          "email",
+          "senha"
+        ]
       },
       "LoginResponse": {
         "type": "object",
@@ -1134,45 +3988,96 @@
           "message": {
             "type": "string"
           },
-          "tipoUser": {
+          "token": {
             "type": "string",
+            "example": "eyJhbGciOi..."
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string"
+              },
+              "tipoUser": {
+                "type": "string",
+                "example": "produtor",
+                "enum": [
+                  "produtor",
+                  "mercado",
+                  "admin"
+                ]
+              },
+              "nome": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "example": "APROVADO",
+                "enum": [
+                  "APROVADO",
+                  "EM_ANALISE"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "SessaoAtual": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "example": "produtor",
             "enum": [
               "produtor",
               "mercado",
               "admin"
             ]
+          },
+          "nome": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "example": "APROVADO",
+            "enum": [
+              "APROVADO",
+              "EM_ANALISE",
+              "REJEITADO",
+              "SUSPENSO"
+            ]
           }
         }
       },
-      "CompletarPerfilInput": {
+      "PerfilCompleto": {
         "type": "object",
-        "required": [
-          "email",
-          "tipoUsuario",
-          "documento",
-          "cep"
-        ],
         "properties": {
           "email": {
-            "type": "string",
-            "format": "email"
+            "type": "string"
           },
-          "tipoUsuario": {
+          "tipoUser": {
             "type": "string",
-            "enum": [
-              "produtor",
-              "mercado"
-            ]
+            "example": "produtor"
+          },
+          "nomeFantasia": {
+            "type": "string"
+          },
+          "telefone": {
+            "type": "string"
           },
           "tipoDoc": {
             "type": "string",
-            "description": "Tipo do documento (CPF, CNPJ, etc.)"
+            "example": "CPF"
           },
           "documento": {
             "type": "string"
           },
           "cep": {
-            "type": "string"
+            "type": "string",
+            "example": "18110000"
           },
           "rua": {
             "type": "string"
@@ -1187,41 +4092,28 @@
             "type": "string"
           },
           "estado": {
-            "type": "string"
-          },
-          "file": {
             "type": "string",
-            "format": "binary",
-            "description": "Arquivo do documento comprobatório"
+            "example": "SP"
+          },
+          "status": {
+            "type": "string",
+            "example": "APROVADO"
           }
         }
       },
-      "AtualizarPerfilInput": {
+      "PerfilInput": {
         "type": "object",
-        "required": [
-          "email",
-          "tipoUser"
-        ],
         "properties": {
-          "email": {
-            "type": "string",
-            "format": "email"
-          },
-          "tipoUser": {
-            "type": "string",
-            "enum": [
-              "produtor",
-              "mercado"
-            ]
-          },
           "nomeFantasia": {
             "type": "string"
           },
           "telefone": {
-            "type": "string"
+            "type": "string",
+            "example": "(14) 99999-9999"
           },
           "cep": {
-            "type": "string"
+            "type": "string",
+            "example": "18110-000"
           },
           "rua": {
             "type": "string"
@@ -1236,15 +4128,19 @@
             "type": "string"
           },
           "estado": {
+            "type": "string",
+            "example": "SP"
+          },
+          "senhaAtual": {
             "type": "string"
           },
           "novaSenha": {
             "type": "string",
-            "description": "Deixar vazio para não alterar a senha"
+            "example": "Raiz@2026!"
           }
         }
       },
-      "UsuarioCompleto": {
+      "ResumoProdutor": {
         "type": "object",
         "properties": {
           "email": {
@@ -1253,10 +4149,39 @@
           "nomeFantasia": {
             "type": "string"
           },
+          "status": {
+            "type": "string"
+          },
           "telefone": {
             "type": "string"
           },
-          "cep": {
+          "cidade": {
+            "type": "string"
+          },
+          "estado": {
+            "type": "string"
+          }
+        }
+      },
+      "PerfilMercado": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "nomeFantasia": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "telefone": {
+            "type": "string"
+          },
+          "cidade": {
+            "type": "string"
+          },
+          "estado": {
             "type": "string"
           },
           "rua": {
@@ -1268,176 +4193,251 @@
           "bairro": {
             "type": "string"
           },
-          "cidade": {
+          "cep": {
             "type": "string"
-          },
-          "estado": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "EM_ANALISE",
-              "APROVADO",
-              "REJEITADO",
-              "SUSPENSO"
-            ]
-          },
-          "tipoUser": {
-            "type": "string",
-            "enum": [
-              "produtor",
-              "mercado",
-              "admin"
-            ]
-          },
-          "urlDocumento": {
-            "type": "string",
-            "nullable": true
           }
         }
       },
-      "Vendedor": {
+      "Produto": {
         "type": "object",
         "properties": {
-          "email": {
+          "cdProduto": {
+            "type": "integer",
+            "example": 1
+          },
+          "nome": {
+            "type": "string",
+            "example": "Maçã Fuji"
+          },
+          "tipo": {
+            "type": "string",
+            "example": "Frutas",
+            "enum": [
+              "Frutas",
+              "Verduras",
+              "Legumes",
+              "Grãos",
+              "Outros"
+            ]
+          },
+          "preco": {
+            "type": "number",
+            "example": 5.9
+          },
+          "unidadePadrao": {
+            "type": "string",
+            "example": "Kg",
+            "enum": [
+              "Kg",
+              "Unidade",
+              "Maço",
+              "Caixa"
+            ]
+          },
+          "descricao": {
             "type": "string"
           },
-          "nomeFantasia": {
+          "imagemUrl": {
             "type": "string"
           },
           "status": {
             "type": "string",
+            "example": "ATIVO",
             "enum": [
-              "EM_ANALISE",
-              "APROVADO",
-              "REJEITADO",
-              "A_ANALISE",
-              "SUSPENSO"
+              "ATIVO",
+              "INATIVO"
             ]
-          },
-          "urlDocumento": {
-            "type": "string",
-            "nullable": true
-          },
-          "telefone": {
-            "type": "string",
-            "nullable": true
-          },
-          "cep": {
-            "type": "string",
-            "nullable": true
-          },
-          "cidade": {
-            "type": "string",
-            "nullable": true
-          },
-          "estado": {
-            "type": "string",
-            "nullable": true
           }
         }
       },
-      "Cliente": {
+      "ProdutoInput": {
         "type": "object",
         "properties": {
-          "email": {
-            "type": "string"
+          "id": {
+            "type": "integer",
+            "example": 1
           },
-          "nomeFantasia": {
+          "nome": {
+            "type": "string",
+            "example": "Maçã Fuji"
+          },
+          "tipo": {
+            "type": "string",
+            "example": "Frutas"
+          },
+          "preco": {
+            "type": "string",
+            "example": "5,90"
+          },
+          "unidadePadrao": {
+            "type": "string",
+            "example": "Kg"
+          },
+          "descricao": {
             "type": "string"
           },
           "status": {
             "type": "string",
+            "example": "ATIVO",
             "enum": [
-              "EM_ANALISE",
-              "APROVADO",
-              "REJEITADO",
-              "SUSPENSO"
+              "ATIVO",
+              "INATIVO"
             ]
           },
-          "urlDocumento": {
+          "file": {
             "type": "string",
-            "nullable": true
-          },
-          "telefone": {
-            "type": "string",
-            "nullable": true
-          },
-          "cep": {
-            "type": "string",
-            "nullable": true
-          },
-          "cidade": {
-            "type": "string",
-            "nullable": true
-          },
-          "estado": {
-            "type": "string",
-            "nullable": true
+            "format": "binary"
           }
-        }
-      },
-      "OfertaInput": {
-        "type": "object",
+        },
         "required": [
-          "demandaId",
-          "quantidade",
-          "emailProdutor"
-        ],
+          "nome",
+          "preco"
+        ]
+      },
+      "Sugestao": {
+        "type": "object",
         "properties": {
-          "demandaId": {
-            "type": "string",
-            "description": "ID da demanda (gerado pelo banco)"
-          },
-          "quantidade": {
-            "type": "number"
+          "id": {
+            "type": "integer"
           },
           "emailProdutor": {
+            "type": "string"
+          },
+          "nomeProduto": {
+            "type": "string"
+          },
+          "descricao": {
+            "type": "string"
+          },
+          "imagemUrl": {
+            "type": "string"
+          },
+          "precoSugerido": {
+            "type": "number"
+          },
+          "criadoEm": {
             "type": "string",
-            "format": "email"
+            "example": "2026-10-27T12:00:00.000Z"
           }
         }
       },
-      "DemandaInput": {
+      "Pedido": {
         "type": "object",
-        "required": [
-          "emailMercado",
-          "carrinho"
-        ],
         "properties": {
-          "emailMercado": {
+          "id": {
             "type": "string",
-            "format": "email"
+            "example": "c1x..."
           },
-          "carrinho": {
+          "produto": {
+            "type": "string",
+            "example": "Tomate"
+          },
+          "quantidade": {
+            "type": "number",
+            "example": 100
+          },
+          "unidade": {
+            "type": "string",
+            "example": "Kg"
+          },
+          "precoMedio": {
+            "type": "number",
+            "example": 6.5
+          },
+          "status": {
+            "type": "string",
+            "example": "ABERTA",
+            "enum": [
+              "ABERTA",
+              "CONCLUIDA",
+              "CANCELADA"
+            ]
+          },
+          "criadoEm": {
+            "type": "string",
+            "example": "2026-10-27T12:00:00.000Z"
+          },
+          "garantido": {
+            "type": "number",
+            "example": 60
+          },
+          "percentual": {
+            "type": "integer",
+            "example": 60
+          },
+          "ofertas": {
             "type": "array",
             "items": {
               "type": "object",
-              "required": [
-                "nome",
-                "qtd"
-              ],
               "properties": {
-                "nome": {
+                "id": {
                   "type": "string"
                 },
-                "qtd": {
+                "quantidade": {
                   "type": "number"
                 },
-                "unidade": {
+                "status": {
+                  "type": "string"
+                },
+                "statusEntrega": {
                   "type": "string",
-                  "default": "Kg"
+                  "example": "PENDENTE",
+                  "enum": [
+                    "PENDENTE",
+                    "ENTREGUE"
+                  ]
                 },
-                "precoEstimado": {
-                  "type": "number"
+                "nota": {
+                  "type": "integer",
+                  "nullable": true
+                },
+                "produtor": {
+                  "type": "string",
+                  "example": "Sítio Bom"
                 }
               }
             }
           }
         }
       },
-      "DemandaComOfertas": {
+      "Mural": {
+        "type": "object",
+        "properties": {
+          "mural": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MuralItem"
+            }
+          },
+          "minhas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MuralItem"
+            }
+          },
+          "resumo": {
+            "type": "object",
+            "properties": {
+              "paraResponder": {
+                "type": "integer"
+              },
+              "ofertasFeitas": {
+                "type": "integer"
+              },
+              "quilosGarantidos": {
+                "type": "number"
+              },
+              "receitaEstimada": {
+                "type": "number"
+              }
+            }
+          },
+          "produtosNoCatalogo": {
+            "type": "integer"
+          }
+        }
+      },
+      "MuralItem": {
         "type": "object",
         "properties": {
           "id": {
@@ -1453,104 +4453,31 @@
             "type": "string"
           },
           "precoMedio": {
-            "type": "number",
-            "nullable": true
-          },
-          "emailMercado": {
-            "type": "string"
+            "type": "number"
           },
           "status": {
             "type": "string",
+            "example": "ABERTA",
             "enum": [
               "ABERTA",
               "CONCLUIDA"
             ]
           },
-          "criadoEm": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "ofertas": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Oferta"
-            }
-          }
-        }
-      },
-      "Oferta": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "quantidade": {
+          "atendido": {
             "type": "number"
           },
-          "emailProdutor": {
-            "type": "string"
+          "faltante": {
+            "type": "number"
           },
-          "demandaId": {
-            "type": "string"
-          },
-          "statusEntrega": {
-            "type": "string",
-            "enum": [
-              "PENDENTE",
-              "ENTREGUE"
-            ],
-            "nullable": true
-          },
-          "nota": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 5,
-            "nullable": true
-          }
-        }
-      },
-      "AvaliacaoInput": {
-        "type": "object",
-        "required": [
-          "ofertaId",
-          "nota"
-        ],
-        "properties": {
-          "ofertaId": {
-            "type": "string"
-          },
-          "nota": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 5
-          }
-        }
-      },
-      "Produto": {
-        "type": "object",
-        "properties": {
-          "cdProduto": {
+          "percentual": {
             "type": "integer"
           },
-          "nome": {
+          "criadoEm": {
             "type": "string"
           },
-          "icone": {
-            "type": "string"
-          },
-          "unidadePadrao": {
-            "type": "string"
-          },
-          "categoria": {
-            "type": "string",
-            "enum": [
-              "Frutas",
-              "Verduras",
-              "Legumes"
-            ]
-          },
-          "preco": {
-            "type": "number"
+          "minhaQuantidade": {
+            "type": "number",
+            "nullable": true
           }
         }
       },
@@ -1564,80 +4491,140 @@
             "type": "string"
           },
           "status": {
-            "type": "string",
-            "enum": [
-              "EM_ANALISE",
-              "APROVADO",
-              "REJEITADO",
-              "SUSPENSO",
-              "A_ANALISE"
-            ]
+            "type": "string"
           },
           "tipo": {
             "type": "string",
+            "example": "produtor",
             "enum": [
               "produtor",
-              "mercado"
+              "mercado",
+              "admin"
             ]
           },
-          "urlDocumento": {
+          "telefone": {
+            "type": "string"
+          },
+          "cidade": {
+            "type": "string"
+          },
+          "estado": {
+            "type": "string"
+          },
+          "criadoEm": {
+            "type": "string"
+          }
+        }
+      },
+      "BalancaVinculada": {
+        "type": "object",
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "example": "A4:CF:12:9B:07:E1"
+          },
+          "deviceName": {
+            "type": "string",
+            "example": "Balança 01"
+          },
+          "nickname": {
+            "type": "string",
+            "nullable": true
+          },
+          "key": {
+            "type": "string",
+            "example": "RC-1a2b3c4d5e6f7a8b9c0d"
+          },
+          "linkedAt": {
+            "type": "string",
+            "example": "2026-10-27T12:00:00.000Z"
+          }
+        }
+      },
+      "EstadoBalancas": {
+        "type": "object",
+        "properties": {
+          "scales": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BalancaVinculada"
+            }
+          },
+          "activeDeviceId": {
             "type": "string",
             "nullable": true
           }
         }
       },
-      "AtualizarStatusInput": {
+      "LeituraAoVivo": {
         "type": "object",
-        "required": [
-          "email",
-          "tipo",
-          "novoStatus"
-        ],
         "properties": {
-          "email": {
-            "type": "string",
-            "format": "email"
+          "online": {
+            "type": "boolean"
           },
-          "tipo": {
-            "type": "string",
-            "enum": [
-              "produtor",
-              "mercado"
-            ]
+          "kg": {
+            "type": "number",
+            "nullable": true
           },
-          "novoStatus": {
-            "type": "string",
-            "enum": [
-              "APROVADO",
-              "REJEITADO",
-              "SUSPENSO",
-              "ATIVO"
-            ]
+          "estavel": {
+            "type": "boolean"
+          },
+          "em": {
+            "type": "integer",
+            "nullable": true
+          },
+          "agora": {
+            "type": "integer"
           }
         }
-      }
-    },
-    "responses": {
-      "ErroInterno": {
-        "description": "Erro interno no servidor",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Erro"
-            },
-            "example": {
-              "error": "Erro interno no servidor"
-            }
+      },
+      "BalancaAdmin": {
+        "type": "object",
+        "properties": {
+          "deviceId": {
+            "type": "string"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "codigo": {
+            "type": "string",
+            "example": "K7M2-Q9XT"
+          },
+          "emailProdutor": {
+            "type": "string",
+            "nullable": true
+          },
+          "apelido": {
+            "type": "string",
+            "nullable": true
+          },
+          "conectada": {
+            "type": "boolean"
+          },
+          "online": {
+            "type": "boolean"
+          },
+          "firmware": {
+            "type": "string",
+            "nullable": true
+          },
+          "ultimoContato": {
+            "type": "string",
+            "nullable": true
+          },
+          "ultimoKg": {
+            "type": "number",
+            "nullable": true
+          },
+          "vinculadaEm": {
+            "type": "string",
+            "nullable": true
+          },
+          "criadoEm": {
+            "type": "string"
           }
         }
-      }
-    },
-    "securitySchemes": {
-      "BearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT",
-        "description": "Token JWT obtido via POST /api/auth/login. Obrigatório para endpoints /api/admin/*."
       }
     }
   }

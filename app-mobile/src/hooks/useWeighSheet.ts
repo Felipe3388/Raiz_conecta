@@ -7,6 +7,7 @@ import { judgeWeight, parseKg, roundKg, toleranceFor } from "@/lib/delivery/weig
 import { minimumAlert, type MinimumAlert } from "@/content/deliveryTexts";
 import type { Delivery, WeigherRole, WeighingInput, WeighingSource } from "@/types/delivery";
 import { useScale } from "./useScale";
+import { useOptionalScaleLink } from "./useScaleLink";
 
 interface Options {
   visible: boolean;
@@ -27,7 +28,9 @@ export function useWeighSheet({ visible, delivery, role, onRegister, keepScaleBe
   const [isSaving, setIsSaving] = useState(false);
   // Depois de registrar um lote, a balança precisa esvaziar antes do próximo (o mesmo lote não conta duas vezes).
   const [locked, setLocked] = useState(false);
-  const scale = useScale(visible && source === "BALANCA");
+  // A balança conectada da conta (a de verdade consulta o servidor por ela).
+  const connectedDeviceId = useOptionalScaleLink()?.link?.deviceId ?? null;
+  const scale = useScale(visible && source === "BALANCA", undefined, connectedDeviceId);
 
   // Cada vez que a folha abre, ou que se passa para outro produto do pedido, recomeça limpa, com a balança vazia.
   const deliveryId = delivery?.id ?? null;

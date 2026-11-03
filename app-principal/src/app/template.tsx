@@ -1,9 +1,11 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { MotionConfig, motion } from "framer-motion";
 
 export default function Template({ children }: { children: React.ReactNode }) {
+    // reducedMotion="user": quem pediu menos movimento no sistema não vê os deslizes (a opacidade continua).
     return (
+        <MotionConfig reducedMotion="user">
         <motion.div
             // 1. ESTADO INICIAL: A página começa invisível e 10 pixels para baixo
             initial={{ opacity: 0, y: 10 }}
@@ -19,5 +21,6 @@ export default function Template({ children }: { children: React.ReactNode }) {
         >
             {children}
         </motion.div>
+        </MotionConfig>
     );
 }

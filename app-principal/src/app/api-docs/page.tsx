@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import swaggerSpec from '@/swagger.json';
 import ReactSwagger from './ReactSwagger';
 
@@ -19,7 +18,7 @@ export default function ApiDocsPage() {
         </div>
       </div>
       <div className="p-8 max-w-5xl mx-auto">
-        <ReactSwagger spec={swaggerSpec as Record<string, any>} />
+        <ReactSwagger spec={swaggerSpec as Record<string, unknown>} />
       </div>
     </section>
   );

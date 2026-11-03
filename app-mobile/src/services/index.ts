@@ -8,6 +8,8 @@ import { getTokenStorage } from "@/lib/storage";
 import type { AssistantGateway } from "./AssistantGateway";
 import { ApiCatalogService } from "./ApiCatalogService";
 import { ApiProfileService } from "./ApiProfileService";
+import { ApiScaleLinkService } from "./ApiScaleLinkService";
+import { ApiScaleService } from "./ApiScaleService";
 import type { AuthGateway } from "./AuthGateway";
 import { AuthService } from "./authService";
 import type { CatalogGateway } from "./CatalogGateway";
@@ -61,9 +63,9 @@ export function getCepService(): CepGateway {
   return cepService;
 }
 
-// Área do Produtor. Catálogo, sugestão de produto e Meu Perfil já têm API no app-principal e trocam de simulado para
-// real pelo EXPO_PUBLIC_USE_MOCKS. O resto (propostas com preço fixo, entregas e pesagem, preços, balança) ainda não
-// existe no site e continua simulado, mesmo com a API ligada (ver ARQUITETURA.md).
+// Área do Produtor. Catálogo, sugestão de produto, Meu Perfil e a balança (vínculo e peso ao vivo) já têm API no
+// app-principal e trocam de simulado para real pelo EXPO_PUBLIC_USE_MOCKS. O resto (propostas com preço fixo, entregas e
+// pesagem, preços) ainda não existe no site e continua simulado, mesmo com a API ligada (ver ARQUITETURA.md).
 export function getCatalogService(): CatalogGateway {
   if (!catalogService) {
     const mock = new MockCatalogService({
@@ -104,15 +106,15 @@ export function getDeliveryService(): DeliveryGateway {
   return deliveryService;
 }
 
-// A balança do produtor. Hoje é simulada; o módulo ESP32 entra aqui quando existir.
+// O peso da balança do produtor: simulado, ou o do módulo ESP32 que o servidor recebe (consultado a cada 0,5 s).
 export function getScaleService(): ScaleGateway {
-  scaleService ??= new MockScaleService();
+  scaleService ??= env.useMocks ? new MockScaleService() : new ApiScaleService(getApiClient());
   return scaleService;
 }
 
-// O vínculo da balança com o produtor (chave do par produtor + balança). Hoje é simulado.
+// O vínculo da balança com o produtor (chave do par produtor + balança): simulado ou o do servidor.
 export function getScaleLinkService(): ScaleLinkGateway {
-  scaleLinkService ??= new MockScaleLinkService();
+  scaleLinkService ??= env.useMocks ? new MockScaleLinkService() : new ApiScaleLinkService(getApiClient());
   return scaleLinkService;
 }
 
@@ -129,8 +131,8 @@ export type { CatalogGateway } from "./CatalogGateway";
 export type { CepGateway, CepLookup } from "./CepGateway";
 export type { DeliveryGateway } from "./DeliveryGateway";
 export type { PriceResponse, PricingGateway } from "./PricingGateway";
-export type { ProfileGateway } from "./ProfileGateway";
+export type { PasswordChange, ProfileGateway } from "./ProfileGateway";
 export type { ProposalGateway } from "./ProposalGateway";
 export type { ScaleLinkGateway } from "./ScaleLinkGateway";
 export type { RegistrationGateway } from "./RegistrationGateway";
-export type { ScaleConnection, ScaleGateway, ScaleReading, ScaleSimulator } from "./ScaleGateway";
+export type { ScaleConnection, ScaleGateway, ScaleReading, ScaleSimulator, SubscribeOptions } from "./ScaleGateway";

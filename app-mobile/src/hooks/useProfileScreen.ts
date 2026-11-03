@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { maskCep, maskPhone } from "@/lib/format/masks";
+import { ApiError } from "@/lib/http/ApiError";
 import { validateProfileEdit } from "@/lib/validation/profileEdit";
 import { getProfileService, type ProfileGateway } from "@/services";
 import type { EditableProfile, ProducerProfile } from "@/types/produtor";
@@ -9,6 +10,11 @@ import { useToast } from "./useToast";
 import { useUndo } from "./useUndo";
 
 type LoadStatus = "loading" | "ready" | "error";
+
+// A API explica o motivo (senha atual errada, pedidos vinculados...): isso vale mais do que um aviso genérico.
+function serverReason(error: unknown): string | undefined {
+  return error instanceof ApiError && error.message ? error.message : undefined;
+}
 
 const EMPTY_FORM: EditableProfile = {
   nomeFantasia: "",
@@ -39,6 +45,7 @@ export function useProfileScreen(
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [profile, setProfile] = useState<ProducerProfile | null>(null);
   const [form, setForm] = useState<EditableProfile>(EMPTY_FORM);
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isConfirmingSave, setIsConfirmingSave] = useState(false);
@@ -75,7 +82,7 @@ export function useProfileScreen(
   }
 
   function requestSave() {
-    const message = validateProfileEdit(form, newPassword, confirmPassword);
+    const message = validateProfileEdit(form, newPassword, confirmPassword, currentPassword);
     if (message) toast.show("warning", message);
     else setIsConfirmingSave(true);
   }
@@ -85,9 +92,14 @@ export function useProfileScreen(
     try {
       const before = profile ? editableFrom(profile) : null;
       const changedPassword = newPassword !== "";
-      const updated = await gateway.updateProfile(email, form, newPassword || undefined);
+      const updated = await gateway.updateProfile(
+        email,
+        form,
+        changedPassword ? { current: currentPassword, next: newPassword } : undefined,
+      );
       setProfile(updated);
       onNameChanged(updated.nomeFantasia);
+      setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
       // A senha antiga não é guardada, então só dá para desfazer quando a senha não mudou.
@@ -105,8 +117,8 @@ export function useProfileScreen(
       } else {
         toast.show("success", "Perfil atualizado com sucesso!");
       }
-    } catch {
-      toast.show("error", "Erro ao atualizar os dados.");
+    } catch (error) {
+      toast.show("error", "Erro ao atualizar os dados.", serverReason(error));
     } finally {
       setIsSaving(false);
       setIsConfirmingSave(false);
@@ -119,8 +131,12 @@ export function useProfileScreen(
       await gateway.deleteAccount(email);
       toast.show("success", "Conta excluída. Sentiremos sua falta!");
       await signOut();
-    } catch {
-      toast.show("error", "Não foi possível excluir a conta.", "Pode haver histórico de pedidos vinculados a ela.");
+    } catch (error) {
+      toast.show(
+        "error",
+        "Não foi possível excluir a conta.",
+        serverReason(error) ?? "Pode haver histórico de pedidos vinculados a ela.",
+      );
       setIsConfirmingDelete(false);
     } finally {
       setIsDeleting(false);
@@ -132,6 +148,8 @@ export function useProfileScreen(
     profile,
     form,
     setField,
+    currentPassword,
+    setCurrentPassword,
     newPassword,
     setNewPassword,
     confirmPassword,

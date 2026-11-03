@@ -20,6 +20,7 @@ const NOT_FOUND = "Não encontramos essa balança. Ligue-a e procure de novo.";
 const NOT_YOURS = "Essa balança não está na sua conta.";
 
 export class MockScaleLinkService implements ScaleLinkGateway {
+  readonly discovery = "scan" as const;
   private readonly devices: ScaleDevice[];
   private readonly latencyMs: number;
   private readonly now: () => Date;

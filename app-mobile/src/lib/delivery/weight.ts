@@ -49,6 +49,13 @@ export function acceptedRange(expected: number, tolerance: Tolerance): WeightRan
   };
 }
 
+// Quanto o limite de cima passa do pedido, em % inteira ou com uma casa (2 = "±2%"). É o que a tela mostra como
+// "tolerância": o limite de baixo pode ser menor que isso nos pedidos pequenos (nunca abaixo de 1 kg).
+export function tolerancePercent(expected: number, range: WeightRange): number {
+  if (expected <= 0) return 0;
+  return Math.round((range.maxKg / expected - 1) * 1000) / 10;
+}
+
 export type WeightVerdict = "SEM_PESO" | "ABAIXO" | "NA_FAIXA" | "ACIMA";
 
 export interface WeightJudgement {

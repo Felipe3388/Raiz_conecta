@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId } from "react";
 
 interface SelectOption {
   value: string;
@@ -17,11 +17,14 @@ const accentRing = {
   blue:  "focus:ring-blue-500",
 };
 
-export function Select({ label, options, accent = "green", className = "", ...props }: SelectProps) {
+export function Select({ label, options, accent = "green", className = "", id, ...props }: SelectProps) {
+  const generated = useId();
+  const selectId = id ?? generated;
   return (
     <div className="space-y-1.5 w-full">
-      {label && <label className="text-sm font-semibold text-gray-700 block">{label}</label>}
+      {label && <label htmlFor={selectId} className="text-sm font-semibold text-gray-700 block">{label}</label>}
       <select
+        id={selectId}
         className={`rc-select focus:ring-2 ${accentRing[accent]} ${className}`}
         {...props}
       >

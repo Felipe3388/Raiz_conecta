@@ -12,14 +12,20 @@ export interface ScaleSimulator {
   clear(): void;
 }
 
-// A balança do produtor. Hoje só existe a simulada (MockScaleService). O módulo de verdade será um ESP32 com célula
-// de carga, e entra aqui sem mexer nas telas: ele só precisa mandar leituras em kg; saber se o peso "parou" é regra
+export interface SubscribeOptions {
+  // A balança conectada do produtor. A simulada ignora; a real (ApiScaleService) consulta o servidor por ela.
+  deviceId?: string | null;
+}
+
+// A balança do produtor: a simulada (MockScaleService) ou a real (ApiScaleService: módulo ESP32 com célula de carga que
+// manda o peso ao servidor, e o app consulta). Ela só precisa entregar leituras em kg; saber se o peso "parou" é regra
 // do app (lib/delivery/scale.ts), igual para qualquer balança.
 export interface ScaleGateway {
   // Começa a receber leituras e devolve a função que para. `onConnection` avisa se a balança conectou ou caiu.
   subscribe(
     onReading: (reading: ScaleReading) => void,
     onConnection?: (connection: ScaleConnection) => void,
+    options?: SubscribeOptions,
   ): () => void;
   // Presente só na balança simulada.
   readonly simulator?: ScaleSimulator;

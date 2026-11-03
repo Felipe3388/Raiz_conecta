@@ -18,8 +18,9 @@ interface ScaleState {
 const IDLE: ScaleState = { kg: 0, stableKg: null, connection: "connecting", spread: readingSpread([]) };
 
 // Escuta a balança enquanto `active` for verdadeiro. A decisão de "o peso parou" é da regra do app
-// (lib/delivery/scale.ts), igual para a balança simulada e para a de verdade.
-export function useScale(active: boolean, scale: ScaleGateway = getScaleService()) {
+// (lib/delivery/scale.ts), igual para a balança simulada e para a de verdade. `deviceId` é a balança conectada do
+// produtor (a de verdade consulta o servidor por ela; a simulada ignora).
+export function useScale(active: boolean, scale: ScaleGateway = getScaleService(), deviceId: string | null = null) {
   const [state, setState] = useState<ScaleState>(IDLE);
   const samples = useRef<number[]>([]);
 
@@ -37,12 +38,13 @@ export function useScale(active: boolean, scale: ScaleGateway = getScaleService(
         }));
       },
       (connection) => setState((current) => ({ ...current, connection })),
+      { deviceId },
     );
     return () => {
       stop();
       setState(IDLE);
     };
-  }, [active, scale]);
+  }, [active, scale, deviceId]);
 
   return { ...state, simulator: scale.simulator };
 }

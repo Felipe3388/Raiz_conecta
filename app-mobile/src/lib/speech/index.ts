@@ -12,5 +12,7 @@ export function getSpeaker(): Speaker {
   return speaker;
 }
 
+export { NARRATION_DELAY_MS, planNarration } from "./narration";
+export type { NarrationPlan } from "./narration";
 export { betweenPrompt, RUN_FINISHED_PROMPT, spokenKg, weighPrompt } from "./prompts";
 export type { Speaker } from "./speaker";

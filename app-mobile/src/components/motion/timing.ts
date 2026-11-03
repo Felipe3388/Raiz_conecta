@@ -10,3 +10,8 @@ const STAGGER_MAX_ITEMS = 8;
 export function staggerDelay(index: number): number {
   return Math.min(index, STAGGER_MAX_ITEMS) * STAGGER_STEP_MS;
 }
+
+// A troca de passo (StepTransition): o passo que sai leva 140 ms e o novo leva 280 ms para entrar. A voz da pesagem
+// espera esse tempo para só falar do produto depois que ele já está parado na tela.
+export const STEP_OUT_MS = 140;
+export const STEP_IN_MS = 280;

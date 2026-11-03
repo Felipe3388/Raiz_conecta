@@ -1,6 +1,6 @@
 import type { CatalogProduct, ProductSuggestion, SuggestionRecord } from "@/types/produtor";
 
-// O que as telas do Meu Catálogo precisam. Implementado pela API real (a fazer) e pelo MockCatalogService.
+// O que as telas do Meu Catálogo precisam. Implementado pela API (ApiCatalogService) e pelo MockCatalogService.
 export interface CatalogGateway {
   // GET /api/produtos
   listProducts(): Promise<CatalogProduct[]>;

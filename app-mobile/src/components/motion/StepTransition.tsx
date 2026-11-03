@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Animated, Easing } from "react-native";
-import { USE_NATIVE_DRIVER } from "./timing";
+import { STEP_IN_MS, STEP_OUT_MS, USE_NATIVE_DRIVER } from "./timing";
 import { useReducedMotion } from "./useReducedMotion";
 
-const OUT_MS = 140;
-const IN_MS = 280;
+const OUT_MS = STEP_OUT_MS;
+const IN_MS = STEP_IN_MS;
 const OUT_OFFSET = -16;
 const IN_OFFSET = 24;
 

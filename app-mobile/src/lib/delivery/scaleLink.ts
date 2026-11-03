@@ -32,3 +32,42 @@ export function cleanScaleName(text: string): string | null {
 export function scaleDisplayName(scale: { deviceName: string; nickname: string | null }): string {
   return scale.nickname ?? scale.deviceName;
 }
+
+// O endereço MAC da balança tem 12 letras/números (A4:CF:12:9B:07:E1).
+export function isValidDeviceId(deviceId: string): boolean {
+  return /^[0-9A-F]{12}$/.test(normalizeDeviceId(deviceId));
+}
+
+// Máscara enquanto a pessoa digita o endereço: "a4cf129" → "A4:CF:12:9".
+export function maskDeviceId(text: string): string {
+  const hex = text.replace(/[^0-9a-f]/gi, "").toUpperCase().slice(0, 12);
+  return hex.match(/.{1,2}/g)?.join(":") ?? "";
+}
+
+// O código da etiqueta tem 8 letras/números e aparece como K7M2-Q9XT.
+export const PAIRING_CODE_LENGTH = 8;
+
+export function normalizePairingCode(text: string): string {
+  return text.replace(/[^0-9a-z]/gi, "").toUpperCase().slice(0, PAIRING_CODE_LENGTH);
+}
+
+export function maskPairingCode(text: string): string {
+  const code = normalizePairingCode(text);
+  return code.length > 4 ? `${code.slice(0, 4)}-${code.slice(4)}` : code;
+}
+
+export function isValidPairingCode(text: string): boolean {
+  return normalizePairingCode(text).length === PAIRING_CODE_LENGTH;
+}
+
+// A etiqueta também pode vir como texto de QR Code: "RC:A4CF129B07E1:K7M2Q9XT". Devolve os dois campos, ou null se não for isso.
+export function parseLabelText(text: string): { deviceId: string; code: string } | null {
+  const match = /^RC:([0-9A-F:.\- ]+):([0-9A-Z-]+)$/i.exec(text.trim());
+  if (!match || !isValidDeviceId(match[1]) || !isValidPairingCode(match[2])) return null;
+  return { deviceId: maskDeviceId(match[1]), code: maskPairingCode(match[2]) };
+}
+
+// O nome provisório de uma balança que ainda não foi vinculada (o servidor devolve o verdadeiro ao vincular).
+export function provisionalScaleName(deviceId: string): string {
+  return `Balança ${normalizeDeviceId(deviceId).slice(-4)}`;
+}

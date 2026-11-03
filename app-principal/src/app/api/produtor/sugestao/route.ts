@@ -1,113 +1,76 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+import { emailMatches, forbiddenEmail, requireSession } from "@/lib/auth/session";
+import { fail, prismaCode, serverError, text } from "@/lib/api/http";
+import { IMAGE_TYPES, checkFile, optionalFile, removeByUrl, uploadFile } from "@/lib/media/upload";
+import { notify } from "@/lib/notify/email";
+import { parsePreco } from "@/lib/admin/produtos";
 
 // GET: Admin lê as sugestões
-export async function GET() {
+export async function GET(req: Request) {
+  const auth = await requireSession(req, ["admin"]);
+  if (auth.error) return auth.error;
+
   try {
-    const sugestoes = await prisma.sugestao.findMany({
-      orderBy: { criadoEm: "desc" },
-    });
-    return NextResponse.json(sugestoes);
+    return NextResponse.json(await prisma.sugestao.findMany({ orderBy: { criadoEm: "desc" } }));
   } catch (error) {
-    return NextResponse.json({ error: "Erro ao buscar" }, { status: 500 });
+    return serverError("sugestao.listar", error, "Erro ao buscar");
   }
 }
 
-// POST: Produtor cria a sugestão com imagem e PREÇO
+// POST: o produtor sugere um produto novo (nome, foto, descrição e preço por kg). O e-mail é o da sessão.
 export async function POST(req: Request) {
+  const auth = await requireSession(req, ["produtor"]);
+  if (auth.error) return auth.error;
+
   try {
-    const formData = await req.formData();
-    const emailProdutor = formData.get("emailProdutor") as string;
-    const nomeProduto = formData.get("nomeProduto") as string;
-    const descricao = formData.get("descricao") as string;
-    const precoSugerido = formData.get("precoSugerido") as string; // <--- NOVO
-    const file = formData.get("file") as File;
+    const form = await req.formData().catch(() => null);
+    if (!form) return fail(400, "Envie os dados da sugestão.");
+    const informado = form.get("emailProdutor");
+    if (!emailMatches(auth.session, typeof informado === "string" ? informado : null)) return forbiddenEmail();
+
+    const nomeProduto = text(form.get("nomeProduto"));
+    if (nomeProduto.length < 2 || nomeProduto.length > 80) return fail(400, "Informe o nome do produto (até 80 letras).");
+    const descricao = text(form.get("descricao")).slice(0, 500);
+    const preco = parsePreco(text(form.get("precoSugerido")));
+    const precoSugerido = Number.isFinite(preco) && preco > 0 ? Math.round(preco * 100) / 100 : null;
 
     let imagemUrl = "";
-
-    if (file && file.size > 0) {
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
-        cloudinary.uploader
-          .upload_stream(
-            { folder: "raiz-conecta/sugestoes", resource_type: "image" },
-            (error, res) => {
-              if (error || !res) return reject(error);
-              resolve(res as { secure_url: string });
-            }
-          )
-          .end(buffer);
-      });
-      imagemUrl = result.secure_url;
+    const file = optionalFile(form.get("file"));
+    if (file) {
+      const problem = checkFile(file, IMAGE_TYPES);
+      if (problem) return fail(400, problem);
+      imagemUrl = await uploadFile(file, "sugestoes");
     }
 
     await prisma.sugestao.create({
-      data: {
-        emailProdutor,
-        nomeProduto,
-        descricao,
-        imagemUrl,
-        precoSugerido: precoSugerido ? parseFloat(precoSugerido) : null // <--- SALVA NO BANCO
-      },
+      data: { emailProdutor: auth.session.email, nomeProduto, descricao, imagemUrl, precoSugerido },
     });
-
-    // Microsserviço de e-mail — só chama se URL configurada
-    if (process.env.MICROSERVICE_URL) {
-      try {
-        await fetch(`${process.env.MICROSERVICE_URL}/api/email/sugestao`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            emailProdutor,
-            nomeProduto,
-            descricao,
-            imagemUrl,
-            precoSugerido: precoSugerido || null,
-          }),
-        });
-      } catch (e) {
-        console.error("Microsserviço de e-mail indisponível.");
-      }
-    }
+    notify("sugestao", { emailProdutor: auth.session.email, nomeProduto, descricao, imagemUrl, precoSugerido });
 
     return NextResponse.json({ message: "Enviado com sucesso!" }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: "Erro no servidor" }, { status: 500 });
+    return serverError("sugestao.criar", error, "Erro no servidor");
   }
 }
 
-// DELETE: Admin apaga a sugestão (remove do Cloudinary também)
+// DELETE: Admin apaga a sugestão (e a foto dela no Cloudinary).
 export async function DELETE(req: Request) {
+  const auth = await requireSession(req, ["admin"]);
+  if (auth.error) return auth.error;
+
   try {
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
+    const id = Number(new URL(req.url).searchParams.get("id"));
+    if (!Number.isInteger(id) || id <= 0) return fail(400, "ID não informado");
 
-    const sugestao = await prisma.sugestao.findUnique({
-      where: { id: Number(id) },
-    });
+    const sugestao = await prisma.sugestao.findUnique({ where: { id } });
+    if (!sugestao) return fail(404, "Sugestão não encontrada");
 
-    if (sugestao?.imagemUrl?.includes("cloudinary.com")) {
-      try {
-        const parts = sugestao.imagemUrl.split("/");
-        const fileWithExt = parts[parts.length - 1];
-        const publicId = `raiz-conecta/sugestoes/${fileWithExt.split(".")[0]}`;
-        await cloudinary.uploader.destroy(publicId);
-      } catch (e) {
-        console.log("Aviso: imagem não removida do Cloudinary.");
-      }
-    }
-
-    await prisma.sugestao.delete({ where: { id: Number(id) } });
+    await prisma.sugestao.delete({ where: { id } });
+    await removeByUrl(sugestao.imagemUrl, "sugestoes");
     return NextResponse.json({ message: "Apagado" });
   } catch (error) {
-    return NextResponse.json({ error: "Erro" }, { status: 500 });
+    if (prismaCode(error) === "P2025") return fail(404, "Sugestão não encontrada");
+    return serverError("sugestao.apagar", error, "Erro");
   }
 }

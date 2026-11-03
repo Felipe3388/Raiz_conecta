@@ -1,131 +1,74 @@
+import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
-import { v2 as cloudinary } from "cloudinary";
+import { fail, prismaCode, serverError, text } from "@/lib/api/http";
+import { DOCUMENT_TYPES, checkFile, optionalFile, uploadFile } from "@/lib/media/upload";
+import { notify } from "@/lib/notify/email";
+import { digits, validateCadastro, type AccountType } from "@/lib/validation/cadastro";
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
+// Cadastro de produtor ou mercado (site e app). Cria o perfil e o acesso juntos, já "em análise", com a foto do
+// documento. Esta rota é aberta (ainda não há login), então valida tudo e não confia em nada do corpo.
 export async function POST(req: Request) {
   try {
-    const formData = await req.formData();
+    const form = await req.formData().catch(() => null);
+    if (!form) return fail(400, "Envie os dados do cadastro.");
 
-    const tipoUsuario    = formData.get("tipoUsuario")    as string;
-    const nome           = formData.get("nome")           as string;
-    const email          = formData.get("email")          as string;
-    const senha          = formData.get("senha")          as string;
-    const tipoDoc        = formData.get("tipoDoc")        as string;
-    const documento      = formData.get("documento")      as string;
-    const telefone       = formData.get("telefone")       as string;
-    const cep            = formData.get("cep")            as string;
-    const rua            = formData.get("rua")            as string;
-    const numero         = formData.get("numero")         as string;
-    const bairro         = formData.get("bairro")         as string;
-    const cidade         = formData.get("cidade")         as string;
-    const estado         = formData.get("estado")         as string;
-    const tipoComprovante = formData.get("tipoComprovante") as string;
-    const file           = formData.get("file")           as File;
-
-    if (!nome || !email || !senha || !tipoUsuario || !documento) {
-      return NextResponse.json(
-        { error: "Preencha todos os campos obrigatórios." },
-        { status: 400 }
-      );
-    }
-
-    if (tipoUsuario !== "produtor" && tipoUsuario !== "mercado") {
-      return NextResponse.json(
-        { error: "Tipo de perfil inválido. Selecione Produtor Rural ou Mercado." },
-        { status: 400 }
-      );
-    }
-
-    const usuarioExistente = await prisma.acesso.findFirst({
-      where: { login: email },
-    });
-    if (usuarioExistente) {
-      return NextResponse.json(
-        { error: "Este e-mail já está cadastrado." },
-        { status: 400 }
-      );
-    }
-
-    // Upload para Cloudinary (persistente no Vercel)
-    let urlDocumento = "";
-    if (file && file.size > 0) {
-      const bytes  = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
-        cloudinary.uploader
-          .upload_stream(
-            { folder: "raiz-conecta/docs", resource_type: "auto" },
-            (error, res) => {
-              if (error || !res) return reject(error);
-              resolve(res as { secure_url: string });
-            }
-          )
-          .end(buffer);
-      });
-      urlDocumento = result.secure_url;
-    }
-
-    const hashSenha = await bcrypt.hash(senha, 10);
-
-    const dadosComuns = {
-      nomeFantasia: nome,
-      email,
-      status: "EM_ANALISE",
-      tipoDoc,
-      documento,
-      telefone: telefone || null,
-      cep,
-      rua,
-      numero,
-      bairro,
-      cidade,
-      estado,
-      urlDocumento,
-      Acessos: {
-        create: {
-          login: email,
-          hash: hashSenha,
-          tipoUser: tipoUsuario === "produtor" ? "produtor" : "mercado",
-          status: "EM_ANALISE",
-        },
-      },
+    const fields = {
+      tipoUsuario: text(form.get("tipoUsuario")),
+      nome: text(form.get("nome")),
+      email: text(form.get("email")).toLowerCase(),
+      senha: typeof form.get("senha") === "string" ? (form.get("senha") as string) : "",
+      telefone: text(form.get("telefone")),
+      tipoDoc: text(form.get("tipoDoc")),
+      documento: text(form.get("documento")),
+      cep: text(form.get("cep")),
+      rua: text(form.get("rua")),
+      numero: text(form.get("numero")),
+      bairro: text(form.get("bairro")),
+      cidade: text(form.get("cidade")),
+      estado: text(form.get("estado")).toUpperCase(),
     };
 
-    if (tipoUsuario === "produtor") {
-      await prisma.vendedor.create({ data: dadosComuns });
-    } else {
-      await prisma.cliente.create({ data: dadosComuns });
-    }
+    const problem = validateCadastro(fields);
+    if (problem) return fail(400, problem);
 
-    // Microsserviço de e-mail — falha silenciosa (não quebra o cadastro)
-    if (process.env.MICROSERVICE_URL) {
-      try {
-        await fetch(`${process.env.MICROSERVICE_URL}/api/email/boas-vindas`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, nome, tipoUsuario }),
-        });
-      } catch (err) {
-        console.error("Microsserviço de e-mail indisponível:", err);
-      }
-    }
+    const file = optionalFile(form.get("file"));
+    if (!file) return fail(400, "Anexe a foto do seu documento para validação.");
+    const fileProblem = checkFile(file, DOCUMENT_TYPES);
+    if (fileProblem) return fail(400, fileProblem);
 
-    return NextResponse.json(
-      { message: "Cadastro realizado com sucesso!" },
-      { status: 201 }
-    );
+    const existing = await prisma.acesso.findFirst({ where: { login: { equals: fields.email, mode: "insensitive" } } });
+    if (existing) return fail(409, "Este e-mail já está cadastrado.");
+
+    const urlDocumento = await uploadFile(file, "docs", "auto");
+    const hash = await bcrypt.hash(fields.senha, 10);
+    const tipoUsuario = fields.tipoUsuario as AccountType;
+
+    const data = {
+      nomeFantasia: fields.nome,
+      email: fields.email,
+      status: "EM_ANALISE",
+      tipoDoc: fields.tipoDoc,
+      documento: digits(fields.documento),
+      telefone: fields.telefone || null,
+      cep: digits(fields.cep),
+      rua: fields.rua,
+      numero: fields.numero,
+      bairro: fields.bairro,
+      cidade: fields.cidade,
+      estado: fields.estado,
+      urlDocumento,
+      Acessos: { create: { login: fields.email, hash, tipoUser: tipoUsuario, status: "EM_ANALISE" } },
+    };
+
+    if (tipoUsuario === "produtor") await prisma.vendedor.create({ data });
+    else await prisma.cliente.create({ data });
+
+    notify("boas-vindas", { email: fields.email, nome: fields.nome, tipoUsuario });
+    return NextResponse.json({ message: "Cadastro realizado com sucesso!" }, { status: 201 });
   } catch (error) {
-    console.error("Erro na API de Cadastro:", error);
-    return NextResponse.json(
-      { error: "Erro interno no servidor ao tentar cadastrar." },
-      { status: 500 }
-    );
+    // Dois cadastros ao mesmo tempo com o mesmo e-mail: o banco barra o segundo.
+    if (prismaCode(error) === "P2002") return fail(409, "Este e-mail já está cadastrado.");
+    return serverError("auth.cadastro.falhou", error, "Erro interno no servidor ao tentar cadastrar.");
   }
 }

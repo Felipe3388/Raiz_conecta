@@ -9,6 +9,7 @@ import { StepTransition } from "@/components/motion/StepTransition";
 import { useAnimatedColor } from "@/components/motion/useAnimatedColor";
 import { AlertModal } from "@/components/ui/AlertModal";
 import { Button } from "@/components/ui/Button";
+import { WeighTarget } from "./WeighTarget";
 import { ConfirmationPopup } from "./ConfirmationPopup";
 import { RegisterButton } from "./RegisterButton";
 import { StabilityNotice } from "./StabilityNotice";
@@ -210,13 +211,14 @@ export function WeighRunScreen({ run }: { run: WeighRun }) {
                   ) : (
                     card && (
                       <>
-                        <View style={styles.product}>
-                          <Text style={styles.productName}>{card.delivery.produto}</Text>
-                          <Text style={styles.toWeigh}>{RUN_TEXTS.weigh(formatKg(sheet.expectedKg))}</Text>
-                          <Text style={styles.hint}>
-                            {RUN_TEXTS.accepted(formatKg(range.minKg), formatKg(range.maxKg))}
-                          </Text>
-                        </View>
+                        <WeighTarget
+                          produto={card.delivery.produto}
+                          expectedKg={sheet.expectedKg}
+                          range={range}
+                          registeredKg={card.weighedKg}
+                          pendingKg={sheet.candidate ?? 0}
+                          tone={VERDICT_TONES[sheet.judgement.verdict]}
+                        />
 
                         {sheet.source === "BALANCA" ? (
                           <Animated.View style={[styles.scale, { backgroundColor: scaleBackground }]}>
@@ -385,9 +387,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
   },
   marketName: { flex: 1, fontSize: 22, fontWeight: "700", color: colors.primaryPressed },
-  product: { gap: 4, alignItems: "center" },
-  productName: { fontSize: 38, lineHeight: 44, fontWeight: "700", color: colors.text, textAlign: "center" },
-  toWeigh: { fontSize: 24, fontWeight: "700", color: colors.textStrong },
   hint: { ...typography.hint, color: colors.textMuted, textAlign: "center" },
   scale: { alignItems: "center", gap: spacing.xs, padding: spacing.md, borderRadius: radius.lg },
   reading: { fontSize: 56, lineHeight: 64, fontWeight: "700", ...typography.numeric, color: colors.text },

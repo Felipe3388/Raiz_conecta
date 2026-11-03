@@ -1,4 +1,4 @@
-import React, { forwardRef } from "react";
+import React, { forwardRef, useId } from "react";
 import { LucideIcon } from "lucide-react";
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -9,11 +9,16 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, icon: Icon, hint, error, className = "", ...props }, ref) => {
+  ({ label, icon: Icon, hint, error, className = "", id, ...props }, ref) => {
+    const generated = useId();
+    const inputId = id ?? generated;
+    const noteId = `${inputId}-note`;
+    const note = error || hint;
+
     return (
       <div className="space-y-1.5 w-full">
         {label && (
-          <label className="text-sm font-semibold text-gray-700 block">{label}</label>
+          <label htmlFor={inputId} className="text-sm font-semibold text-gray-700 block">{label}</label>
         )}
         <div className="relative">
           {Icon && (
@@ -23,14 +28,20 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
           <input
             ref={ref}
+            id={inputId}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={note ? noteId : undefined}
             className={`w-full ${Icon ? "pl-10" : "px-4"} pr-4 py-3 rounded-xl border ${
               error ? "border-red-400 focus:ring-red-400" : "border-gray-300 focus:ring-green-500"
-            } focus:ring-2 bg-white text-sm outline-none transition-all ${className}`}
+            } focus:ring-2 bg-white text-sm outline-none transition-all disabled:bg-gray-50 disabled:text-gray-500 ${className}`}
             {...props}
           />
         </div>
-        {hint && !error && <p className="text-xs text-gray-400">{hint}</p>}
-        {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
+        {note && (
+          <p id={noteId} className={`text-xs ${error ? "text-red-500 font-medium" : "text-gray-400"}`} role={error ? "alert" : undefined}>
+            {note}
+          </p>
+        )}
       </div>
     );
   }

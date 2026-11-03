@@ -14,15 +14,23 @@ const prismaMock = vi.hoisted(() => ({
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 
-import { POST } from "./route";
+import { GET, POST } from "./route";
+import { authHeaders } from "@/test-utils/auth";
 
-function post(body: unknown) {
+// O token é do e-mail informado no corpo (ou de ana@sitio.com quando o corpo não traz e-mail).
+function post(body: unknown, headers?: Record<string, string>) {
+  const email = typeof body === "object" && body !== null && "email" in body ? String((body as { email: string }).email) : "ana@sitio.com";
   return POST(
     new Request("http://localhost/api/produtor/meus-produtos", {
       method: "POST",
+      headers: headers ?? authHeaders(email),
       body: JSON.stringify(body),
     }),
   );
+}
+
+function get(query = "", headers: Record<string, string> = authHeaders("ana@sitio.com")) {
+  return GET(new Request(`http://localhost/api/produtor/meus-produtos${query}`, { headers }));
 }
 
 beforeEach(() => {
@@ -34,11 +42,31 @@ beforeEach(() => {
 });
 
 describe("POST /api/produtor/meus-produtos", () => {
-  it("recusa requisição sem e-mail", async () => {
-    const response = await post({ produtos: [] });
+  it("recusa requisição sem token", async () => {
+    const response = await post({ email: "ana@sitio.com", produtos: [] }, {});
 
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ error: "E-mail não fornecido" });
+    expect(response.status).toBe(401);
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("recusa token de mercado e de admin", async () => {
+    const response = await post({ email: "ana@sitio.com", produtos: [] }, authHeaders("ana@sitio.com", "mercado"));
+
+    expect(response.status).toBe(403);
+  });
+
+  it("recusa gravar o catálogo de outro produtor (e-mail do corpo diferente do token)", async () => {
+    const response = await post({ email: "outra@sitio.com", produtos: [] }, authHeaders("ana@sitio.com"));
+
+    expect(response.status).toBe(403);
+    expect(prismaMock.vendedor.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("sem e-mail no corpo, usa o do token", async () => {
+    const response = await post({ produtos: [{ cdProduto: 1 }] });
+
+    expect(response.status).toBe(200);
+    expect(prismaMock.vendedor.findUnique).toHaveBeenCalledWith({ where: { email: "ana@sitio.com" } });
   });
 
   it("recusa requisição sem a lista de produtos", async () => {
@@ -139,5 +167,39 @@ describe("POST /api/produtor/meus-produtos", () => {
     const response = await post({ email: "ana@sitio.com", produtos: [] });
 
     expect(response.status).toBe(500);
+  });
+});
+
+describe("GET /api/produtor/meus-produtos", () => {
+  beforeEach(() => {
+    prismaMock.vendedor.findUnique.mockResolvedValue({
+      cdVendedor: 7,
+      Estoques: [
+        { cdProduto: 1, preco: 9.5 },
+        { cdProduto: 4, preco: null },
+      ],
+    });
+  });
+
+  it("devolve só os códigos dos produtos do catálogo", async () => {
+    const response = await get();
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual([1, 4]);
+  });
+
+  it("com ?detalhes=1 devolve também o preço de cada produto", async () => {
+    const response = await get("?detalhes=1");
+
+    expect(await response.json()).toEqual([
+      { cdProduto: 1, preco: 9.5 },
+      { cdProduto: 4, preco: null },
+    ]);
+  });
+
+  it("recusa sem token e ler o catálogo de outro produtor", async () => {
+    expect((await get("", {})).status).toBe(401);
+    expect((await get("?email=outra@sitio.com")).status).toBe(403);
+    expect((await get("?email=ANA@sitio.com")).status).toBe(200);
   });
 });

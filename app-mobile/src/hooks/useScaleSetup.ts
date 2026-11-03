@@ -1,16 +1,27 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SCALE_SETUP } from "@/content/scaleTexts";
-import { normalizeDeviceId, scaleDisplayName } from "@/lib/delivery/scaleLink";
+import {
+  isValidDeviceId,
+  isValidPairingCode,
+  maskDeviceId,
+  maskPairingCode,
+  normalizeDeviceId,
+  parseLabelText,
+  provisionalScaleName,
+  scaleDisplayName,
+} from "@/lib/delivery/scaleLink";
 import type { ScaleDevice } from "@/types/scaleLink";
 import { useScaleLink } from "./useScaleLink";
 import { useToast } from "./useToast";
 
 // Controller da tela Balança: lista as balanças do produtor (a conectada em destaque), conecta outra, remove e
-// adiciona uma nova em 2 passos (escolher a balança encontrada e confirmar).
+// adiciona uma nova em 2 passos: escolher a balança (procurando perto do celular, ou digitando os dados da etiqueta
+// quando o app usa a API) e confirmar.
 export function useScaleSetup() {
   const scale = useScaleLink();
   const toast = useToast();
   const { findDevices } = scale;
+  const mode = scale.discovery;
   const [found, setFound] = useState<ScaleDevice[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
@@ -18,6 +29,10 @@ export function useScaleSetup() {
   const [isWorking, setIsWorking] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [removing, setRemoving] = useState<string | null>(null);
+  // Dados da etiqueta (só no modo "label").
+  const [labelDevice, setLabelDevice] = useState("");
+  const [labelCode, setLabelCode] = useState("");
+  const [labelError, setLabelError] = useState<string | null>(null);
 
   const search = useCallback(async () => {
     setIsSearching(true);
@@ -36,8 +51,8 @@ export function useScaleSetup() {
   const isReady = scale.status === "ready";
   const showAdd = isReady && (isAdding || scale.scales.length === 0);
   useEffect(() => {
-    if (showAdd && !hasSearched && !isSearching) void search();
-  }, [showAdd, hasSearched, isSearching, search]);
+    if (mode === "scan" && showAdd && !hasSearched && !isSearching) void search();
+  }, [mode, showAdd, hasSearched, isSearching, search]);
 
   // As balanças que já estão na conta não aparecem de novo na busca.
   const devices = useMemo(() => {
@@ -56,13 +71,42 @@ export function useScaleSetup() {
     }
   }
 
+  // Digitar o endereço: um texto de QR Code colado ("RC:<endereço>:<código>") preenche os dois campos de uma vez.
+  function changeLabelDevice(text: string) {
+    const pasted = parseLabelText(text);
+    setLabelError(null);
+    if (pasted) {
+      setLabelDevice(pasted.deviceId);
+      setLabelCode(pasted.code);
+    } else {
+      setLabelDevice(maskDeviceId(text));
+    }
+  }
+
+  function changeLabelCode(text: string) {
+    setLabelError(null);
+    setLabelCode(maskPairingCode(text));
+  }
+
+  // Passo 1 no modo "label": confere os dados da etiqueta e segue para a confirmação.
+  function submitLabel() {
+    if (!isValidDeviceId(labelDevice)) return setLabelError(SCALE_SETUP.label.invalidDevice);
+    if (!isValidPairingCode(labelCode)) return setLabelError(SCALE_SETUP.label.invalidCode);
+    const wanted = normalizeDeviceId(labelDevice);
+    if (scale.scales.some((item) => normalizeDeviceId(item.deviceId) === wanted)) return setLabelError(SCALE_SETUP.label.alreadyYours);
+    setLabelError(null);
+    setSelected({ id: labelDevice, name: provisionalScaleName(labelDevice) });
+  }
+
   const confirm = () =>
     selected
       ? run(async () => {
-          await scale.addScale(selected.id);
+          await scale.addScale(selected.id, mode === "label" ? labelCode : undefined);
           setSelected(null);
           setIsAdding(false);
           setHasSearched(false);
+          setLabelDevice("");
+          setLabelCode("");
           toast.show("success", SCALE_SETUP.addedToast);
         })
       : Promise.resolve();
@@ -103,6 +147,17 @@ export function useScaleSetup() {
       cancel: () => {
         setIsAdding(false);
         setSelected(null);
+        setLabelError(null);
+      },
+      // "scan": escolhe entre as balanças achadas perto. "label": digita os dados da etiqueta.
+      mode,
+      label: {
+        device: labelDevice,
+        code: labelCode,
+        error: labelError,
+        changeDevice: changeLabelDevice,
+        changeCode: changeLabelCode,
+        submit: submitLabel,
       },
       // O passo em que o produtor está: 1 escolhe a balança, 2 confirma.
       step: selected ? (2 as const) : (1 as const),

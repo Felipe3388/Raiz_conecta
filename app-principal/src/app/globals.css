@@ -24,6 +24,18 @@
 @layer base {
   html { scroll-behavior: smooth; }
 
+  /* Anel de foco para quem navega pelo teclado (campos de texto têm o próprio anel verde). */
+  :where(a, button, summary, [role="tab"], [tabindex]):focus-visible {
+    outline: 2px solid #16a34a;
+    outline-offset: 2px;
+  }
+
+  /* Quem pediu menos movimento no sistema não vê animações longas nem o scroll suave. */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, ::before, ::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  }
+
   body { @apply bg-slate-50 text-slate-900 antialiased; }
 
   h1 { @apply text-2xl font-black text-gray-900 leading-tight; }
@@ -127,15 +139,9 @@
            transition-all cursor-pointer;
   }
 
-  /* ── SectionHeader ──────────────────────────────────────────── */
-  .rc-section-icon {
-    @apply p-2.5 bg-green-50 text-green-600 rounded-xl;
-  }
+  /* ── Título de seção (abas do admin) ────────────────────────── */
   .rc-section-title {
     @apply text-lg font-black text-gray-800;
-  }
-  .rc-section-subtitle {
-    @apply text-sm text-gray-500 mt-0.5;
   }
 
   /* ── InfoRow ────────────────────────────────────────────────── */
@@ -276,6 +282,6 @@
 
   /* Campo de senha — força o ícone de olho clicável */
   .rc-password-toggle {
-    @apply cursor-pointer text-gray-400 hover:text-gray-700 transition-colors;
+    @apply inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg text-gray-500 transition-colors hover:text-gray-800 focus-visible:outline-2 focus-visible:outline-green-600;
   }
 }

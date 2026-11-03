@@ -28,24 +28,39 @@ describe("validateProfileEdit", () => {
     expect(validateProfileEdit({ ...profile, ...override }, "", "")).toBe(message);
   });
 
-  it("aceita trocar a senha por uma forte e repetida igual", () => {
-    expect(validateProfileEdit(profile, "Nova@2026!", "Nova@2026!")).toBeNull();
+  it("aceita trocar a senha por uma forte e repetida igual, com a senha atual", () => {
+    expect(validateProfileEdit(profile, "Nova@2026!", "Nova@2026!", "Antiga@2025!")).toBeNull();
+  });
+
+  it("exige a senha atual para trocar a senha", () => {
+    expect(validateProfileEdit(profile, "Nova@2026!", "Nova@2026!")).toBe("Informe a senha atual para trocar a senha.");
+    expect(validateProfileEdit(profile, "Nova@2026!", "Nova@2026!", "")).toBe("Informe a senha atual para trocar a senha.");
+  });
+
+  it("recusa senha nova igual à atual", () => {
+    expect(validateProfileEdit(profile, "Nova@2026!", "Nova@2026!", "Nova@2026!")).toBe(
+      "A nova senha precisa ser diferente da atual.",
+    );
+  });
+
+  it("a senha atual sozinha não troca nada (e não é cobrada)", () => {
+    expect(validateProfileEdit(profile, "", "", "Antiga@2025!")).toBeNull();
   });
 
   it("recusa senha nova fraca", () => {
-    expect(validateProfileEdit(profile, "fraca", "fraca")).toBe(
+    expect(validateProfileEdit(profile, "fraca", "fraca", "Antiga@2025!")).toBe(
       "A nova senha deve ter mínimo 8 caracteres, letra maiúscula, minúscula, número e caractere especial (!@#$%...).",
     );
   });
 
   it("recusa senha nova que não confere com a repetição", () => {
-    expect(validateProfileEdit(profile, "Nova@2026!", "Outra@2026!")).toBe(
+    expect(validateProfileEdit(profile, "Nova@2026!", "Outra@2026!", "Antiga@2025!")).toBe(
       "As senhas não coincidem. Verifique e tente novamente.",
     );
   });
 
   it("recusa repetição preenchida sem senha nova", () => {
-    expect(validateProfileEdit(profile, "", "Nova@2026!")).toBe(
+    expect(validateProfileEdit(profile, "", "Nova@2026!", "Antiga@2025!")).toBe(
       "As senhas não coincidem. Verifique e tente novamente.",
     );
   });
