@@ -4,7 +4,7 @@ Site e API do Raiz Conecta: plataforma B2B que liga **produtores rurais** a **me
 Next.js 16 (App Router) · React 19 · TypeScript · Prisma 6 (PostgreSQL) · Tailwind 4 · Cloudinary · JWT.
 
 O app mobile do produtor (`app-mobile`) usa esta mesma API. A balança IoT (ESP32) também: ver [docs/IOT.md](docs/IOT.md).
-Como o código está organizado (camadas, kit de componentes, como criar uma tela ou rota nova): [ARQUITETURA.md](ARQUITETURA.md).
+Como o código está organizado (camadas, kit de componentes, visual, como criar uma tela ou rota nova): [ARQUITETURA.md](ARQUITETURA.md).
 
 ## Início rápido
 
@@ -52,8 +52,9 @@ Primeiro administrador: abra `/api/setup-admin` uma vez (usa `ADMIN_SENHA_INICIA
 | Área | Rota | O que tem |
 |---|---|---|
 | Administração | `/admin` | Usuários (aprovar/rejeitar/suspender/editar), produtos, sugestões, administradores e **Balanças** (cadastrar MAC, ver código da etiqueta, gerar segredo, liberar) |
-| Produtor | `/produtor` | Início, Catálogo, Ofertas, Entregas e Mais — mesma estrutura do app — mais **Meu Perfil** (`/produtor/perfil`) e **Minha balança** (`/produtor/balancas`: adicionar pela etiqueta, renomear, trocar, remover e ver o **peso ao vivo**) |
+| Produtor | `/produtor` | Início, Catálogo, Ofertas, Entregas e Mais — as telas do app adaptadas ao computador (menu lateral, Início em colunas, Ofertas em tabela) — mais **Meu Perfil** (`/produtor/perfil`) e **Minha balança** (`/produtor/balancas`: adicionar pela etiqueta, renomear, trocar, remover e ver o **peso ao vivo**) |
 | Mercado | `/catalogo`, `/checkout` | Catálogo com busca/filtros, cotação (carrinho guardado no navegador), confirmação, **Minhas cotações** (acompanhar ofertas, avaliar o produtor, cancelar em até 7 dias úteis) |
+| Página inicial | `/` | Como funciona, para quem é, a balança conectada e os ODS; quem já entrou vai ao seu painel |
 | Conta | `/perfil` (mercado), `/login`, `/completar-perfil`, `/cadastro-enviado` | Dados, endereço (CEP preenche sozinho), senha, exclusão de conta e a tela de "cadastro enviado" (olhe o e-mail) |
 
 ## API
@@ -70,8 +71,8 @@ Resumo: o módulo ESP32 envia o peso para `POST /api/iot/leituras` (credencial p
 ```
 src/
   app/            páginas e rotas (app/api/**/route.ts)
-  components/     ui/ (base), admin/, produtor/, mercado/, auth/
-  hooks/          useSession, useCart, useDialog, useSignupDraft...
+  components/     ui/ (base), brand/, landing/, admin/, produtor/, mercado/, auth/, perfil/, balanca/, forms/, legal/
+  hooks/          useSession, useCart, useScales, useLiveWeight, useProducerCatalog, useProfileForm...
   lib/            regras puras e testadas: auth, http (cliente da API), validation, format, mercado, produtor, iot, security, media
   proxy.ts        proteção de rotas e CORS (antigo middleware.ts)
 prisma/           schema, migrações e seed

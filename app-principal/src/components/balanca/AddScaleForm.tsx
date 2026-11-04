@@ -34,7 +34,7 @@ export function AddScaleForm({ busy, onAdd, onCancel }: { busy: boolean; onAdd: 
   }
 
   return (
-    <form onSubmit={submit} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 md:p-6 space-y-4" noValidate>
+    <form onSubmit={submit} className="bg-white rounded-2xl border border-gray-200 p-5 md:p-6 space-y-4" noValidate>
       <div>
         <h2 className="flex items-center gap-2 text-base"><Tag size={19} className="text-green-700" aria-hidden="true" /> Dados da etiqueta</h2>
         <p className="text-sm text-gray-500 mt-1">Estão na etiqueta colada na balança. Se tiver o QR Code, cole o texto dele no primeiro campo.</p>

@@ -1,41 +1,58 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight, Package, Radio, Scale, Smartphone } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import { ScaleWidget } from "@/components/balanca/ScaleWidget";
 import { PageHeading } from "@/components/ui/PageHeading";
 
-// Entregas e pesagem ainda dependem da balança e do app do celular: o site mostra para onde ir, sem fingir dados.
+// Do jeito que o app faz, na ordem em que acontece no dia da entrega.
+const STEPS = [
+  { title: "Abra Entregas no app", text: "Os pedidos aparecem por dia de entrega e por mercado, com o total de cada produto para separar." },
+  { title: "Toque em Iniciar pesagem", text: "O app diz o mercado e o produto, mostra o que foi pedido e a faixa aceita (2% para mais ou para menos)." },
+  { title: "Coloque o produto na balança", text: "Quando o peso fica parado 5 segundos dentro da faixa, o app registra sozinho e chama o próximo." },
+  { title: "Entregue à logística", text: "Com todos os produtos pesados, o pedido segue para a entrega. Fora da faixa, o app pede confirmação." },
+];
+
+// Entregas: a pesagem acontece no celular, perto da balança. No computador o produtor vê como funciona e acompanha
+// a balança conectada; o registro das entregas por pedido ainda não tem rota no servidor.
 export default function EntregasPage() {
   return (
     <div className="space-y-6">
-      <PageHeading title="Entregas" subtitle="Separe e pese os pedidos no dia da entrega." />
+      <PageHeading title="Entregas" subtitle="Separe e pese os pedidos no dia da entrega, pelo aplicativo." />
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8 flex flex-col md:flex-row gap-6 items-start">
-        <div className="bg-green-50 text-green-700 p-4 rounded-2xl shrink-0">
-          <Smartphone size={36} />
-        </div>
-        <div className="space-y-3">
-          <h2>A pesagem é feita no aplicativo</h2>
-          <p className="text-gray-600 leading-relaxed">
-            No dia da entrega, abra o aplicativo Raiz Conecta no celular, entre em <b>Entregas</b> e toque em{" "}
-            <b>Iniciar pesagem</b>. O app diz o que pesar, quanto o mercado pediu e a faixa aceita, e registra o peso
-            quando a balança estabiliza.
-          </p>
-          <ul className="space-y-2 text-sm text-gray-600">
-            <li className="flex items-center gap-2"><Package size={17} className="text-green-700" /> Pedidos separados por mercado e por dia de entrega</li>
-            <li className="flex items-center gap-2"><Scale size={17} className="text-green-700" /> Balança conectada ou simulador de teste</li>
-          </ul>
+      <div className="grid gap-6 xl:grid-cols-[1fr_340px]">
+        <section aria-labelledby="como-pesar" className="bg-white rounded-2xl border border-gray-200 p-6 md:p-8">
+          <h2 id="como-pesar">Como pesar um pedido</h2>
+          <ol className="mt-6 space-y-6">
+            {STEPS.map((step, index) => (
+              <li key={step.title} className="flex gap-4">
+                <span className="grid place-items-center w-9 h-9 shrink-0 rounded-full bg-green-600 text-white font-display font-bold" aria-hidden="true">{index + 1}</span>
+                <div>
+                  <h3 className="!text-base !font-bold !text-gray-900">{step.title}</h3>
+                  <p className="text-gray-600 leading-relaxed mt-0.5">{step.text}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <div className="space-y-4">
+          <div className="h-44"><ScaleWidget /></div>
+          <Link href="/produtor/balancas" className="flex items-center gap-3 bg-white rounded-2xl border border-gray-200 p-4 hover:border-green-600 transition-colors">
+            <span className="flex-1">
+              <span className="block font-bold text-gray-900">Minha balança</span>
+              <span className="block text-sm text-gray-600">Conectar, trocar ou ver o peso ao vivo</span>
+            </span>
+            <ChevronRight size={18} className="text-gray-400" aria-hidden="true" />
+          </Link>
+          <div className="hidden xl:block rounded-2xl bg-mata px-8 pt-8 overflow-hidden">
+            <div className="rounded-t-[2rem] bg-gray-950 px-2 pt-2">
+              <Image src="/landing/app-pesagem.png" alt="A tela de pesagem do app, com a faixa aceita e o peso estabilizando" width={780} height={1000} sizes="260px" className="rounded-t-[1.6rem] w-full h-auto" />
+            </div>
+          </div>
         </div>
       </div>
-
-      <Link href="/produtor/balancas" className="group bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
-        <div className="bg-green-50 text-green-700 p-3 rounded-xl shrink-0"><Radio size={24} aria-hidden="true" /></div>
-        <div className="flex-1 min-w-0">
-          <p className="font-black text-gray-900">Ver o peso ao vivo e gerenciar balanças</p>
-          <p className="text-sm text-gray-500">Em Minha balança você conecta a balança e acompanha o peso pelo computador.</p>
-        </div>
-        <ChevronRight size={20} className="text-gray-400 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
-      </Link>
     </div>
   );
 }

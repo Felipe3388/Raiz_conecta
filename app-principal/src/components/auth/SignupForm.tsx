@@ -18,17 +18,19 @@ const ACCOUNT_TYPES = [
 interface SignupFormProps {
   onOpenTerms: () => void;
   onOpenPrivacy: () => void;
+  // O tipo de conta já escolhido na página inicial ("Criar conta de mercado").
+  initialType?: "produtor" | "mercado";
 }
 
 // Passo 1 do cadastro: dados da conta. O passo 2 (documento e endereço) é em /completar-perfil, que lê estes dados da
 // memória da página (lib/auth/signupDraft): a senha não vai para nenhum storage do navegador.
-export function SignupForm({ onOpenTerms, onOpenPrivacy }: SignupFormProps) {
+export function SignupForm({ onOpenTerms, onOpenPrivacy, initialType = "produtor" }: SignupFormProps) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [accepted, setAccepted] = useState(false);
   // Quem volta do passo 2 encontra o que já tinha digitado.
   const [form, setForm] = useState(() => readSignupDraft() ?? {
-    tipoUsuario: "produtor",
+    tipoUsuario: initialType as string,
     nome: "",
     email: "",
     telefone: "",
@@ -51,7 +53,7 @@ export function SignupForm({ onOpenTerms, onOpenPrivacy }: SignupFormProps) {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-black text-gray-950 text-center">Junte-se a nós</h1>
+      <h1 className="!text-[1.75rem] !font-extrabold">Crie sua conta</h1>
 
       <form onSubmit={submit} className="space-y-5" noValidate>
         {error && <AuthError message={error} />}

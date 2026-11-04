@@ -10,12 +10,12 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeading } from "@/components/ui/PageHeading";
 import { PageLoader } from "@/components/ui/PageLoader";
 import { useConfirm } from "@/components/ui/useConfirm";
-import { useScales } from "@/hooks/useScales";
+import { useProdutor } from "@/components/produtor/ProdutorProvider";
 import { isActiveScale, scaleDisplayName } from "@/lib/iot/label";
 
 // Minha balança: as balanças do produtor e o peso ao vivo da conectada (a tela Balanças do app, na versão web).
 export default function BalancasPage() {
-  const scales = useScales();
+  const { scales } = useProdutor();
   const { confirm, dialog } = useConfirm();
   const [adding, setAdding] = useState(false);
   const { state, active } = scales;

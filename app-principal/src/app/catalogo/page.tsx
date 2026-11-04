@@ -13,6 +13,7 @@ import { PageLoader } from "@/components/ui/PageLoader";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { Select } from "@/components/ui/Select";
 import { StatusBanner } from "@/components/ui/StatusBanner";
+import { PageHeading } from "@/components/ui/PageHeading";
 import { TabNav, tabId, tabPanelId } from "@/components/ui/TabNav";
 import { useCart } from "@/hooks/useCart";
 import { logout } from "@/lib/auth/logout";
@@ -88,10 +89,7 @@ function Catalogo() {
   return (
     <div className={`rc-page ${hasCart && tab === "vitrine" ? "pb-32 lg:pb-12" : ""}`}>
       <div className="rc-container">
-        <header>
-          <h1>Olá, {perfil.nomeFantasia || "mercado"}</h1>
-          <p className="text-sm text-gray-500 mt-1">Monte uma cotação e os produtores da região respondem com ofertas.</p>
-        </header>
+        <PageHeading title={`Olá, ${perfil.nomeFantasia || "mercado"}`} subtitle="Monte uma cotação e os produtores da região respondem com ofertas." />
 
         <TabNav
           label="Áreas do mercado"
@@ -106,7 +104,7 @@ function Catalogo() {
         {tab === "vitrine" && (
           <div role="tabpanel" id={tabPanelId("vitrine")} aria-labelledby={tabId("vitrine")} className={`grid gap-8 items-start ${hasCart ? "lg:grid-cols-[minmax(0,1fr)_24rem]" : ""}`}>
             <div className="space-y-6 min-w-0">
-              <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 space-y-3">
+              <div className="bg-white p-4 rounded-2xl border border-gray-200 space-y-3">
                 <div className="grid gap-3 sm:grid-cols-[1fr_11rem_13rem]">
                   <SearchBar value={filters.query} onChange={(query) => setFilters({ ...filters, query })} placeholder="Buscar por nome..." />
                   <Select aria-label="Categoria" value={filters.category} onChange={(e) => setFilters({ ...filters, category: e.target.value })} options={categories.map((category) => ({ value: category, label: category }))} />

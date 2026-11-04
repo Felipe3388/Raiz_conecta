@@ -9,7 +9,6 @@ import { PrivacidadeModal, TermosModal } from "@/components/legal/LegalModals";
 import { useProdutor } from "@/components/produtor/ProdutorProvider";
 import { ListGroup, ListRow } from "@/components/ui/ListGroup";
 import { PageHeading } from "@/components/ui/PageHeading";
-import { useScales } from "@/hooks/useScales";
 import { logout } from "@/lib/auth/logout";
 import { scaleRowHint } from "@/lib/iot/label";
 import { SUPPORT_MESSAGE } from "@/lib/support";
@@ -17,8 +16,7 @@ import { SUPPORT_MESSAGE } from "@/lib/support";
 // Mais: a conta, a balança, os documentos e a saída, nos mesmos grupos da aba Mais do app.
 export default function MaisPage() {
   const router = useRouter();
-  const { produtor } = useProdutor();
-  const scales = useScales();
+  const { produtor, scales } = useProdutor();
   const [termos, setTermos] = useState(false);
   const [privacidade, setPrivacidade] = useState(false);
   const scaleCount = scales.state?.scales.length ?? 0;
@@ -32,7 +30,7 @@ export default function MaisPage() {
     <div className="space-y-6 max-w-2xl">
       <PageHeading title="Mais" />
 
-      <Link href="/produtor/perfil" className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
+      <Link href="/produtor/perfil" className="bg-white rounded-2xl border border-gray-200 p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
         <div className="w-14 h-14 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-xl font-black" aria-hidden="true">
           {(produtor.nomeFantasia ?? "P").trim().charAt(0).toUpperCase()}
         </div>

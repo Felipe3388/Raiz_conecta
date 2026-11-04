@@ -29,9 +29,9 @@ export function SectionCard({ title, icon: Icon, tone = "green", description, ac
 
   if (description) {
     return (
-      <section className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden ${className}`}>
-        <div className="bg-gray-50/50 p-6 md:p-8 border-b border-gray-100 flex gap-5 items-start">
-          <div className={`${look.tile} p-3.5 rounded-2xl shadow-sm shrink-0`}><Icon size={28} aria-hidden="true" /></div>
+      <section className={`bg-white rounded-2xl border border-gray-200 overflow-hidden ${className}`}>
+        <div className="p-6 md:p-8 border-b border-gray-100 flex gap-5 items-start">
+          <div className={`${look.tile} p-3.5 rounded-2xl shrink-0`}><Icon size={28} aria-hidden="true" /></div>
           <div className="flex-1 min-w-0">
             <h2>{title}</h2>
             <p className="text-gray-500 text-sm mt-1 leading-relaxed">{description}</p>
@@ -44,7 +44,7 @@ export function SectionCard({ title, icon: Icon, tone = "green", description, ac
   }
 
   return (
-    <section className={`bg-white rounded-2xl border border-gray-100 shadow-sm p-5 md:p-6 space-y-4 ${className}`}>
+    <section className={`bg-white rounded-2xl border border-gray-200 p-5 md:p-6 space-y-4 ${className}`}>
       <div className="flex items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 text-base">
           <Icon size={19} className={look.text} aria-hidden="true" /> {title}

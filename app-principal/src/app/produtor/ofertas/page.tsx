@@ -5,6 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { CheckCircle, LayoutDashboard, ListChecks, Sprout } from "lucide-react";
 import { toast } from "sonner";
 import { DemandCard } from "@/components/produtor/DemandCard";
+import { OffersTable } from "@/components/produtor/OffersTable";
+import { api } from "@/lib/http/client";
 import { useProdutor } from "@/components/produtor/ProdutorProvider";
 import { PageHeading } from "@/components/ui/PageHeading";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -27,26 +29,16 @@ function OfertasContent() {
   const filtered = list.filter((item) => normalizeText(item.produto).includes(normalizeText(search)));
 
   async function offer(item: MuralItem, quantity: number): Promise<boolean> {
-    try {
-      const res = await fetch("/api/produtor/ofertas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ demandaId: item.id, quantidade: quantity }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        toast.error(data.error || "Não foi possível registrar a oferta.");
-        // Outro produtor pode ter fechado o pedido: atualiza a lista.
-        if (res.status === 400) await reloadMural();
-        return false;
-      }
-      toast.success("Oferta registrada!", { description: "O mercado será avisado." });
-      await reloadMural();
-      return true;
-    } catch {
-      toast.error("Erro de conexão. Tente de novo.");
+    const result = await api("/api/produtor/ofertas", { method: "POST", json: { demandaId: item.id, quantidade: quantity } });
+    if (!result.ok) {
+      toast.error(result.error);
+      // Outro produtor pode ter fechado o pedido no meio do caminho: a lista é lida de novo.
+      if (result.status === 400) await reloadMural();
       return false;
     }
+    toast.success("Oferta registrada!", { description: `${quantity} ${item.unidade} de ${item.produto}. O mercado será avisado.` });
+    await reloadMural();
+    return true;
   }
 
   const tabs = [
@@ -58,8 +50,10 @@ function OfertasContent() {
     <div className="space-y-6">
       <PageHeading title="Ofertas" subtitle="Pedidos dos mercados para os produtos do seu catálogo." />
 
-      <TabNav tabs={tabs} activeTab={tab} onTabChange={setTab} className="mb-0" />
-      <SearchBar value={search} onChange={setSearch} placeholder="Buscar por produto..." className="w-full md:w-96" />
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 border-b border-gray-200">
+        <TabNav tabs={tabs} activeTab={tab} onTabChange={setTab} className="mb-0 border-b-0" />
+        <SearchBar value={search} onChange={setSearch} placeholder="Buscar por produto" className="w-full md:w-72 mb-2" />
+      </div>
 
       {tab === "responder" && produtosNoCatalogo === 0 ? (
         <EmptyState
@@ -76,11 +70,16 @@ function OfertasContent() {
           description="Volte mais tarde ou diversifique seu catálogo."
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
-          {filtered.map((item) => (
-            <DemandCard key={item.id} item={item} onOffer={tab === "responder" ? offer : undefined} />
-          ))}
-        </div>
+        <>
+          <div className="hidden lg:block">
+            <OffersTable items={filtered} mode={tab === "responder" ? "responder" : "minhas"} onOffer={offer} />
+          </div>
+          <div className="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filtered.map((item) => (
+              <DemandCard key={item.id} item={item} onOffer={tab === "responder" ? offer : undefined} />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

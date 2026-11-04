@@ -45,7 +45,7 @@ export function CartPanel({ cart, total, onSetQty, onRemove, onClear }: CartPane
               {item.imagemUrl ? (
                 <Image src={item.imagemUrl} alt="" width={40} height={40} className="w-10 h-10 object-cover rounded-full shadow-sm border border-gray-200" />
               ) : (
-                <span className="text-3xl bg-white p-2 rounded-xl shadow-sm border border-gray-100" aria-hidden="true">{categoryIcon(null)}</span>
+                <span className="text-3xl bg-white p-2 rounded-xl border border-gray-200" aria-hidden="true">{categoryIcon(null)}</span>
               )}
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-base text-gray-900 leading-tight">{item.nome}</p>
@@ -56,7 +56,7 @@ export function CartPanel({ cart, total, onSetQty, onRemove, onClear }: CartPane
               </button>
             </div>
             <div className="flex items-center justify-between bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
-              <span className="text-xs text-gray-500 font-bold ml-2 uppercase">{item.unidade}</span>
+              <span className="text-sm text-gray-600 font-semibold ml-2">{item.unidade}</span>
               <QuantityInput value={item.qtd} onChange={(qtd) => onSetQty(item.id, qtd)} min={1} max={MAX_QTD} itemName={item.nome} className="w-36 h-10 border-0 shadow-none" />
             </div>
           </li>

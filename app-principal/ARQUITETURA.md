@@ -14,7 +14,9 @@ src/
     brand/             Logo do Raiz Conecta (o mesmo desenho do app), marca "RaizConecta", folhinhas animadas.
     forms/             Blocos de formulário que se repetem (endereço com busca de CEP).
     legal/             Janela de documento (Termos, Privacidade).
+    landing/           Peças da página inicial (o pedido passando pelas três pontas, os botões de cadastro).
     auth/ admin/ mercado/ produtor/ perfil/ balanca/   Componentes de cada área.
+    SiteHeader, SiteFooter   Cabeçalho e rodapé do site público e do mercado.
   content/             Textos longos (Termos, Privacidade). Texto muda sem mexer em componente.
   hooks/               Controllers das telas: estado, chamadas à API e fluxo (useProfileForm, useScales...).
   lib/                 Regras puras e testadas (validação, máscaras, cálculos, contratos da API) e o servidor:
@@ -33,18 +35,24 @@ Regra de dependência: `app` → `components` / `hooks` → `lib`. `lib` não im
 
 | Tela | Rota | Controller / regras |
 |---|---|---|
+| Página inicial | `/` | `HeroFlow`, `LandingActions` (quem já entrou vai ao painel do seu perfil) |
 | Login e cadastro (passo 1) | `/login` | `useLoginForm`, `SignupForm`, `lib/validation/auth` |
 | Cadastro (passo 2) | `/completar-perfil` | `useCompleteSignup`, `lib/auth/signupForm`, `AddressFields` |
 | Cadastro enviado | `/cadastro-enviado` | `AccountReview` (mesma animação do app: logo, folhas, envelope) |
 | Meu perfil do mercado | `/perfil` | `useProfileForm` + `ProfileEditor`, `lib/perfil/form` |
-| Área do produtor | `/produtor/*` | `ProdutorProvider` (carrega o produtor e o mural uma vez), `ProdutorShell` (menu) |
+| Área do produtor | `/produtor/*` | `ProdutorProvider` (carrega o produtor, o mural e as balanças uma vez), `ProdutorShell` (menu lateral no computador, barra de abas no celular) |
+| Início do produtor | `/produtor` | `ScaleWidget` (peso ao vivo), `StatTile`, `lib/produtor/greeting`, `lib/produtor/dashboard` |
+| Catálogo do produtor | `/produtor/catalogo` | `useProducerCatalog`, `lib/produtor/catalogSelection` (marcar, preço por kg, sugestão) |
+| Ofertas | `/produtor/ofertas` | `OffersTable` no computador, `DemandCard` no celular; `lib/produtor/mural` |
+| Entregas | `/produtor/entregas` | Como pesar no app + `ScaleWidget` (a pesagem em si fica no celular) |
 | Meu Perfil do produtor | `/produtor/perfil` | o mesmo `useProfileForm` + `ProfileEditor` |
 | Minha balança | `/produtor/balancas` | `useScales`, `useLiveWeight`, `lib/iot/label`, `lib/iot/liveWeight` |
 | Mercado | `/catalogo`, `/checkout` | `useMercadoData`, `useCart`, `lib/mercado/*` |
 | Administração | `/admin` | `useAdminData` e uma aba por arquivo em `components/admin` |
 
-As telas do produtor têm os mesmos nomes e a mesma ordem das abas do app (`lib/produtor/nav.ts`).
-Perfil e Minha balança abrem a partir do **Mais**, como no celular (`MORE_SCREENS`).
+As telas do produtor têm os mesmos nomes das abas do app (`lib/produtor/nav.ts`), mas foram adaptadas à tela grande:
+Início em colunas, Ofertas em tabela, Entregas com o passo a passo ao lado da balança. No computador, Minha balança e
+Meu Perfil também ficam no menu lateral; no celular, abrem a partir do **Mais**, como no app (`MORE_SCREENS`).
 
 ## Kit de componentes (`components/ui`)
 
@@ -61,8 +69,18 @@ Perfil e Minha balança abrem a partir do **Mais**, como no celular (`MORE_SCREE
 | `FileDrop`, `PhotoField` | Anexar documento / escolher foto, com a conferência de tipo e tamanho |
 | `EmptyState`, `PageLoader`, `StatusBanner`, `Badge`, `TabNav`, `SearchBar`, `InfoRow`, `ProgressBar`, `StarRating` | Estados e detalhes de tela |
 
-Cores: verde (`green-*`) é a ação principal, âmbar é aviso, vermelho é perigo, azul é informação.
-Classes `.rc-*` em `app/globals.css` guardam padrões usados por vários componentes.
+## Visual
+
+- **Tokens** em `app/globals.css` (`@theme`): os cinzas são levemente esverdeados (`gray-50` #f4f7f2 a `gray-900`
+  #16231a); `green-600` #17803a é a ação principal (texto branco com contraste 5:1); `mata` #0e3b22 é o verde-escuro
+  das faixas e do rodapé; `milho` #f0b323 é reservado à balança e a destaques sobre o verde-escuro.
+- **Fontes** (`app/layout.tsx`, `next/font`): Figtree na interface e Bricolage Grotesque nos títulos (`font-display`,
+  `.rc-display-1/2/3`).
+- Âmbar é aviso, vermelho é perigo, azul é informação. Cartões usam borda (`border-gray-200`), não sombra.
+- Movimento: uma transição curta entre páginas (`app/template.tsx`) e a animação do topo da página inicial; tudo
+  respeita "reduzir movimento".
+- Classes `.rc-*` em `app/globals.css` guardam padrões usados por vários componentes (faixas, abas, tabelas,
+  estados vazios, status).
 
 ## API (rotas)
 

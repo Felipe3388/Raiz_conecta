@@ -1,16 +1,13 @@
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 
-// Um número do Painel que leva à tela dele ("Para responder", "Ofertas feitas", "No catálogo").
+// Um número que leva à tela dele ("Para responder", "Ofertas feitas", "No catálogo").
 export function StatTile({ icon: Icon, value, label, href }: { icon: LucideIcon; value: number; label: string; href: string }) {
   return (
-    <Link
-      href={href}
-      className="flex-1 min-w-0 bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col items-center gap-1 text-center transition-all hover:shadow-md hover:-translate-y-0.5"
-    >
-      <Icon size={22} className="text-green-700" />
-      <span className="text-3xl font-black text-gray-900 tabular-nums">{value}</span>
-      <span className="text-xs font-bold text-gray-500">{label}</span>
+    <Link href={href} className="min-w-0 bg-white rounded-2xl border border-gray-200 p-4 md:p-5 flex flex-col gap-2 hover:border-green-600 transition-colors">
+      <Icon size={20} className="text-green-700" aria-hidden="true" />
+      <span className="font-display text-3xl md:text-4xl font-extrabold text-gray-900 tabular-nums leading-none">{value}</span>
+      <span className="text-sm font-semibold text-gray-600 leading-tight">{label}</span>
     </Link>
   );
 }

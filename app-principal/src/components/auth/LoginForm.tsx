@@ -13,7 +13,7 @@ export function LoginForm({ onPending }: { onPending: () => void }) {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-black text-gray-950 text-center">Entrar na conta</h1>
+      <h1 className="!text-[1.75rem] !font-extrabold">Entrar na conta</h1>
 
       <form onSubmit={submit} className="space-y-5" noValidate>
         {error && <AuthError message={error} />}

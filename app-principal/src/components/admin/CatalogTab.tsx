@@ -84,7 +84,7 @@ export function CatalogTab({ products, onChanged }: CatalogTabProps) {
                     <button type="button" onClick={() => setEditing(product)} aria-label={`Editar ${name}`} className="grid h-9 w-9 place-items-center bg-white text-blue-500 hover:text-blue-700 rounded-full shadow-sm border border-blue-100">
                       <Edit2 size={14} aria-hidden="true" />
                     </button>
-                    <button type="button" onClick={() => remove(product)} aria-label={`Remover ${name}`} className="grid h-9 w-9 place-items-center bg-white text-gray-400 hover:text-red-500 rounded-full shadow-sm border border-gray-100">
+                    <button type="button" onClick={() => remove(product)} aria-label={`Remover ${name}`} className="grid h-9 w-9 place-items-center bg-white text-gray-400 hover:text-red-500 rounded-full border border-gray-200">
                       <Trash2 size={14} aria-hidden="true" />
                     </button>
                   </div>

@@ -1,11 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle } from "lucide-react";
-import { Badge } from "@/components/ui/Badge";
+import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { ProgressBar } from "@/components/ui/ProgressBar";
 import { QuantityInput } from "@/components/ui/QuantityInput";
 import { formatBRL, formatQuantity } from "@/lib/format/currency";
 import type { MuralItem } from "@/lib/produtor/mural";
@@ -16,7 +13,8 @@ interface DemandCardProps {
   onOffer?: (item: MuralItem, quantity: number) => Promise<boolean>;
 }
 
-// Um pedido de mercado: o que ele precisa, o quanto já foi garantido e, se ainda dá, quanto o produtor envia.
+// Um pedido de mercado em cartão (celular e tablet): o que ele precisa, quanto já foi garantido e, se ainda dá,
+// quanto o produtor envia. No computador a mesma informação vai numa linha da tabela (OffersTable).
 export function DemandCard({ item, onOffer }: DemandCardProps) {
   const [quantity, setQuantity] = useState(0);
   const [sending, setSending] = useState(false);
@@ -31,65 +29,43 @@ export function DemandCard({ item, onOffer }: DemandCardProps) {
   }
 
   return (
-    <Card flat className={`rc-demand-card ${mine ? "rc-demand-card-mine" : "rc-demand-card-default"}`}>
-      <div className="mb-5">
-        <div className="flex justify-between items-start mb-4 gap-3">
-          <div>
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Mercado precisa de</span>
-            <h3 className="text-2xl font-black text-gray-900">{item.produto}</h3>
-          </div>
-          <Badge variant={item.status === "CONCLUIDA" ? "success" : "warning"}>
-            {item.status === "CONCLUIDA" ? "Fechada" : "Aberta"}
-          </Badge>
+    <article className={`bg-white rounded-2xl border p-5 flex flex-col gap-4 ${mine ? "border-green-300" : "border-gray-200"}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="font-display !text-2xl !font-bold !text-gray-900">{item.produto}</h3>
+          <p className="text-sm text-gray-600">Pedido de {formatQuantity(item.quantidade, item.unidade)}</p>
         </div>
-
-        <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 flex justify-between mb-4">
-          <div>
-            <p className="text-[10px] text-gray-500 font-bold uppercase">Estimativa</p>
-            <p className="text-lg font-black text-green-700">
-              {formatBRL(item.precoMedio)} <span className="text-xs text-gray-500 font-normal">/ {item.unidade}</span>
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-[10px] text-gray-500 font-bold uppercase">Pedido</p>
-            <p className="text-lg font-black text-gray-800">{formatQuantity(item.quantidade, item.unidade)}</p>
-          </div>
-        </div>
-
-        <div className="flex justify-between text-xs font-bold mb-1.5">
-          <span className="text-gray-500">
-            Garantido: <span className="text-green-700">{formatQuantity(item.atendido, item.unidade)}</span>
-          </span>
-          {!mine && item.faltante > 0 && <span className="text-amber-700">Faltam: {formatQuantity(item.faltante, item.unidade)}</span>}
-        </div>
-        <ProgressBar value={item.percentual} size="md" />
+        <p className="text-right">
+          <span className="block font-bold text-gray-900 tabular-nums">{formatBRL(item.precoMedio)}</span>
+          <span className="block text-xs text-gray-500">por {item.unidade}</span>
+        </p>
       </div>
 
-      <div className="pt-5 border-t border-gray-100">
-        {mine ? (
-          <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 text-center">
-            <CheckCircle className="text-blue-700 mx-auto mb-1" size={22} />
-            <span className="font-black text-blue-900 text-sm">
-              Você garantiu {formatQuantity(item.minhaQuantidade ?? 0, item.unidade)}!
-            </span>
-          </div>
-        ) : (
-          <div>
-            <label className="text-sm font-bold text-gray-700 block mb-2">Quanto você enviará?</label>
-            <div className="flex items-center gap-2">
-              <QuantityInput value={quantity} onChange={setQuantity} min={0} max={item.faltante} itemName={item.produto} unit={item.unidade} className="w-1/2" />
-              <Button
-                onClick={offer}
-                isLoading={sending}
-                disabled={!quantity || quantity <= 0 || quantity > item.faltante}
-                className="w-1/2 h-12 font-bold"
-              >
-                Ofertar
-              </Button>
-            </div>
-          </div>
-        )}
+      <div>
+        <div className="h-2 rounded-full bg-gray-100 overflow-hidden" aria-hidden="true">
+          <div className="h-full rounded-full bg-green-600" style={{ width: `${Math.min(100, item.percentual)}%` }} />
+        </div>
+        <p className="mt-1.5 text-sm text-gray-600 tabular-nums">
+          {formatQuantity(item.atendido, item.unidade)} garantidos
+          {!mine && item.faltante > 0 ? `, faltam ${formatQuantity(item.faltante, item.unidade)}` : ""}
+        </p>
       </div>
-    </Card>
+
+      {mine ? (
+        <p className="flex items-center gap-2 rounded-xl bg-green-50 px-4 py-3 text-green-800 font-semibold">
+          <CheckCircle2 size={18} aria-hidden="true" /> Você garantiu {formatQuantity(item.minhaQuantidade ?? 0, item.unidade)}
+        </p>
+      ) : onOffer ? (
+        <div>
+          <p className="text-sm font-semibold text-gray-700 mb-2">Quanto você envia?</p>
+          <div className="flex items-center gap-2">
+            <QuantityInput value={quantity} onChange={setQuantity} min={0} max={item.faltante} itemName={item.produto} unit={item.unidade} className="flex-1" />
+            <Button onClick={offer} isLoading={sending} disabled={quantity <= 0 || quantity > item.faltante} className="h-12 px-6">
+              Ofertar
+            </Button>
+          </div>
+        </div>
+      ) : null}
+    </article>
   );
 }

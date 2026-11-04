@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Lato, Source_Code_Pro } from "next/font/google";
+import { Bricolage_Grotesque, Figtree } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import Script from "next/script";
@@ -7,23 +7,23 @@ import Script from "next/script";
 import SiteHeader from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 
-const lato = Lato({
+// Figtree para a interface (clara em tamanho pequeno, números legíveis) e Bricolage Grotesque para os títulos: uma
+// grotesca com traço um pouco artesanal, que dá voz à marca sem perder a leitura.
+const figtree = Figtree({
   subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-lato",
+  variable: "--font-figtree",
   display: "swap",
 });
 
-const sourceCodePro = Source_Code_Pro({
+const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
-  weight: ["400", "600"],
-  variable: "--font-source-code-pro",
+  variable: "--font-bricolage",
   display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "Raiz Conecta",
-  description: "Conectando produtores rurais a mercados locais.",
+  description: "O mercado pede, o produtor da região responde e a balança confere cada quilo. Cotação, oferta e pesagem sem atravessador.",
 };
 
 export default function RootLayout({
@@ -32,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={`${lato.variable} ${sourceCodePro.variable} scroll-smooth`}>
+    <html lang="pt-BR" className={`${figtree.variable} ${bricolage.variable} scroll-smooth`}>
       {/* Microsoft Clarity Analytics */}
       <Script
         id="microsoft-clarity"

@@ -7,6 +7,7 @@ import { PageLoader } from "@/components/ui/PageLoader";
 import { StatusBanner } from "@/components/ui/StatusBanner";
 import { logout } from "@/lib/auth/logout";
 import { api } from "@/lib/http/client";
+import { useScales, type ScalesController } from "@/hooks/useScales";
 import type { Mural } from "@/lib/produtor/mural";
 
 export interface ProdutorPerfil {
@@ -27,6 +28,8 @@ interface ProdutorContextValue {
   reloadMural: () => Promise<void>;
   // Lê o produtor de novo (depois de editar o perfil, o nome no Mais acompanha).
   reloadProdutor: () => Promise<void>;
+  // As balanças do produtor, lidas uma vez e divididas entre o menu, o Início, o Mais e a tela Minha balança.
+  scales: ScalesController;
 }
 
 interface OfertasResponse extends Mural {
@@ -51,6 +54,7 @@ export function ProdutorProvider({ children }: { children: ReactNode }) {
   const [mural, setMural] = useState<Mural | null>(null);
   const [produtosNoCatalogo, setProdutosNoCatalogo] = useState(0);
   const [muralError, setMuralError] = useState(false);
+  const scales = useScales();
 
   const reloadMural = useCallback(async () => {
     const result = await api<OfertasResponse>("/api/produtor/ofertas");
@@ -97,8 +101,8 @@ export function ProdutorProvider({ children }: { children: ReactNode }) {
   }, [readProdutor]);
 
   const value = useMemo(
-    () => (produtor ? { produtor, mural, produtosNoCatalogo, muralError, reloadMural, reloadProdutor } : null),
-    [produtor, mural, produtosNoCatalogo, muralError, reloadMural, reloadProdutor],
+    () => (produtor ? { produtor, mural, produtosNoCatalogo, muralError, reloadMural, reloadProdutor, scales } : null),
+    [produtor, mural, produtosNoCatalogo, muralError, reloadMural, reloadProdutor, scales],
   );
 
   if (loading) return <PageLoader message="Carregando seu painel..." />;

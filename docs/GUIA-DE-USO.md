@@ -27,7 +27,7 @@ produto, de preferência com a **balança conectada**. O **administrador** aprov
 
 ## Como rodar
 
-O passo a passo de instalação está no [README](../README.md#-rodar-em-1-minuto). Resumo:
+O passo a passo de instalação está no [README](../README.md#5-repositório-e-como-executar). Resumo:
 
 | Quero ver... | Comando | Precisa de |
 | --- | --- | --- |
@@ -147,16 +147,18 @@ bloqueado. Com todos os produtos pesados, **Entregar o pedido à logística**. S
 
 ## Produtor no site
 
-O site tem as **mesmas abas e a mesma ordem** do app: menu lateral no computador e barra de abas no celular.
+O site tem as **mesmas telas** do app, adaptadas para a tela grande. No computador, um menu lateral fixo traz as
+cinco abas e, logo abaixo, **Minha balança** e **Meu Perfil** (no app eles ficam dentro de Mais). No celular, o site
+usa a barra de abas do app, com o Início no meio.
 
 | Tela | O que faz |
 | --- | --- |
-| **Início** | Receita estimada, contadores e o que responder primeiro |
-| **Catálogo** | Marcar o que você produz e sugerir produto |
-| **Ofertas** | Pedidos abertos da região e quanto você garante de cada um |
-| **Entregas** | Leva para a pesagem no app e para o peso ao vivo |
-| **Mais → Meu Perfil** | Os mesmos dados e a troca de senha do app |
-| **Mais → Minha balança** | Conectar, renomear, trocar, remover e ver o **peso ao vivo** |
+| **Início** | Receita garantida, a balança ao vivo, os contadores, o que responder primeiro e a receita por produto |
+| **Catálogo** | Marcar o que você produz, com preço por kg opcional, e sugerir produto |
+| **Ofertas** | No computador, uma tabela: produto, andamento do pedido e quanto você garante, na própria linha. No celular, cartões |
+| **Entregas** | Como pesar um pedido no app, passo a passo, e a balança conectada ao lado |
+| **Minha balança** | Conectar, renomear, trocar, remover e ver o **peso ao vivo** |
+| **Meu Perfil** | Os mesmos dados do app; a troca de senha pede a senha atual |
 
 | Ofertas | Minha balança | No celular |
 | --- | --- | --- |
@@ -170,7 +172,7 @@ mesmo peso.
 1. **Administrador** — em *Balanças*, **Cadastrar balança** com o endereço MAC. O site mostra o **segredo uma
    única vez**: grave-o no módulo (firmware em `app-principal/docs/iot/raiz_balanca`). A tabela mostra o **código
    da etiqueta** (XXXX-XXXX) para imprimir e colar na balança.
-2. **Produtor** — em *Mais → Minha balança → Adicionar*, digite o **endereço** e o **código da etiqueta**. Se a
+2. **Produtor** — em *Minha balança → Adicionar balança* (no app, em *Mais → Minha balança*), digite o **endereço** e o **código da etiqueta**. Se a
    etiqueta tiver QR Code, cole o texto dele (`RC:<MAC>:<CÓDIGO>`) no primeiro campo e os dois se preenchem.
 3. A balança fica **conectada**: é ela que pesa no app. Com várias, só uma fica conectada por vez (*Usar esta*).
 4. **Peso ao vivo** — atualiza a cada meio segundo. *Peso parado* quando estabiliza; *Sem sinal* quando o módulo

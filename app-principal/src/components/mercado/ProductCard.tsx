@@ -41,7 +41,7 @@ export function ProductCard({ product, inCart, onAdd }: ProductCardProps) {
         {product.tipo && <p className="text-xs text-gray-500 mb-3 bg-gray-100 inline-block px-2 py-1 rounded-full">{product.tipo}</p>}
 
         <div className="bg-gray-50 p-2 rounded-lg mb-4">
-          <p className="text-xs text-gray-500 uppercase font-bold mb-1">Preço de referência</p>
+          <p className="text-xs text-gray-600 font-semibold mb-1">Preço de referência</p>
           <p className="text-xl text-green-700 font-black">
             {formatBRL(product.preco ?? 0)} <span className="text-xs text-gray-500 font-normal">/ {unit}</span>
           </p>

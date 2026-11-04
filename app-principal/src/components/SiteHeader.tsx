@@ -13,9 +13,9 @@ import { clearLegacySession, homeFor } from "@/lib/auth/client";
 import { logout } from "@/lib/auth/logout";
 
 const PUBLIC_LINKS = [
-  { href: "/#sobre", label: "Sobre o Projeto" },
-  { href: "/#funcionalidades", label: "Vantagens" },
-  { href: "/#como-funciona", label: "Como Funciona" },
+  { href: "/#como-funciona", label: "Como funciona" },
+  { href: "/#para-quem", label: "Para quem é" },
+  { href: "/#balanca", label: "Balança" },
 ];
 
 const ROLE_LABEL = { admin: "Administrador", produtor: "Produtor", mercado: "Mercado" } as const;
@@ -76,15 +76,16 @@ export default function SiteHeader() {
   const panel = session ? panelLink(session.role) : null;
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
-      <div className="max-w-350 mx-auto px-4 md:px-8 h-20 flex justify-between items-center gap-4">
+    // Barra fixa e translúcida (o conteúdo passa por baixo, como nas barras do sistema), com uma linha fina embaixo.
+    <header className="bg-white/85 backdrop-blur-md supports-[backdrop-filter]:bg-white/75 border-b border-gray-200 sticky top-0 z-40">
+      <div className="max-w-350 mx-auto px-4 md:px-8 h-16 flex justify-between items-center gap-4">
         {/* LOGO */}
         <Wordmark href="/" />
 
         {/* MENU DE NAVEGAÇÃO (computador) */}
-        <nav aria-label="Principal" className="hidden md:flex items-center gap-8 font-bold text-gray-600">
+        <nav aria-label="Principal" className="hidden md:flex items-center gap-7 font-semibold text-gray-600">
           {!loading && !session && PUBLIC_LINKS.map((link) => (
-            <Link key={link.href} href={link.href} className="hover:text-green-600 transition">{link.label}</Link>
+            <Link key={link.href} href={link.href} className="hover:text-gray-900 transition-colors">{link.label}</Link>
           ))}
           {panel && (
             <Link
@@ -100,11 +101,16 @@ export default function SiteHeader() {
         <div className="flex items-center gap-2 sm:gap-4">
           {loading ? (
             // Reserva o espaço do botão/menu: a barra não pula quando a sessão chega.
-            <div className="h-11 w-36 rounded-xl bg-gray-100 animate-pulse" aria-hidden="true" />
+            <div className="h-10 w-36 rounded-xl bg-gray-100 animate-pulse" aria-hidden="true" />
           ) : !session ? (
-            <Button onClick={() => router.push("/login")} className="bg-green-600 hover:bg-green-700 shadow-md font-bold h-11 px-6">
-              Acessar Conta
-            </Button>
+            <>
+              <Link href="/login" className="hidden sm:inline-flex items-center h-10 px-4 rounded-xl font-bold text-gray-700 hover:bg-gray-100 transition-colors">
+                Entrar
+              </Link>
+              <Button onClick={() => router.push("/login?modo=cadastro")} className="h-10 px-4 sm:px-5 whitespace-nowrap">
+                Criar conta
+              </Button>
+            </>
           ) : (
             <div className="relative" ref={userMenuRef}>
               <button
@@ -115,7 +121,7 @@ export default function SiteHeader() {
                 className="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-xl transition-colors border border-transparent hover:border-gray-200"
               >
                 <div className="hidden sm:block text-right">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider leading-none mb-1">{ROLE_LABEL[session.role]}</p>
+                  <p className="text-xs font-semibold text-gray-500 leading-none mb-1">{ROLE_LABEL[session.role]}</p>
                   <p className="text-sm font-black text-gray-800 leading-none max-w-40 truncate">{session.nome}</p>
                 </div>
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${look?.tone}`}>{look?.icon}</div>
@@ -175,6 +181,9 @@ export default function SiteHeader() {
               {link.label}
             </Link>
           ))}
+          {!session && (
+            <Link href="/login" className="block rounded-xl px-4 py-3 font-bold text-green-700 hover:bg-gray-50">Entrar</Link>
+          )}
           {panel && (
             <Link href={panel.href} className={`flex items-center gap-2 rounded-xl px-4 py-3 font-bold hover:bg-gray-50 ${panel.tone}`}>
               {panel.icon} {panel.label}

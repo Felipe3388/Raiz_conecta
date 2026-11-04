@@ -1,179 +1,117 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
-import { CheckCircle, MessageSquarePlus, Save, Sprout } from "lucide-react";
-import { toast } from "sonner";
+import { Check, MessageSquarePlus, Save, Sprout } from "lucide-react";
 import { useProdutor } from "@/components/produtor/ProdutorProvider";
-import { PageHeading } from "@/components/ui/PageHeading";
 import { SuggestionModal } from "@/components/produtor/SuggestionModal";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { SearchBar } from "@/components/ui/SearchBar";
+import { PageHeading } from "@/components/ui/PageHeading";
 import { PageLoader } from "@/components/ui/PageLoader";
-import {
-  buildPayload,
-  firstPriceError,
-  fromSaved,
-  isDirty,
-  priceError,
-  setPrice,
-  toggle,
-  type SavedItem,
-  type Selection,
-} from "@/lib/produtor/catalogSelection";
-import { normalizeText } from "@/lib/text/normalize";
+import { SearchBar } from "@/components/ui/SearchBar";
+import { useProducerCatalog, type CatalogView } from "@/hooks/useProducerCatalog";
+import { categoryIcon } from "@/lib/mercado/catalog";
+import { priceError } from "@/lib/produtor/catalogSelection";
 
-interface Produto {
-  cdProduto: number;
-  nome: string | null;
-  tipo: string | null;
-  imagemUrl: string | null;
-  status?: string | null;
-}
+const VIEWS: { id: CatalogView; label: string }[] = [
+  { id: "todos", label: "Todos os produtos" },
+  { id: "meus", label: "No meu catálogo" },
+];
 
-// Catálogo: o produtor marca o que vende e, se quiser, o preço por kg. O Mural de Ofertas só mostra pedidos desses produtos.
+// Meu Catálogo: o produtor marca o que vende e, se quiser, o preço que pede por kg (informação para a equipe).
+// As Ofertas só mostram pedidos dos produtos marcados.
 export default function CatalogoPage() {
   const { reloadMural } = useProdutor();
-  const [products, setProducts] = useState<Produto[] | null>(null);
-  const [saved, setSaved] = useState<Selection>(new Map());
-  const [selection, setSelection] = useState<Selection>(new Map());
-  const [search, setSearch] = useState("");
-  const [saving, setSaving] = useState(false);
+  const catalog = useProducerCatalog(reloadMural);
   const [suggesting, setSuggesting] = useState(false);
-  const [loadError, setLoadError] = useState(false);
 
-  const load = useCallback(async () => {
-    try {
-      const [resProducts, resMine] = await Promise.all([fetch("/api/produtos"), fetch("/api/produtor/meus-produtos?detalhes=1")]);
-      if (!resProducts.ok || !resMine.ok) throw new Error("falha");
-      const list: Produto[] = await resProducts.json();
-      const mine: SavedItem[] = await resMine.json();
-      setProducts(list.filter((product) => !product.status || product.status === "ATIVO"));
-      const initial = fromSaved(mine);
-      setSaved(initial);
-      setSelection(new Map(initial));
-      setLoadError(false);
-    } catch {
-      setLoadError(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  const visible = useMemo(() => {
-    const term = normalizeText(search);
-    return (products ?? []).filter((product) => !term || normalizeText(product.nome ?? "").includes(term));
-  }, [products, search]);
-
-  const dirty = isDirty(saved, selection);
-
-  async function save() {
-    const problem = firstPriceError(selection);
-    if (problem) return toast.warning(problem);
-
-    setSaving(true);
-    try {
-      const res = await fetch("/api/produtor/meus-produtos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildPayload(selection)),
-      });
-      if (!res.ok) throw new Error(String(res.status));
-      toast.success("Catálogo salvo!", { description: "As Ofertas foram atualizadas." });
-      setSaved(new Map(selection));
-      await reloadMural();
-    } catch {
-      toast.error("Não foi possível salvar o catálogo.");
-    } finally {
-      setSaving(false);
-    }
+  if (catalog.error && !catalog.products) {
+    return <EmptyState icon={<Sprout size={56} className="text-gray-300" aria-hidden="true" />} title="Não foi possível carregar o catálogo" description={catalog.error} actionLabel="Tentar de novo" onAction={() => void catalog.reload()} />;
   }
-
-  if (loadError) {
-    return (
-      <EmptyState
-        icon={<Sprout size={56} className="text-amber-300" />}
-        title="Não foi possível carregar o catálogo"
-        description="Confira a conexão e tente de novo."
-        actionLabel="Tentar novamente"
-        onAction={() => void load()}
-      />
-    );
-  }
-  if (!products) return <PageLoader message="Carregando o catálogo..." />;
+  if (!catalog.products) return <PageLoader message="Carregando o catálogo..." />;
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6 pb-28">
       <PageHeading
         title="Meu Catálogo"
         subtitle="Marque o que você produz. As Ofertas só mostram pedidos desses produtos."
         action={
-          <Button variant="outline" onClick={() => setSuggesting(true)} className="border-amber-400 text-amber-700 hover:bg-amber-50">
-            <MessageSquarePlus size={17} /> Sugerir novo produto
+          <Button variant="outline" onClick={() => setSuggesting(true)}>
+            <MessageSquarePlus size={17} aria-hidden="true" /> Sugerir produto
           </Button>
         }
       />
 
-      <div className="flex flex-col md:flex-row gap-3 md:items-center">
-        <SearchBar value={search} onChange={setSearch} placeholder="Buscar produto no catálogo..." accent="amber" className="w-full md:w-80" />
-        <p className="text-sm text-amber-800 font-medium" aria-live="polite">
-          {selection.size} {selection.size === 1 ? "selecionado" : "selecionados"}
-          {search && ` · ${visible.length} ${visible.length === 1 ? "resultado" : "resultados"}`}
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center gap-3">
+        <div role="radiogroup" aria-label="Mostrar" className="inline-flex p-1 rounded-xl bg-gray-200/70 self-start">
+          {VIEWS.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              role="radio"
+              aria-checked={catalog.view === option.id}
+              onClick={() => catalog.setView(option.id)}
+              className={`h-9 px-4 rounded-lg text-sm font-semibold transition-colors ${catalog.view === option.id ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"}`}
+            >
+              {option.label}
+              {option.id === "meus" && <span className="ml-1.5 tabular-nums text-green-700">{catalog.count}</span>}
+            </button>
+          ))}
+        </div>
+        <SearchBar value={catalog.search} onChange={catalog.setSearch} placeholder="Buscar produto" className="w-full md:w-72 md:ml-auto" />
       </div>
 
-      {visible.length === 0 ? (
-        <EmptyState icon={<Sprout size={56} className="text-gray-300" />} title="Nenhum produto encontrado." description="Tente outro nome ou sugira o produto." />
+      {catalog.visible.length === 0 ? (
+        <EmptyState
+          icon={<Sprout size={56} className="text-gray-300" aria-hidden="true" />}
+          title={catalog.view === "meus" && catalog.count === 0 ? "Nenhum produto marcado ainda" : "Nenhum produto encontrado"}
+          description={catalog.view === "meus" && catalog.count === 0 ? "Volte para Todos os produtos e marque o que você produz." : "Tente outro nome ou sugira o produto para a equipe."}
+        />
       ) : (
-        <ul className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
-          {visible.map((product) => {
-            const selected = selection.has(product.cdProduto);
-            const priceText = selection.get(product.cdProduto) ?? "";
+        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3 md:gap-4">
+          {catalog.visible.map((product) => {
+            const selected = catalog.selection.has(product.cdProduto);
+            const priceText = catalog.selection.get(product.cdProduto) ?? "";
             const error = selected ? priceError(priceText) : null;
+            const name = product.nome ?? "Produto";
             return (
-              <li key={product.cdProduto} className={`rc-produto-card ${selected ? "rc-produto-card-on" : "rc-produto-card-off"}`}>
+              <li key={product.cdProduto} className={`rounded-2xl border-2 bg-white p-4 transition-colors ${selected ? "border-green-600" : "border-gray-200 hover:border-gray-300"}`}>
                 <button
                   type="button"
                   aria-pressed={selected}
-                  aria-label={`${product.nome ?? "Produto"}${selected ? ", no catálogo" : ""}`}
-                  onClick={() => setSelection(toggle(selection, product.cdProduto))}
-                  className="flex flex-col items-center text-center w-full"
+                  aria-label={`${name}${selected ? ", no catálogo" : ""}`}
+                  onClick={() => catalog.toggle(product.cdProduto)}
+                  className="w-full flex items-center gap-3 text-left"
                 >
-                  <span className="relative w-16 h-16 mb-3 block">
-                    {product.imagemUrl ? (
-                      <Image src={product.imagemUrl} alt="" fill sizes="64px" className="object-cover rounded-full shadow-sm" />
-                    ) : (
-                      <span className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 text-xs font-bold">Sem foto</span>
-                    )}
-                    {selected && (
-                      <span className="absolute -bottom-1 -right-1 bg-amber-500 text-white rounded-full p-0.5 border-2 border-white">
-                        <CheckCircle size={13} />
-                      </span>
-                    )}
+                  <span className="relative w-12 h-12 shrink-0 grid place-items-center rounded-full bg-gray-100 text-2xl overflow-hidden" aria-hidden="true">
+                    {product.imagemUrl ? <Image src={product.imagemUrl} alt="" fill sizes="48px" className="object-cover" /> : categoryIcon(product.tipo)}
                   </span>
-                  <span className={`font-bold text-sm leading-tight ${selected ? "text-amber-900" : "text-gray-700"}`}>{product.nome}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-bold text-gray-900 leading-tight truncate">{name}</span>
+                    {product.tipo && <span className="block text-xs text-gray-500 truncate">{product.tipo}</span>}
+                  </span>
+                  <span className={`w-6 h-6 shrink-0 grid place-items-center rounded-full border-2 transition-colors ${selected ? "bg-green-600 border-green-600 text-white" : "border-gray-300"}`} aria-hidden="true">
+                    {selected && <Check size={14} strokeWidth={3} />}
+                  </span>
                 </button>
 
                 {selected && (
-                  <div className="mt-3 w-full">
-                    <label className="text-[11px] font-bold text-amber-800 block mb-1 text-left" htmlFor={`preco-${product.cdProduto}`}>
-                      Preço por kg (R$)
+                  <div className="mt-3">
+                    <label className="text-xs font-semibold text-gray-600 block mb-1" htmlFor={`preco-${product.cdProduto}`}>
+                      Seu preço por kg (opcional)
                     </label>
                     <input
                       id={`preco-${product.cdProduto}`}
                       inputMode="decimal"
                       value={priceText}
-                      onChange={(e) => setSelection(setPrice(selection, product.cdProduto, e.target.value))}
+                      onChange={(e) => catalog.setPrice(product.cdProduto, e.target.value)}
                       placeholder="Ex.: 8,50"
                       aria-invalid={error !== null}
-                      className={`w-full px-3 py-2 rounded-lg border text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-white ${
-                        error ? "border-red-400" : "border-amber-200"
-                      }`}
+                      aria-describedby={error ? `preco-erro-${product.cdProduto}` : undefined}
+                      className={`w-full h-10 px-3 rounded-lg border text-sm outline-none focus:ring-2 focus:ring-green-500 bg-white ${error ? "border-red-400" : "border-gray-300"}`}
                     />
-                    {error && <p className="text-[11px] text-red-600 font-bold mt-1 text-left">{error}</p>}
+                    {error && <p id={`preco-erro-${product.cdProduto}`} className="text-xs text-red-700 font-semibold mt-1">{error}</p>}
                   </div>
                 )}
               </li>
@@ -182,20 +120,13 @@ export default function CatalogoPage() {
         </ul>
       )}
 
-      {dirty && (
-        <div className="fixed bottom-20 lg:bottom-6 inset-x-4 lg:inset-x-auto lg:left-1/2 lg:-translate-x-1/2 z-30">
-          <div className="max-w-xl mx-auto bg-white border border-amber-200 shadow-xl rounded-2xl p-3 flex items-center gap-3">
-            <p className="flex-1 text-sm font-bold text-gray-700 pl-2">Você tem alterações não salvas.</p>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelection(new Map(saved))}
-              disabled={saving}
-            >
-              Desfazer
-            </Button>
-            <Button onClick={save} isLoading={saving} size="sm" className="bg-amber-600 hover:bg-amber-700">
-              {!saving && <Save size={16} />} Salvar
+      {catalog.dirty && (
+        <div className="fixed bottom-24 lg:bottom-6 inset-x-4 lg:inset-x-auto lg:left-1/2 lg:-translate-x-1/2 z-30" role="region" aria-label="Alterações não salvas">
+          <div className="max-w-xl mx-auto bg-white/95 backdrop-blur border border-gray-200 shadow-xl rounded-2xl p-3 flex items-center gap-3">
+            <p className="flex-1 text-sm font-semibold text-gray-700 pl-2">Alterações não salvas no catálogo.</p>
+            <Button variant="ghost" size="sm" onClick={catalog.discard} disabled={catalog.saving}>Descartar</Button>
+            <Button onClick={catalog.save} isLoading={catalog.saving} size="sm">
+              {!catalog.saving && <Save size={16} aria-hidden="true" />} Salvar catálogo
             </Button>
           </div>
         </div>

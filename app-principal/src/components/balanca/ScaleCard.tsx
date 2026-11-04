@@ -31,7 +31,7 @@ export function ScaleCard({ scale, active, busy, onActivate, onRename, onRemove 
       <div className="flex-1 min-w-0">
         <p className="font-black text-gray-900 truncate flex items-center gap-2">
           {displayName}
-          {active && <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-green-800 bg-green-100 rounded-full px-2 py-0.5"><CheckCircle2 size={12} aria-hidden="true" /> Conectada</span>}
+          {active && <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full px-2 py-0.5"><CheckCircle2 size={12} aria-hidden="true" /> Conectada</span>}
         </p>
         <p className="text-xs text-gray-500 font-mono">{scale.deviceId}{scale.nickname ? ` · ${scale.deviceName}` : ""}</p>
       </div>

@@ -6,8 +6,8 @@ import { ChevronRight, type LucideIcon } from "lucide-react";
 export function ListGroup({ title, children }: { title?: string; children: ReactNode }) {
   return (
     <section className="space-y-2">
-      {title && <h2 className="px-1 text-xs font-black uppercase tracking-wider text-gray-500">{title}</h2>}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm divide-y divide-gray-100 overflow-hidden">{children}</div>
+      {title && <h2 className="px-1 !font-sans !text-sm !font-semibold !text-gray-600 !tracking-normal">{title}</h2>}
+      <div className="bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">{children}</div>
     </section>
   );
 }

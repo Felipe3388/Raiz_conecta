@@ -2,25 +2,14 @@
 
 import { MotionConfig, motion } from "framer-motion";
 
+// A troca de página só esmaece (rápido): o conteúdo não "pula" de baixo para cima a cada clique.
+// reducedMotion="user": quem pediu menos movimento no sistema não vê deslocamentos.
 export default function Template({ children }: { children: React.ReactNode }) {
-    // reducedMotion="user": quem pediu menos movimento no sistema não vê os deslizes (a opacidade continua).
-    return (
-        <MotionConfig reducedMotion="user">
-        <motion.div
-            // 1. ESTADO INICIAL: A página começa invisível e 10 pixels para baixo
-            initial={{ opacity: 0, y: 10 }}
-
-            // 2. ESTADO FINAL: A página sobe para a posição original e fica visível
-            animate={{ opacity: 1, y: 0 }}
-
-            // 3. CONFIGURAÇÃO DA TRANSIÇÃO
-            transition={{
-                duration: 0.4, // Tempo da animação (0.4 segundos é o padrão de apps premium)
-                ease: [0.22, 1, 0.36, 1], // Uma curva de velocidade personalizada (mais suave que o 'easeOut')
-            }}
-        >
-            {children}
-        </motion.div>
-        </MotionConfig>
-    );
+  return (
+    <MotionConfig reducedMotion="user">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2, ease: "easeOut" }}>
+        {children}
+      </motion.div>
+    </MotionConfig>
+  );
 }

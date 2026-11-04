@@ -60,3 +60,5 @@ export function useScales() {
     remove: (scale: ScaleLink) => run(() => api(path(scale.deviceId), { method: "DELETE" }), "Balança removida."),
   };
 }
+
+export type ScalesController = ReturnType<typeof useScales>;

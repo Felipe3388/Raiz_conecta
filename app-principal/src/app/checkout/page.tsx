@@ -111,7 +111,7 @@ export default function CheckoutConfirmacao() {
                       {item.imagemUrl ? (
                         <Image src={item.imagemUrl} alt="" width={56} height={56} className="w-14 h-14 object-cover rounded-xl shadow-sm border border-gray-200 bg-white" />
                       ) : (
-                        <div className="text-4xl bg-white p-2 rounded-xl shadow-sm border border-gray-100" aria-hidden="true">{categoryIcon(null)}</div>
+                        <div className="text-4xl bg-white p-2 rounded-xl border border-gray-200" aria-hidden="true">{categoryIcon(null)}</div>
                       )}
                       <div className="min-w-0 flex-1">
                         <p className="font-bold text-lg text-gray-900 truncate">{item.nome}</p>
@@ -122,7 +122,7 @@ export default function CheckoutConfirmacao() {
                       </button>
                     </div>
                     <div className="mt-3 flex items-center justify-between bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
-                      <span className="text-xs text-gray-500 font-bold ml-2 uppercase">Quantidade ({item.unidade})</span>
+                      <span className="text-sm text-gray-600 font-semibold ml-2">Quantidade ({item.unidade})</span>
                       <QuantityInput value={item.qtd} onChange={(qtd) => setQty(item.id, qtd)} min={1} max={MAX_QTD} itemName={item.nome} className="w-40 h-11 border-0 shadow-none" />
                     </div>
                   </li>
