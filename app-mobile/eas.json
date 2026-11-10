@@ -10,7 +10,8 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_USE_MOCKS": "true"
+        "EXPO_PUBLIC_API_URL": "https://www.raizconecta.com.br",
+        "EXPO_PUBLIC_USE_MOCKS": "false"
       }
     },
     "production": {
@@ -19,7 +20,7 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_USE_MOCKS": "true"
+        "EXPO_PUBLIC_USE_MOCKS": "false"
       }
     }
   }

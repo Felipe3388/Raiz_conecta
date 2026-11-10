@@ -18,7 +18,10 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.raizconecta.app"
+      "package": "com.raizconecta.app",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -33,6 +36,12 @@
           "cameraPermission": "O Raiz Conecta precisa da câmera para fotografar seu documento e a saída dos pedidos."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7869a89d-735f-4119-a48b-4f75ef805d2a"
+      }
+    }
   }
 }
