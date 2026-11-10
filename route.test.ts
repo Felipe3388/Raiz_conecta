@@ -9,7 +9,7 @@ const prismaMock = vi.hoisted(() => ({
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 
 import { verifyToken } from "@/lib/auth/jwt";
-import { POST } from "./route";
+import { POST } from "./app-principal/src/app/api/auth/login/route";
 
 const HASH = bcrypt.hashSync("Senha@123", 4);
 let ipCounter = 0;
