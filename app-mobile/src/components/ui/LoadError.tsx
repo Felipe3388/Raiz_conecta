@@ -9,8 +9,8 @@ export function LoadError({ onRetry }: { onRetry: () => void }) {
     <Screen>
       <EmptyState
         icon={<Ionicons name="cloud-offline-outline" size={40} color={colors.danger} />}
-        title="Não deu para carregar"
-        description="Verifique sua conexão e tente de novo."
+        title="Erro"
+        description="Verifique sua conexão e tente novamente."
         actionLabel="Tentar de novo"
         onAction={onRetry}
       />

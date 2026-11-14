@@ -34,7 +34,7 @@ export default function OfertasScreen() {
 
   const header = (
     <View style={styles.header}>
-      <ScreenHeading title="Ofertas" count={offers.orderCount} />
+      <ScreenHeading title="Pedidos" count={offers.orderCount} />
       {offers.totalCount > 0 && (
         <>
           <DemandSummary lines={offers.demand} open={offers.demandOpen} onToggle={offers.toggleDemand} />

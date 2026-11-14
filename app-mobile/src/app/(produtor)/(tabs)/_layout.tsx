@@ -55,11 +55,11 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="ofertas"
         options={{
-          title: "Ofertas",
+          title: "Pedidos",
           tabBarIcon: tabIcon("checkmark-done-outline", "checkmark-done-circle"),
           // Quantos pedidos esperam resposta; some enquanto carrega ou quando não há nenhuma.
           tabBarBadge: waiting > 0 ? waiting : undefined,
-          tabBarAccessibilityLabel: badgeLabel("Ofertas", waiting, "pedido para responder", "pedidos para responder"),
+          tabBarAccessibilityLabel: badgeLabel("Pedidos", waiting, "pedido para responder", "pedidos para responder"),
         }}
       />
       {/* O Painel fica no meio da ordem: a barra põe o botão Início entre a 2ª e a 3ª aba. */}
