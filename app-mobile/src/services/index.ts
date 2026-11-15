@@ -8,6 +8,7 @@ import { getTokenStorage } from "@/lib/storage";
 import type { AssistantGateway } from "./AssistantGateway";
 import { ApiCatalogService } from "./ApiCatalogService";
 import { ApiProfileService } from "./ApiProfileService";
+import { ApiProposalService } from "./ApiProposalService";
 import { ApiScaleLinkService } from "./ApiScaleLinkService";
 import { ApiScaleService } from "./ApiScaleService";
 import type { AuthGateway } from "./AuthGateway";
@@ -78,9 +79,12 @@ export function getCatalogService(): CatalogGateway {
   return catalogService;
 }
 
-// Propostas dos mercados (preço fixo, aceitar ou recusar): o site ainda não tem nada disto, só a versão simulada.
+// Propostas dos mercados. Com a API ligada vêm do mural do site (GET/POST /api/produtor/ofertas, ver ApiProposalService);
+// o site ainda não tem preço fixo, prazo, nome do mercado nem recusa, então esses pontos são aproximados no adaptador.
 export function getProposalService(): ProposalGateway {
-  proposalService ??= new MockProposalService({ seed: seedProposals });
+  proposalService ??= env.useMocks
+    ? new MockProposalService({ seed: seedProposals })
+    : new ApiProposalService(getApiClient());
   return proposalService;
 }
 
