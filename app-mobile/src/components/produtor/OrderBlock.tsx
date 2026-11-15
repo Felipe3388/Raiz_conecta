@@ -7,15 +7,12 @@ import {
   PRICE_NOTE,
   PROPOSAL_CLOSED_NOTES,
   PROPOSAL_STATUS_INFO,
-  URGENT_SECONDS,
 } from "@/content/proposalTexts";
 import { deliveryDayLabel } from "@/lib/delivery/schedule";
 import { formatBRL } from "@/lib/format/currency";
 import {
   acceptedTotal,
-  countdownLabel,
   effectiveStatus,
-  secondsLeft,
   selectedCount,
   selectionTotal,
 } from "@/lib/produtor/proposals";
@@ -25,7 +22,7 @@ import { OrderItemRow } from "./OrderItemRow";
 
 interface OrderBlockProps {
   proposal: Proposal;
-  // A hora de agora: é ela que faz a contagem regressiva andar.
+  // A hora atual é usada para determinar a situação do pedido.
   now: Date;
   quantities: ProposalQuantities;
   onChangeQuantity: (itemId: string, value: number) => void;
@@ -50,8 +47,6 @@ export function OrderBlock({
   const status = effectiveStatus(proposal, now);
   const info = PROPOSAL_STATUS_INFO[status];
   const pending = status === "PENDENTE";
-  const remaining = secondsLeft(proposal, now);
-  const urgent = pending && remaining <= URGENT_SECONDS;
   const chosenCount = selectedCount(proposal, quantities);
   const total = selectionTotal(proposal, quantities);
 
@@ -70,19 +65,6 @@ export function OrderBlock({
         </View>
         <Badge label={info.label} variant={info.tone} dot />
       </View>
-
-      {pending && (
-        <View
-          style={[styles.countdown, urgent && styles.countdownUrgent]}
-          accessibilityRole="timer"
-          accessibilityLabel={`Tempo para responder: ${countdownLabel(remaining)}`}
-        >
-          <Ionicons name="time-outline" size={20} color={urgent ? colors.danger : colors.warningStrong} />
-          <Text style={[styles.countdownText, urgent && styles.countdownTextUrgent]}>
-            Responda em {countdownLabel(remaining)}
-          </Text>
-        </View>
-      )}
 
       <View style={styles.items}>
         {proposal.itens.map((item) => (
@@ -158,21 +140,6 @@ const styles = StyleSheet.create({
   metaText: { ...typography.hint, fontWeight: "700", color: colors.textStrong, flexShrink: 1 },
   items: { gap: spacing.sm },
   footer: { gap: spacing.sm, paddingTop: spacing.md },
-  countdown: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xs + 2,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.md,
-    backgroundColor: colors.warningTint,
-    borderWidth: 1,
-    borderColor: colors.warningBorder,
-  },
-  countdownUrgent: { backgroundColor: colors.dangerSoft, borderColor: colors.dangerBorder },
-  countdownText: { ...typography.label, color: colors.warningDark },
-  countdownTextUrgent: { color: colors.dangerText },
   totalRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.sm },
   totalLabel: { ...typography.label, color: colors.textStrong, flexShrink: 1 },
   total: { fontSize: 20, fontWeight: "700", color: colors.primaryPressed },

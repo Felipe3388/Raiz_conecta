@@ -106,7 +106,6 @@ export default function PainelScreen() {
               <ProposalRow
                 key={proposal.id}
                 proposal={proposal}
-                now={now}
                 onPress={() => router.navigate("/ofertas")}
               />
             ))}

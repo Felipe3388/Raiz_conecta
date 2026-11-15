@@ -17,7 +17,7 @@ import { ASK_TEXTS, OFFERS_EMPTY } from "@/content/proposalTexts";
 import { useOffersScreen } from "@/hooks/useOffersScreen";
 import { deliveryDayLabel } from "@/lib/delivery/schedule";
 import { formatBRL } from "@/lib/format/currency";
-import { canAnswer, secondsLeft, selectionTotal, type ProposalFilter } from "@/lib/produtor/proposals";
+import { canAnswer, selectionTotal, type ProposalFilter } from "@/lib/produtor/proposals";
 import { colors, spacing } from "@/theme";
 import type { Proposal, ProposalResponse } from "@/types/proposal";
 
@@ -97,7 +97,6 @@ export default function OfertasScreen() {
             pendingCount={market.orders.filter((order) => canAnswer(order, offers.now)).length}
             open={offers.isOpen(market.key)}
             onToggle={() => offers.toggleMarket(market.key)}
-            secondsLeft={soonest(market.orders, offers.now)}
           >
             {market.orders.map((order) => (
               <OrderBlock
@@ -129,12 +128,6 @@ export default function OfertasScreen() {
       />
     </>
   );
-}
-
-// Quanto falta para o pedido pendente com o prazo mais curto do mercado (null se nenhum espera resposta).
-function soonest(orders: Proposal[], now: Date): number | null {
-  const waiting = orders.filter((order) => canAnswer(order, now)).map((order) => secondsLeft(order, now));
-  return waiting.length > 0 ? Math.min(...waiting) : null;
 }
 
 // O resumo do que vai ser enviado, para a pessoa conferir antes de confirmar.
