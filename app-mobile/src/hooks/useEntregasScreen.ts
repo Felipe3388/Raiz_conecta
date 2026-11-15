@@ -5,8 +5,10 @@ import { buildPickList, dayChips, DONE_FILTER, filterOrders } from "@/lib/delive
 import { filterByStatus, statusOptions, type StatusFilter } from "@/lib/delivery/statusFilter";
 import { judgeWeight, toleranceFor } from "@/lib/delivery/weight";
 import { formatKg } from "@/lib/format/weight";
+import { productImageUrl } from "@/lib/produtor/productVisual";
 import type { WeigherRole, WeighingInput } from "@/types/delivery";
 import { useDeliveries } from "./useDeliveries";
+import { useProdutorData } from "./useProdutorData";
 import { useWeighRun } from "./useWeighRun";
 import { useToast } from "./useToast";
 
@@ -21,6 +23,7 @@ interface WeighSession {
 // (Iniciar pesagem), a janela para ajustar a pesagem de um pedido e a de entregar o pedido à logística.
 export function useEntregasScreen() {
   const data = useDeliveries();
+  const producerData = useProdutorData();
   const toast = useToast();
   const [chosenDay, setChosenDay] = useState<string | null>(null);
   const [status, setStatus] = useState<StatusFilter>("all");
@@ -142,6 +145,7 @@ export function useEntregasScreen() {
     filter,
     chooseDay: setChosenDay,
     cards,
+    imageUrlOf: (productName: string) => productImageUrl(producerData.products, productName),
     // Quantos pedidos tem o dia, antes do filtro de situação.
     dayTotal: dayCards.length,
     statuses,

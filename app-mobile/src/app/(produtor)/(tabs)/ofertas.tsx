@@ -102,6 +102,7 @@ export default function OfertasScreen() {
               <OrderBlock
                 key={order.id}
                 proposal={order}
+                imageUrlOf={offers.imageUrlOf}
                 now={offers.now}
                 quantities={offers.quantitiesOf(order)}
                 onChangeQuantity={(itemId, value) => offers.setQuantity(order, itemId, value)}

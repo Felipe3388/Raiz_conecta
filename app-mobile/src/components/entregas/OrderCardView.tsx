@@ -12,6 +12,7 @@ import { StageBadge } from "./StageBadge";
 
 interface OrderCardViewProps {
   card: OrderCard;
+  imageUrlOf: (productName: string) => string | null;
   onWeigh: () => void;
   onHandOver: () => void;
   // Só no modo simulado: faz de conta que o mercado pesou ao receber.
@@ -24,7 +25,7 @@ function weighLabel(card: OrderCard): string | null {
 }
 
 // Um pedido a entregar: o mercado, a lista dos produtos dele, quanto já foi pesado e o que fazer agora.
-export function OrderCardView({ card, onWeigh, onHandOver, onSimulateReceipt }: OrderCardViewProps) {
+export function OrderCardView({ card, imageUrlOf, onWeigh, onHandOver, onSimulateReceipt }: OrderCardViewProps) {
   const { stage, actions } = card;
   const info = STAGE_INFO[stage];
   const adjustLabel = actions.includes("WEIGH") ? weighLabel(card) : null;
@@ -59,7 +60,7 @@ export function OrderCardView({ card, onWeigh, onHandOver, onSimulateReceipt }: 
 
       <View style={styles.items}>
         {card.items.map((item) => (
-          <OrderItemRow key={item.delivery.id} card={item} />
+          <OrderItemRow key={item.delivery.id} card={item} imageUrl={imageUrlOf(item.delivery.produto)} />
         ))}
       </View>
 

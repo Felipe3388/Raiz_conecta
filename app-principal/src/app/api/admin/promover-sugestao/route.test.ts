@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const prismaMock = vi.hoisted(() => ({
-  sugestao: { findUnique: vi.fn(), delete: vi.fn() },
+  sugestao: { findUnique: vi.fn(), update: vi.fn() },
   produto: { create: vi.fn() },
   $transaction: vi.fn(),
 }));
@@ -17,7 +17,7 @@ const post = (body: unknown, headers: Record<string, string> = ADMIN) =>
 beforeEach(() => {
   vi.clearAllMocks();
   prismaMock.$transaction.mockResolvedValue([]);
-  prismaMock.sugestao.findUnique.mockResolvedValue({ id: 3, nomeProduto: "Pitaya", descricao: "Vermelha", precoSugerido: 12, imagemUrl: "https://img/x.jpg" });
+  prismaMock.sugestao.findUnique.mockResolvedValue({ id: 3, nomeProduto: "Pitaya", descricao: "Vermelha", precoSugerido: 12, imagemUrl: "https://img/x.jpg", status: "EM_ANALISE" });
 });
 
 describe("POST /api/admin/promover-sugestao", () => {
@@ -26,14 +26,17 @@ describe("POST /api/admin/promover-sugestao", () => {
     expect((await post({ idSugestao: 3 }, authHeaders("p@x.com", "produtor"))).status).toBe(403);
   });
 
-  it("cria o produto e apaga a sugestão na mesma transação, usando o que a sugestão trouxe", async () => {
+  it("cria o produto e registra aprovação na mesma transação, usando o que a sugestão trouxe", async () => {
     const response = await post({ idSugestao: 3, tipo: "Frutas" });
 
     expect(response.status).toBe(200);
     expect(prismaMock.produto.create).toHaveBeenCalledWith({
       data: { nome: "Pitaya", tipo: "Frutas", preco: 12, unidadePadrao: "Kg", descricao: "Vermelha", imagemUrl: "https://img/x.jpg", status: "ATIVO" },
     });
-    expect(prismaMock.sugestao.delete).toHaveBeenCalledWith({ where: { id: 3 } });
+    expect(prismaMock.sugestao.update).toHaveBeenCalledWith({
+      where: { id: 3, status: "EM_ANALISE" },
+      data: { status: "APROVADA", motivo: null, decididoEm: expect.any(Date) },
+    });
     expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
   });
 
@@ -47,6 +50,12 @@ describe("POST /api/admin/promover-sugestao", () => {
     expect((await post({ idSugestao: 3, preco: "0" })).status).toBe(400);
     prismaMock.sugestao.findUnique.mockResolvedValue(null);
     expect((await post({ idSugestao: 9 })).status).toBe(404);
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("impede promover novamente uma sugestão já avaliada", async () => {
+    prismaMock.sugestao.findUnique.mockResolvedValue({ id: 3, status: "RECUSADA" });
+    expect((await post({ idSugestao: 3, tipo: "Frutas" })).status).toBe(409);
     expect(prismaMock.$transaction).not.toHaveBeenCalled();
   });
 });

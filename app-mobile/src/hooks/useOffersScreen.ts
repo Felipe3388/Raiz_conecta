@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { deliveryDayLabel } from "@/lib/delivery/schedule";
+import { productImageUrl } from "@/lib/produtor/productVisual";
 import { demandByProduct } from "@/lib/produtor/demand";
 import {
   canAnswer,
@@ -138,6 +139,7 @@ export function useOffersScreen() {
     reload: data.reload,
     now,
     markets,
+    imageUrlOf: (productName: string) => productImageUrl(data.products, productName),
     orderCount: visible.length,
     counts,
     totalCount: data.proposals.length,

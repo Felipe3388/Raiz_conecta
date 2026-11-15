@@ -48,3 +48,11 @@ export function productVisual(product: CatalogProduct): ProductVisual {
   if (uri) return { kind: "image", uri };
   return { kind: "emoji", emoji: productEmoji(product.nome) };
 }
+
+
+// Localiza a foto oficial do catálogo pelo nome do produto recebido nas propostas e entregas.
+export function productImageUrl(products: CatalogProduct[], name: string): string | null {
+  const normalized = normalizeText(name);
+  const match = products.find((product) => normalizeText(product.nome) === normalized);
+  return match?.imagemUrl?.trim() || null;
+}

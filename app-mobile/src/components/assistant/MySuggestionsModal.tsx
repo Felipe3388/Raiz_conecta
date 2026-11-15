@@ -15,7 +15,7 @@ interface MySuggestionsModalProps {
 
 // Minhas sugestões: os produtos que o produtor pediu para entrar no catálogo e a situação de cada um.
 export function MySuggestionsModal({ visible, onClose, onSuggest }: MySuggestionsModalProps) {
-  const { status, items, reload } = useMySuggestions(visible);
+  const { status, items, error, reload } = useMySuggestions(visible);
 
   return (
     <BottomSheet
@@ -35,7 +35,7 @@ export function MySuggestionsModal({ visible, onClose, onSuggest }: MySuggestion
       {status === "error" && (
         <View style={styles.center}>
           <Ionicons name="cloud-offline-outline" size={32} color={colors.danger} />
-          <Text style={styles.message}>Não deu para carregar as sugestões.</Text>
+          <Text style={styles.message}>{error ?? "Não deu para carregar as sugestões."}</Text>
           <Button label="Tentar de novo" variant="outline" size="sm" onPress={reload} />
         </View>
       )}

@@ -37,6 +37,9 @@ export interface AdminSuggestion {
   precoSugerido: number | null;
   imagemUrl: string | null;
   criadoEm: string;
+  status: "EM_ANALISE" | "APROVADA" | "RECUSADA";
+  motivo: string | null;
+  decididoEm: string | null;
 }
 
 export interface AdminScale {

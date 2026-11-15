@@ -12,6 +12,7 @@ export function SuggestionItem({ suggestion }: { suggestion: SuggestionRecord })
   // Uma informação por linha: o preço ("R$ 8,50/kg") não quebra no meio.
   const meta = [
     `Enviada em ${formatDateBR(suggestion.criadoEm)}`,
+    suggestion.decididoEm ? `Avaliada em ${formatDateBR(suggestion.decididoEm)}` : null,
     suggestion.precoSugerido != null ? `Preço sugerido: ${formatBRL(suggestion.precoSugerido)}/kg` : null,
   ].filter((line): line is string => line !== null);
 

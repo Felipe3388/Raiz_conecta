@@ -17,7 +17,7 @@ export interface ProductSuggestion {
   attachment: Attachment | null;
 }
 
-// Situação de um produto sugerido. O site ainda não guarda isso (ver ARQUITETURA.md).
+// Situação persistida no backend após análise da equipe.
 export type SuggestionStatus = "EM_ANALISE" | "APROVADA" | "RECUSADA";
 
 export interface SuggestionRecord {
@@ -27,6 +27,8 @@ export interface SuggestionRecord {
   precoSugerido: number | null;
   status: SuggestionStatus;
   criadoEm: string;
+  // Quando foi tomada a decisão; não existe enquanto está em análise.
+  decididoEm?: string | null;
   // Por que foi recusada, quando a equipe explicou.
   motivo?: string;
 }

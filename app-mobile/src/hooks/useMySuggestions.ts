@@ -11,13 +11,18 @@ export function useMySuggestions(active: boolean, gateway: CatalogGateway = getC
   const { email } = useProdutorData();
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [items, setItems] = useState<SuggestionRecord[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setStatus("loading");
+    setError(null);
     try {
       setItems(newestFirst(await gateway.listSuggestions(email)));
       setStatus("ready");
-    } catch {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Não foi possível consultar as sugestões.";
+      console.error("[Sugestões] Falha ao listar:", err);
+      setError(message);
       setStatus("error");
     }
   }, [gateway, email]);
@@ -26,5 +31,5 @@ export function useMySuggestions(active: boolean, gateway: CatalogGateway = getC
     if (active) void load();
   }, [active, load]);
 
-  return { status, items, reload: load };
+  return { status, items, error, reload: load };
 }

@@ -45,9 +45,10 @@ export function useSuggestionForm(onSent: () => void) {
       });
       setForm(EMPTY);
       onSent();
-    } catch {
-      // O formulário ocupa a tela toda, então o erro aparece nele e não num aviso escondido atrás.
-      setError("Erro ao enviar sugestão. Tente de novo.");
+    } catch (err) {
+      // Exibe o erro real retornado pela API (401, 403, 500 etc.).
+      console.error("[Sugestões] Falha ao enviar:", err);
+      setError(err instanceof Error ? err.message : "Erro ao enviar sugestão. Tente de novo.");
     } finally {
       setIsSending(false);
     }

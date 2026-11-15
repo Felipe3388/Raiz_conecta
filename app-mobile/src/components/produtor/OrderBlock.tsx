@@ -22,6 +22,7 @@ import { OrderItemRow } from "./OrderItemRow";
 
 interface OrderBlockProps {
   proposal: Proposal;
+  imageUrlOf: (productName: string) => string | null;
   // A hora atual é usada para determinar a situação do pedido.
   now: Date;
   quantities: ProposalQuantities;
@@ -36,6 +37,7 @@ interface OrderBlockProps {
 // quanto o produtor aceita de cada produto. Aceitar só uma parte é permitido: o resto segue para outros produtores.
 export function OrderBlock({
   proposal,
+  imageUrlOf,
   now,
   quantities,
   onChangeQuantity,
@@ -71,6 +73,7 @@ export function OrderBlock({
           <OrderItemRow
             key={item.id}
             item={item}
+            imageUrl={imageUrlOf(item.produto)}
             chosen={quantities[item.id] ?? 0}
             editable={pending}
             onChange={(value) => onChangeQuantity(item.id, value)}

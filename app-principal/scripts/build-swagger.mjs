@@ -131,13 +131,21 @@ const paths = {
     }),
   },
   "/api/produtor/sugestao": {
-    get: op("Produtor", "Lista sugestões de produto (admin)", { responses: { ...ok("Sugestões.", arr(ref("Sugestao"))), ...errors(401, 403, 500) } }),
+    get: op("Produtor", "Consulta sugestões (produtor: próprias; admin: pendentes)", {
+      description: "O produtor recebe apenas suas sugestões, com histórico e situação real. O admin recebe pendentes por padrão; ?status=all inclui o histórico.",
+      parameters: [{ name: "status", in: "query", required: false, schema: str("all"), description: "Admin: use all para listar todas as sugestões." }],
+      responses: { ...ok("Sugestões.", arr(ref("Sugestao"))), ...errors(401, 403, 500) },
+    }),
     post: op("Produtor", "Sugere um produto novo", {
       description: "Multipart com nome, descrição, preço por kg e foto opcional. O e-mail é o da sessão.",
       body: { required: true, content: { "multipart/form-data": { schema: obj({ nomeProduto: str("Pitaya"), descricao: str(), precoSugerido: str("12,50"), file: { type: "string", format: "binary" } }, ["nomeProduto"]) } } },
-      responses: { ...res(201, "Sugestão enviada.", message), ...errors(400, 401, 403, 500) },
+      responses: { ...res(201, "Sugestão enviada com id e status.", obj({ message: str(), id: int(), status: str("EM_ANALISE") })), ...errors(400, 401, 403, 500) },
     }),
-    delete: op("Produtor", "Apaga uma sugestão (admin)", { parameters: [{ name: "id", in: "query", required: true, schema: int(1) }], responses: { ...ok("Apagada.", message), ...errors(400, 401, 403, 404, 500) } }),
+    patch: op("Produtor", "Recusa uma sugestão (admin, preservando histórico)", {
+      body: jsonBody(obj({ id: int(1), status: str("RECUSADA"), motivo: str("Produto já existe no catálogo") }, ["id", "status"])),
+      responses: { ...ok("Recusada.", message), ...errors(400, 401, 403, 404, 409, 500) },
+    }),
+    delete: op("Produtor", "Retira a própria sugestão pendente (Desfazer)", { parameters: [{ name: "id", in: "query", required: true, schema: int(1) }], responses: { ...ok("Retirada.", message), ...errors(400, 401, 403, 404, 409, 500) } }),
   },
   "/api/produtor/balancas": {
     get: op("Balanças", "Balanças do produtor", { description: "Todas as vinculadas e qual está conectada. É o contrato `ScaleState` do app mobile.", responses: { ...ok("Estado das balanças.", ref("EstadoBalancas")), ...errors(401, 403, 500) } }),
@@ -197,7 +205,7 @@ const paths = {
   },
   "/api/admin/promover-sugestao": {
     post: op("Admin", "Transforma uma sugestão em produto", {
-      description: "Cria o produto e apaga a sugestão numa transação. Os campos ajustados valem; o que faltar vem da sugestão.",
+      description: "Cria o produto e marca a sugestão como APROVADA numa transação. Os campos ajustados valem; o que faltar vem da sugestão.",
       body: jsonBody(obj({ idSugestao: int(1), nome: str(), tipo: str("Frutas"), preco: str("12,50"), unidadePadrao: str("Kg") }, ["idSugestao"])),
       responses: { ...res(201, "Produto criado.", message), ...errors(400, 401, 403, 404, 500) },
     }),
@@ -294,7 +302,7 @@ const spec = {
       PerfilMercado: obj({ email: str(), nomeFantasia: str(), status: str(), telefone: str(), cidade: str(), estado: str(), rua: str(), numero: str(), bairro: str(), cep: str() }),
       Produto: obj({ cdProduto: int(1), nome: str("Maçã Fuji"), tipo: status(["Frutas", "Verduras", "Legumes", "Grãos", "Outros"]), preco: num(5.9), unidadePadrao: status(["Kg", "Unidade", "Maço", "Caixa"]), descricao: str(), imagemUrl: str(), status: status(["ATIVO", "INATIVO"]) }),
       ProdutoInput: obj({ id: int(1), nome: str("Maçã Fuji"), tipo: str("Frutas"), preco: str("5,90"), unidadePadrao: str("Kg"), descricao: str(), status: status(["ATIVO", "INATIVO"]), file: { type: "string", format: "binary" } }, ["nome", "preco"]),
-      Sugestao: obj({ id: int(), emailProdutor: str(), nomeProduto: str(), descricao: str(), imagemUrl: str(), precoSugerido: num(), criadoEm: str("2026-10-27T12:00:00.000Z") }),
+      Sugestao: obj({ id: int(), emailProdutor: str(), nomeProduto: str(), descricao: str(), imagemUrl: str(), precoSugerido: num(), status: str("EM_ANALISE"), motivo: str(), decididoEm: str(), criadoEm: str("2026-10-27T12:00:00.000Z") }),
       Pedido: obj({
         id: str("c1x..."), produto: str("Tomate"), quantidade: num(100), unidade: str("Kg"), precoMedio: num(6.5), status: status(["ABERTA", "CONCLUIDA", "CANCELADA"]), criadoEm: str("2026-10-27T12:00:00.000Z"),
         garantido: num(60), percentual: int(60),

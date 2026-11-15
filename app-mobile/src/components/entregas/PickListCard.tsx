@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { formatKg } from "@/lib/format/weight";
@@ -9,10 +9,11 @@ import { colors, radius, spacing, typography } from "@/theme";
 interface PickListCardProps {
   title: string;
   items: PickItem[];
+  imageUrlOf: (productName: string) => string | null;
 }
 
 // "Separar hoje": cada produto com o que precisa estar separado, somando todos os pedidos dele.
-export function PickListCard({ title, items }: PickListCardProps) {
+export function PickListCard({ title, items, imageUrlOf }: PickListCardProps) {
   return (
     <SectionCard title={title} icon="basket-outline">
       <View style={styles.list}>
@@ -23,9 +24,18 @@ export function PickListCard({ title, items }: PickListCardProps) {
             accessibilityLabel={`${item.produto}: ${formatKg(item.expectedKg)}`}
           >
             <View style={styles.emoji}>
-              <Text maxFontSizeMultiplier={1} style={styles.emojiText}>
-                {productEmoji(item.produto)}
-              </Text>
+              {imageUrlOf(item.produto) ? (
+                <Image
+                  source={{ uri: imageUrlOf(item.produto)! }}
+                  accessibilityLabel={`Foto de ${item.produto}`}
+                  style={styles.productImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Text maxFontSizeMultiplier={1} style={styles.emojiText}>
+                  {productEmoji(item.produto)}
+                </Text>
+              )}
             </View>
             <View style={styles.body}>
               <View style={styles.top}>
@@ -61,6 +71,7 @@ const styles = StyleSheet.create({
     borderColor: colors.borderMid,
   },
   emojiText: { fontSize: 24 },
+  productImage: { width: 46, height: 46, borderRadius: radius.full },
   body: { flex: 1, gap: 6 },
   top: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", gap: spacing.sm },
   name: { ...typography.label, fontSize: 18, color: colors.text },

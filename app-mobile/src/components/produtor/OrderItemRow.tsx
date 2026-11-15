@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 import { QuantityInput } from "@/components/ui/QuantityInput";
 import { QuantitySlider } from "@/components/ui/QuantitySlider";
 import { formatBRL } from "@/lib/format/currency";
@@ -10,6 +10,7 @@ import type { ProposalItem } from "@/types/proposal";
 
 interface OrderItemRowProps {
   item: ProposalItem;
+  imageUrl: string | null;
   // Quantidade que a pessoa está escolhendo (só quando o pedido espera resposta).
   chosen: number;
   editable: boolean;
@@ -18,8 +19,8 @@ interface OrderItemRowProps {
 
 // Um produto do pedido que espera resposta: quanto o mercado pediu, o preço fixo e o campo de quantidade.
 // Depois da resposta ele vira a linha resumida (ResultRow): só o que o produtor aceitou e quanto recebe por isso.
-export function OrderItemRow({ item, chosen, editable, onChange }: OrderItemRowProps) {
-  if (!editable) return <ResultRow item={item} />;
+export function OrderItemRow({ item, imageUrl, chosen, editable, onChange }: OrderItemRowProps) {
+  if (!editable) return <ResultRow item={item} imageUrl={imageUrl} />;
   const unit = item.unidade.toLowerCase();
   const kind: ResultKind = chosen === 0 ? "none" : chosen < item.quantidade ? "partial" : "full";
   const tone = RESULT_TONES[kind];
@@ -28,11 +29,7 @@ export function OrderItemRow({ item, chosen, editable, onChange }: OrderItemRowP
   return (
     <View style={styles.row}>
       <View style={styles.top}>
-        <View style={styles.emoji}>
-          <Text maxFontSizeMultiplier={1} style={styles.emojiText}>
-            {productEmoji(item.produto)}
-          </Text>
-        </View>
+        <ProductThumbnail name={item.produto} imageUrl={imageUrl} />
         <View style={styles.titleBlock}>
           <Text style={styles.product}>{item.produto}</Text>
           <Text style={styles.detail}>
@@ -84,7 +81,7 @@ export function OrderItemRow({ item, chosen, editable, onChange }: OrderItemRowP
 
 // Resultado de um produto, em três cores: verde quando aceitou tudo, âmbar quando aceitou só uma parte e cinza
 // quando não aceitou. À esquerda o produto e o preço; à direita o quanto aceitou e o valor.
-function ResultRow({ item }: { item: ProposalItem }) {
+function ResultRow({ item, imageUrl }: { item: ProposalItem; imageUrl: string | null }) {
   const unit = item.unidade.toLowerCase();
   const accepted = item.aceita ?? 0;
   const kind: ResultKind = accepted === 0 ? "none" : accepted < item.quantidade ? "partial" : "full";
@@ -95,11 +92,7 @@ function ResultRow({ item }: { item: ProposalItem }) {
       accessibilityLabel={`${item.produto}: ${kind === "none" ? "não aceito" : `aceito ${accepted} de ${item.quantidade} ${unit}`}`}
       style={[styles.result, { backgroundColor: tone.background }]}
     >
-      <View style={[styles.emoji, { backgroundColor: tone.emoji }]}>
-        <Text maxFontSizeMultiplier={1} style={styles.emojiText}>
-          {productEmoji(item.produto)}
-        </Text>
-      </View>
+      <ProductThumbnail name={item.produto} imageUrl={imageUrl} backgroundColor={tone.emoji} />
       <View style={styles.titleBlock}>
         <Text style={[styles.product, kind === "none" && styles.muted]}>{item.produto}</Text>
         {kind === "none" ? (
@@ -116,6 +109,26 @@ function ResultRow({ item }: { item: ProposalItem }) {
         )}
       </View>
       {kind !== "none" && <Text style={[styles.amount, { color: tone.text }]}>{formatBRL(accepted * item.preco)}</Text>}
+    </View>
+  );
+}
+
+
+function ProductThumbnail({
+  name,
+  imageUrl,
+  backgroundColor = colors.surface,
+}: {
+  name: string;
+  imageUrl: string | null;
+  backgroundColor?: string;
+}) {
+  if (imageUrl) {
+    return <Image accessibilityLabel={`Foto de ${name}`} source={{ uri: imageUrl }} style={styles.image} />;
+  }
+  return (
+    <View style={[styles.emoji, { backgroundColor }]}>
+      <Text maxFontSizeMultiplier={1} style={styles.emojiText}>{productEmoji(name)}</Text>
     </View>
   );
 }
@@ -153,6 +166,12 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: "center",
     justifyContent: "center",
+    borderRadius: radius.full,
+    backgroundColor: colors.surface,
+  },
+  image: {
+    width: 44,
+    height: 44,
     borderRadius: radius.full,
     backgroundColor: colors.surface,
   },

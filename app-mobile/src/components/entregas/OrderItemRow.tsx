@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 import { itemStatus } from "@/content/deliveryTexts";
 import type { DeliveryCard } from "@/lib/delivery/card";
 import { formatKg } from "@/lib/format/weight";
@@ -8,12 +8,13 @@ import { TONE_COLORS } from "./tones";
 
 interface OrderItemRowProps {
   card: DeliveryCard;
+  imageUrl?: string | null;
   // Destaca o produto que está sendo pesado agora.
   current?: boolean;
 }
 
 // Um produto dentro do pedido: o que e quanto o mercado pediu, e como está a pesagem dele.
-export function OrderItemRow({ card, current = false }: OrderItemRowProps) {
+export function OrderItemRow({ card, imageUrl = null, current = false }: OrderItemRowProps) {
   const { delivery } = card;
   const status = itemStatus(card);
   const tone = TONE_COLORS[status.tone];
@@ -23,9 +24,11 @@ export function OrderItemRow({ card, current = false }: OrderItemRowProps) {
       style={[styles.row, current && styles.current]}
       accessibilityLabel={`${delivery.produto}, ${formatKg(card.expectedKg)}. ${status.label}.`}
     >
-      <Text maxFontSizeMultiplier={1} style={styles.emoji}>
-        {productEmoji(delivery.produto)}
-      </Text>
+      {imageUrl ? (
+        <Image accessibilityLabel={`Foto de ${delivery.produto}`} source={{ uri: imageUrl }} style={styles.image} />
+      ) : (
+        <Text maxFontSizeMultiplier={1} style={styles.emoji}>{productEmoji(delivery.produto)}</Text>
+      )}
       <View style={styles.text}>
         <Text style={styles.product}>{delivery.produto}</Text>
         <Text style={styles.detail}>{formatKg(card.expectedKg)}</Text>
@@ -51,7 +54,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   current: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
-  emoji: { fontSize: 24 },
+  emoji: { width: 44, height: 44, borderRadius: 22, textAlign: "center", textAlignVertical: "center", fontSize: 24, backgroundColor: colors.surface },
+  image: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surface },
   text: { flex: 1, gap: 1 },
   product: { ...typography.label, fontSize: 17, color: colors.text },
   detail: { ...typography.hint, color: colors.textMuted },

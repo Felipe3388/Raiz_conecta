@@ -58,7 +58,7 @@ export default function EntregasScreen() {
         />
       )}
 
-      {screen.pickList.length > 0 && <PickListCard title={pickListTitle(chip?.label ?? "")} items={screen.pickList} />}
+      {screen.pickList.length > 0 && <PickListCard title={pickListTitle(chip?.label ?? "")} items={screen.pickList} imageUrlOf={screen.imageUrlOf} />}
 
       {screen.cards.length > 0 && (
         <Text accessibilityRole="header" style={styles.section}>
@@ -98,6 +98,7 @@ export default function EntregasScreen() {
         renderItem={(card) => (
           <OrderCardView
             card={card}
+            imageUrlOf={screen.imageUrlOf}
             onWeigh={() => screen.weigh.open(card.key)}
             onHandOver={() => screen.handOver.ask(card.key)}
             onSimulateReceipt={screen.canSimulateReceipt ? () => screen.weigh.open(card.key, "MERCADO") : undefined}

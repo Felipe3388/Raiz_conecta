@@ -243,8 +243,13 @@ model Sugestao {
   descricao     String?
   precoSugerido Float?  
   imagemUrl     String?
+  status        String    @default("EM_ANALISE") // EM_ANALISE, APROVADA, RECUSADA
+  motivo        String?   // Motivo informado ao recusar
+  decididoEm    DateTime? // Data da aprovação ou recusa
   criadoEm      DateTime @default(now())
 
+  @@index([emailProdutor, criadoEm])
+  @@index([status])
   @@map("sugestoes")
 }
 
