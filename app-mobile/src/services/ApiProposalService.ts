@@ -8,6 +8,8 @@ import type { ProposalGateway } from "./ProposalGateway";
 // Cada item é UM produto de UM pedido de mercado, visível a todos os produtores que o têm no catálogo.
 interface MuralItemDto {
   id: string;
+  // Nome fantasia do mercado. Servidores mais antigos não mandam: aí vale MURAL_MARKET_NAME.
+  mercado?: string;
   produto: string;
   quantidade: number;
   unidade: string;
@@ -28,7 +30,7 @@ interface MuralDto {
   minhas: MuralItemDto[];
 }
 
-// O site não esconde nada do produtor além do mercado: o nome do mercado não vem na resposta (de propósito, no servidor).
+// Nome usado quando o servidor não manda o nome do mercado (versão antiga do site ou mercado sem nome fantasia).
 export const MURAL_MARKET_NAME = "Mercado da região";
 
 // O servidor ainda não tem prazo de resposta: o pedido fica aberto até ser completado. O app, porém, conta um prazo
@@ -51,7 +53,7 @@ function toPendingProposal(item: MuralItemDto, now: Date): Proposal {
   return {
     id: item.id,
     numero: orderNumber(item.id),
-    mercado: MURAL_MARKET_NAME,
+    mercado: item.mercado?.trim() || MURAL_MARKET_NAME,
     itens: [
       {
         id: item.id,
@@ -85,7 +87,7 @@ function toAcceptedProposal(item: MuralItemDto, now: Date): Proposal {
 // para as recusas locais. Limites do site que o app herda:
 // - não há recusa no servidor: "Recusar" só esconde o pedido neste aparelho (e só até o app ser fechado);
 // - o produtor responde uma vez por pedido ("Você já fez uma oferta"), com quantidade inteira até o que falta;
-// - não há prazo, mercado nem dia de entrega: o dia é o próximo de terça ou sexta.
+// - não há prazo nem dia de entrega: o dia é o próximo de terça ou sexta.
 export class ApiProposalService implements ProposalGateway {
   // Recusas feitas neste aparelho: e-mail → (id do pedido → quando recusou).
   private readonly refused = new Map<string, Map<string, string>>();

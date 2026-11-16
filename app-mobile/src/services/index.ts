@@ -64,18 +64,17 @@ export function getCepService(): CepGateway {
   return cepService;
 }
 
-// Área do Produtor. Catálogo, sugestões com histórico real, Meu Perfil e a balança (vínculo e peso ao vivo) já têm API no
+// Área do Produtor. Catálogo, sugestão de produto, Meu Perfil e a balança (vínculo e peso ao vivo) já têm API no
 // app-principal e trocam de simulado para real pelo EXPO_PUBLIC_USE_MOCKS. O resto (propostas com preço fixo, entregas e
 // pesagem, preços) ainda não existe no site e continua simulado, mesmo com a API ligada (ver ARQUITETURA.md).
 export function getCatalogService(): CatalogGateway {
   if (!catalogService) {
-    catalogService = env.useMocks
-      ? new MockCatalogService({
-          products: MOCK_PRODUCTS,
-          defaultMyProductIds: DEFAULT_MY_PRODUCT_IDS,
-          seedSuggestions,
-        })
-      : new ApiCatalogService(getApiClient());
+    const mock = new MockCatalogService({
+      products: MOCK_PRODUCTS,
+      defaultMyProductIds: DEFAULT_MY_PRODUCT_IDS,
+      seedSuggestions,
+    });
+    catalogService = env.useMocks ? mock : new ApiCatalogService(getApiClient(), mock);
   }
   return catalogService;
 }
