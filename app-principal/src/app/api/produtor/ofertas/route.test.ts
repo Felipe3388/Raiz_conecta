@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const prismaMock = vi.hoisted(() => ({
   vendedor: { findUnique: vi.fn() },
+  cliente: { findMany: vi.fn() },
   demanda: { findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
   oferta: { create: vi.fn() },
   $transaction: vi.fn(),
@@ -39,6 +40,7 @@ beforeEach(() => {
     Estoques: [{ cdProduto: 1, Produto: { nome: "Alface" } }],
   });
   prismaMock.demanda.findMany.mockResolvedValue([demanda(), demanda({ id: "d2", produto: "Tomate" })]);
+  prismaMock.cliente.findMany.mockResolvedValue([{ email: "mercado@secreto.com", nomeFantasia: "Hortifruti Bom Preço" }]);
   prismaMock.demanda.findUnique.mockResolvedValue(demanda());
   // A transação roda a função recebida com o próprio mock como "tx".
   prismaMock.$transaction.mockImplementation(async (run: (tx: unknown) => unknown) => run(prismaMock));
@@ -53,6 +55,24 @@ describe("GET /api/produtor/ofertas", () => {
     expect(data.mural.map((item: { id: string }) => item.id)).toEqual(["d1"]);
     expect(data.resumo.paraResponder).toBe(1);
     expect(data.produtosNoCatalogo).toBe(1);
+  });
+
+  it("mostra o nome do mercado em cada pedido, buscando os cadastros de uma vez só", async () => {
+    const data = await (await get()).json();
+
+    expect(data.mural[0].mercado).toBe("Hortifruti Bom Preço");
+    expect(prismaMock.cliente.findMany).toHaveBeenCalledTimes(1);
+    expect(prismaMock.cliente.findMany).toHaveBeenCalledWith({
+      where: { email: { in: ["mercado@secreto.com"] } },
+      select: { email: true, nomeFantasia: true },
+    });
+  });
+
+  it("usa o nome padrão quando o mercado não tem nome fantasia", async () => {
+    prismaMock.cliente.findMany.mockResolvedValue([{ email: "mercado@secreto.com", nomeFantasia: "  " }]);
+    const data = await (await get()).json();
+
+    expect(data.mural[0].mercado).toBe("Mercado");
   });
 
   it("não expõe e-mail de mercado nem de outros produtores", async () => {

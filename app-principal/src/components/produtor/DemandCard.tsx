@@ -32,6 +32,7 @@ export function DemandCard({ item, onOffer }: DemandCardProps) {
     <article className={`bg-white rounded-2xl border p-5 flex flex-col gap-4 ${mine ? "border-green-300" : "border-gray-200"}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-green-700">{item.mercado}</p>
           <h3 className="font-display !text-2xl !font-bold !text-gray-900">{item.produto}</h3>
           <p className="text-sm text-gray-600">Pedido de {formatQuantity(item.quantidade, item.unidade)}</p>
         </div>

@@ -15,7 +15,7 @@ async function approvedProducer(email: string) {
 const NOT_APPROVED = NextResponse.json({ error: "Seu cadastro ainda não foi aprovado." }, { status: 403 });
 
 // GET: o mural do produtor logado. Devolve só o que ele pode responder (pedidos abertos dos produtos do catálogo dele),
-// o que ele já ofertou e um resumo para o Painel. Não mostra e-mail de mercado nem de outros produtores.
+// o que ele já ofertou e um resumo para o Painel. Mostra o NOME do mercado, mas não o e-mail dele nem o de outros produtores.
 export async function GET(req: Request) {
   const auth = await requireSession(req, ["produtor"]);
   if (auth.error) return auth.error;
@@ -31,8 +31,17 @@ export async function GET(req: Request) {
     });
     const nomes = vendedor.Estoques.flatMap((estoque) => (estoque.Produto?.nome ? [estoque.Produto.nome] : []));
 
+    // O nome fantasia de cada mercado que aparece nos pedidos (uma busca só, por e-mail).
+    const emailsMercado = [...new Set(demandas.map((demanda) => demanda.emailMercado))];
+    const mercados = emailsMercado.length
+      ? await prisma.cliente.findMany({ where: { email: { in: emailsMercado } }, select: { email: true, nomeFantasia: true } })
+      : [];
+    const nomesMercado = new Map(
+      mercados.flatMap((mercado) => (mercado.nomeFantasia?.trim() ? [[mercado.email.toLowerCase(), mercado.nomeFantasia.trim()] as const] : [])),
+    );
+
     return NextResponse.json({
-      ...buildMural(demandas, vendedor.email, nomes),
+      ...buildMural(demandas, vendedor.email, nomes, nomesMercado),
       produtosNoCatalogo: vendedor.Estoques.length,
     });
   } catch (error) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildMural, toMuralItem, validateOffer, type DemandaRow } from "./mural";
+import { buildMural, DEFAULT_MARKET_NAME, toMuralItem, validateOffer, type DemandaRow } from "./mural";
 
 const ME = "maria@teste.com";
 
@@ -16,6 +16,26 @@ function demanda(partial: Partial<DemandaRow> = {}): DemandaRow {
     ...partial,
   };
 }
+
+describe("nome do mercado", () => {
+  const names = new Map([["mercado@x.com", "Hortifruti Bom Preço"]]);
+
+  it("mostra o nome fantasia achado pelo e-mail do mercado, sem diferenciar maiúsculas", () => {
+    expect(toMuralItem(demanda({ emailMercado: "Mercado@X.com" }), ME, names).mercado).toBe("Hortifruti Bom Preço");
+  });
+
+  it("usa um nome padrão quando o cadastro não tem nome ou o e-mail não foi achado", () => {
+    expect(toMuralItem(demanda({ emailMercado: "outro@x.com" }), ME, names).mercado).toBe(DEFAULT_MARKET_NAME);
+    expect(toMuralItem(demanda(), ME, names).mercado).toBe(DEFAULT_MARKET_NAME);
+    expect(toMuralItem(demanda({ emailMercado: "mercado@x.com" }), ME).mercado).toBe(DEFAULT_MARKET_NAME);
+  });
+
+  it("nunca deixa o e-mail do mercado na resposta", () => {
+    const mural = buildMural([demanda({ emailMercado: "mercado@x.com" })], ME, ["Alface"], names);
+    expect(JSON.stringify(mural)).not.toContain("mercado@x.com");
+    expect(mural.mural[0].mercado).toBe("Hortifruti Bom Preço");
+  });
+});
 
 describe("toMuralItem", () => {
   it("soma o que já foi garantido e calcula o que falta", () => {

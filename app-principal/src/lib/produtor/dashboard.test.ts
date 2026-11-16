@@ -5,6 +5,7 @@ import type { MuralItem } from "./mural";
 function item(over: Partial<MuralItem>): MuralItem {
   return {
     id: "x",
+    mercado: "Mercado",
     produto: "Alface",
     quantidade: 100,
     unidade: "Kg",

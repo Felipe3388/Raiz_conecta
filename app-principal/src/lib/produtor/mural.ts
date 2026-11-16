@@ -9,12 +9,22 @@ export interface DemandaRow {
   precoMedio: number | null;
   status: string;
   criadoEm: Date | string;
+  // Só serve para achar o nome do mercado; nunca sai na resposta.
+  emailMercado?: string;
   ofertas: { quantidade: number; emailProdutor: string }[];
 }
 
-// O que o produtor recebe: sem e-mail do mercado nem de outros produtores.
+// Nome fantasia do mercado por e-mail (e-mail em minúsculas). Quem monta a resposta busca isto no cadastro.
+export type MarketNames = ReadonlyMap<string, string>;
+
+// Quando o mercado não tem nome fantasia cadastrado (ou o cadastro não foi achado).
+export const DEFAULT_MARKET_NAME = "Mercado";
+
+// O que o produtor recebe: o NOME do mercado, mas nunca o e-mail dele nem o de outros produtores.
 export interface MuralItem {
   id: string;
+  // Nome fantasia do mercado que fez o pedido.
+  mercado: string;
   produto: string;
   quantidade: number;
   unidade: string;
@@ -43,11 +53,12 @@ export interface Mural {
   resumo: MuralResumo;
 }
 
-export function toMuralItem(demanda: DemandaRow, email: string): MuralItem {
+export function toMuralItem(demanda: DemandaRow, email: string, marketNames: MarketNames = new Map()): MuralItem {
   const atendido = demanda.ofertas.reduce((total, oferta) => total + oferta.quantidade, 0);
   const minha = demanda.ofertas.find((oferta) => sameEmail(oferta.emailProdutor, email));
   return {
     id: demanda.id,
+    mercado: marketNames.get((demanda.emailMercado ?? "").trim().toLowerCase()) ?? DEFAULT_MARKET_NAME,
     produto: demanda.produto,
     quantidade: demanda.quantidade,
     unidade: demanda.unidade,
@@ -67,9 +78,14 @@ function sameEmail(a: string, b: string): boolean {
 
 // Separa o que o produtor pode responder agora (mural) do que ele já ofertou (minhas):
 // o mural só tem pedidos abertos, de produtos do catálogo dele, que ele ainda não ofertou.
-export function buildMural(demandas: DemandaRow[], email: string, catalogProductNames: string[]): Mural {
+export function buildMural(
+  demandas: DemandaRow[],
+  email: string,
+  catalogProductNames: string[],
+  marketNames: MarketNames = new Map(),
+): Mural {
   const catalog = new Set(catalogProductNames.map(normalizeText));
-  const items = demandas.map((demanda) => toMuralItem(demanda, email));
+  const items = demandas.map((demanda) => toMuralItem(demanda, email, marketNames));
 
   const mural = items.filter(
     (item) => item.status === "ABERTA" && item.minhaQuantidade === null && catalog.has(normalizeText(item.produto)),

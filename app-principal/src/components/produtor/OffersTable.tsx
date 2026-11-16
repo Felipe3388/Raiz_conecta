@@ -37,7 +37,7 @@ function OpenRow({ item, onOffer }: { item: MuralItem; onOffer: OfferFn }) {
     <tr className="align-middle">
       <td className="py-4 pl-5 pr-4">
         <p className="font-bold text-gray-900">{item.produto}</p>
-        <p className="text-sm text-gray-500">Faltam {formatQuantity(item.faltante, item.unidade)}</p>
+        <p className="text-sm text-gray-500">{item.mercado} · faltam {formatQuantity(item.faltante, item.unidade)}</p>
       </td>
       <td className="py-4 pr-4"><Progress item={item} /></td>
       <td className="py-4 pr-4 text-right tabular-nums font-semibold text-gray-900 whitespace-nowrap">{formatBRL(item.precoMedio)} / {item.unidade}</td>
@@ -60,7 +60,7 @@ function MineRow({ item }: { item: MuralItem }) {
     <tr className="align-middle">
       <td className="py-4 pl-5 pr-4">
         <p className="font-bold text-gray-900">{item.produto}</p>
-        <p className="text-sm text-gray-500">Pedido de {formatQuantity(item.quantidade, item.unidade)}</p>
+        <p className="text-sm text-gray-500">{item.mercado} · pedido de {formatQuantity(item.quantidade, item.unidade)}</p>
       </td>
       <td className="py-4 pr-4"><Progress item={item} /></td>
       <td className="py-4 pr-4 text-right tabular-nums whitespace-nowrap">

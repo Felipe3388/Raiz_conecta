@@ -1308,26 +1308,13 @@
         "tags": [
           "Produtor"
         ],
-        "summary": "Consulta sugestões (produtor: próprias; admin: pendentes)",
-        "description": "O produtor recebe apenas suas sugestões, com histórico e situação real. O admin recebe pendentes por padrão; ?status=all inclui o histórico.",
+        "summary": "Lista sugestões de produto (admin)",
         "security": [
           {
             "BearerAuth": []
           },
           {
             "CookieAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "status",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "example": "all"
-            },
-            "description": "Admin: use all para listar todas as sugestões."
           }
         ],
         "responses": {
@@ -1422,113 +1409,7 @@
         },
         "responses": {
           "201": {
-            "description": "Sugestão enviada com id e status.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    },
-                    "id": {
-                      "type": "integer"
-                    },
-                    "status": {
-                      "type": "string",
-                      "example": "EM_ANALISE"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Dados inválidos (a mensagem diz o que corrigir).",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Sem sessão ou sessão vencida.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Sem permissão para este recurso.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Erro interno (sem detalhes).",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "Produtor"
-        ],
-        "summary": "Recusa uma sugestão (admin, preservando histórico)",
-        "security": [
-          {
-            "BearerAuth": []
-          },
-          {
-            "CookieAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "integer",
-                    "example": 1
-                  },
-                  "status": {
-                    "type": "string",
-                    "example": "RECUSADA"
-                  },
-                  "motivo": {
-                    "type": "string",
-                    "example": "Produto já existe no catálogo"
-                  }
-                },
-                "required": [
-                  "id",
-                  "status"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Recusada.",
+            "description": "Sugestão enviada.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1559,26 +1440,6 @@
           },
           "403": {
             "description": "Sem permissão para este recurso.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Não encontrado.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflito com o estado atual.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1603,7 +1464,7 @@
         "tags": [
           "Produtor"
         ],
-        "summary": "Retira a própria sugestão pendente (Desfazer)",
+        "summary": "Apaga uma sugestão (admin)",
         "security": [
           {
             "BearerAuth": []
@@ -1625,7 +1486,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Retirada.",
+            "description": "Apagada.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1666,16 +1527,6 @@
           },
           "404": {
             "description": "Não encontrado.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflito com o estado atual.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3211,7 +3062,7 @@
           "Admin"
         ],
         "summary": "Transforma uma sugestão em produto",
-        "description": "Cria o produto e marca a sugestão como APROVADA numa transação. Os campos ajustados valem; o que faltar vem da sugestão.",
+        "description": "Cria o produto e apaga a sugestão numa transação. Os campos ajustados valem; o que faltar vem da sugestão.",
         "security": [
           {
             "BearerAuth": []
@@ -4464,16 +4315,6 @@
           "precoSugerido": {
             "type": "number"
           },
-          "status": {
-            "type": "string",
-            "example": "EM_ANALISE"
-          },
-          "motivo": {
-            "type": "string"
-          },
-          "decididoEm": {
-            "type": "string"
-          },
           "criadoEm": {
             "type": "string",
             "example": "2026-10-27T12:00:00.000Z"
@@ -4601,6 +4442,11 @@
         "properties": {
           "id": {
             "type": "string"
+          },
+          "mercado": {
+            "type": "string",
+            "description": "Nome fantasia do mercado que fez o pedido (nunca o e-mail).",
+            "example": "Hortifruti Bom Preço"
           },
           "produto": {
             "type": "string"
