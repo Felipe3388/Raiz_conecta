@@ -74,7 +74,7 @@ export function getCatalogService(): CatalogGateway {
       defaultMyProductIds: DEFAULT_MY_PRODUCT_IDS,
       seedSuggestions,
     });
-    catalogService = env.useMocks ? mock : new ApiCatalogService(getApiClient(), mock);
+    catalogService = env.useMocks ? mock : new ApiCatalogService(getApiClient());
   }
   return catalogService;
 }
