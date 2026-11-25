@@ -45,7 +45,6 @@ export interface AdminSuggestion {
 export interface AdminScale {
   deviceId: string;
   nome: string;
-  codigo: string;
   emailProdutor: string | null;
   apelido: string | null;
   conectada: boolean;

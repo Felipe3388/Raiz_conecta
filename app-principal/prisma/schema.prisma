@@ -254,8 +254,8 @@ model Sugestao {
 }
 
 // 🔌 IOT: BALANÇAS (módulo ESP32 + célula de carga)
-// O módulo fala com o servidor por HTTPS (ver docs/IOT.md). O servidor guarda só o HASH do segredo do módulo; o segredo
-// aparece uma única vez, quando o administrador cadastra a balança.
+// O módulo fala com o servidor por HTTPS (ver docs/IOT.md). A balança nasce no pareamento feito pelo app (estilo lâmpada
+// inteligente): o servidor gera o segredo do módulo, entrega-o uma única vez ao ESP32 e guarda só o HASH.
 
 model Balanca {
   id            String    @id @default(uuid())
@@ -292,4 +292,20 @@ model LeituraPeso {
 
   @@index([balancaId, medidoEm])
   @@map("leituras_peso")
+}
+
+// Pareamento de uma balança com o produtor (ver docs/IOT.md). O app pede um token ao servidor, entrega-o ao ESP32 pela rede
+// da própria balança e o ESP32 o apresenta em POST /api/iot/vincular. Só o HASH do token fica no banco.
+model PareamentoBalanca {
+  id            String    @id @default(uuid())
+  tokenHash     String    @unique // SHA-256 do token que o app entrega ao módulo
+  emailProdutor String // quem pediu o pareamento (dono da balança quando o módulo concluir)
+  criadoEm      DateTime  @default(now())
+  expiraEm      DateTime
+  usadoEm       DateTime? // quando o módulo apresentou o token e a balança foi vinculada
+  deviceId      String? // MAC do módulo que usou (ou tentou usar) o token
+  recusa        String? // por que o servidor recusou o módulo (ex.: "outra-conta"); o app mostra ao produtor
+
+  @@index([emailProdutor, criadoEm])
+  @@map("pareamentos_balanca")
 }

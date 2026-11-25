@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/http/client";
 import { normalizeDeviceId } from "@/lib/iot/deviceId";
-import { normalizePairingCode, scaleDisplayName, type ScaleLink, type ScaleState } from "@/lib/iot/label";
+import { scaleDisplayName, type ScaleLink, type ScaleState } from "@/lib/iot/label";
 
 const BASE = "/api/produtor/balancas";
 const path = (deviceId: string) => `${BASE}/${normalizeDeviceId(deviceId)}`;
@@ -53,8 +53,6 @@ export function useScales() {
     reload,
     active,
     activeName: active ? scaleDisplayName(active) : null,
-    add: (deviceId: string, code: string) =>
-      run(() => api(BASE, { method: "POST", json: { deviceId: normalizeDeviceId(deviceId), codigo: normalizePairingCode(code) } }), "Balança adicionada e conectada!"),
     activate: (scale: ScaleLink) => run(() => api(`${path(scale.deviceId)}/conectada`, { method: "PUT" }), `${scaleDisplayName(scale)} conectada.`),
     rename: (scale: ScaleLink, name: string) => run(() => api(path(scale.deviceId), { method: "PATCH", json: { apelido: name.trim() === "" ? null : name } }), "Nome da balança salvo."),
     remove: (scale: ScaleLink) => run(() => api(path(scale.deviceId), { method: "DELETE" }), "Balança removida."),

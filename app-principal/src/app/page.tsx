@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Check, ArrowRight, Store, Sprout, Handshake } from "lucide-react";
+import { Check, CheckCircle2, Radio, Scale, Timer } from "lucide-react";
 import { HeroFlow } from "@/components/landing/HeroFlow";
 import { LandingActions } from "@/components/landing/LandingActions";
 
@@ -8,7 +8,7 @@ import { LandingActions } from "@/components/landing/LandingActions";
 const STEPS = [
   { title: "O mercado monta a cotação", text: "Escolhe os produtos do catálogo e quantos quilos quer de cada um. O preço de referência mostra a estimativa antes de enviar." },
   { title: "Os produtores da região ofertam", text: "Cada produtor atende a parte que tem. Vários juntos completam um pedido grande." },
-  { title: "O pedido ganha fornecedores", text: "O mercado acompanha as quantidades ofertadas. Cada produtor contribui com o que consegue entregar." },
+  { title: "A pesagem é guiada", text: "No dia da entrega, o app diz o que pesar e só registra quando o peso fica dentro da faixa combinada." },
   { title: "O mercado recebe e avalia", text: "Confere o pedido, acompanha tudo pelo painel e avalia o produtor." },
 ];
 
@@ -35,10 +35,16 @@ const AUDIENCES = [
     points: [
       "Veja os pedidos dos mercados próximos para o que você produz.",
       "Atenda só a quantidade que você tem disponível.",
-      "Organize os pedidos e as entregas pelo celular.",
+      "Separe e pese os pedidos pelo app, com a balança conectada.",
     ],
     cta: { href: "/login?modo=cadastro&tipo=produtor", label: "Criar conta de produtor" },
   },
+];
+
+const SCALE_POINTS = [
+  { icon: CheckCircle2, text: "Tolerância de 2% para mais ou para menos do que o mercado pediu" },
+  { icon: Timer, text: "O peso só é registrado depois de ficar parado por 5 segundos" },
+  { icon: Radio, text: "Peso ao vivo no app e no site, com aviso quando a balança perde o sinal" },
 ];
 
 // Os Objetivos de Desenvolvimento Sustentável da ONU com que o projeto se compromete.
@@ -53,16 +59,16 @@ const container = "max-w-6xl mx-auto px-5 md:px-8";
 export default function HomePage() {
   return (
     <div className="bg-gray-50">
-      {/* Demonstração ilustrativa da conexão direta entre mercado e produtores. */}
+      {/* O produto em ação logo de cara: um pedido de verdade passando pelas três pontas. */}
       <section className="overflow-hidden">
         <div className={`${container} grid lg:grid-cols-[1.05fr_1fr] gap-14 lg:gap-10 items-center pt-14 pb-20 md:pt-20 md:pb-28`}>
           <div>
             <h1 className="rc-display-1 max-w-[12ch]">
-              Quem produz encontra quem precisa.
+              O mercado pede. O produtor da região entrega.
             </h1>
             <p className="mt-6 text-lg md:text-xl text-gray-600 leading-relaxed max-w-[46ch]">
-              O mercado publica o que precisa. Produtores da região fazem suas ofertas e, juntos, completam o pedido —
-              direto do campo, sem atravessador.
+              Cotação, oferta e pesagem no mesmo lugar, sem atravessador. A balança conectada confere cada quilo antes
+              de o pedido sair.
             </p>
             <div className="mt-9">
               <LandingActions />
@@ -124,28 +130,34 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="conexao" className="bg-mata text-white scroll-mt-20">
-        <div className={`${container} py-20 md:py-24 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center`}>
+      <section id="balanca" className="bg-mata text-white scroll-mt-20 overflow-hidden">
+        <div className={`${container} py-20 md:py-24 grid gap-14 lg:grid-cols-[1.1fr_1fr] items-center`}>
           <div>
-            <span className="inline-flex items-center gap-2 text-green-200 font-semibold"><Handshake size={20} aria-hidden="true" /> Conexão direta</span>
-            <h2 className="rc-display-2 mt-3 !text-white max-w-[17ch]">Duas pontas, uma oportunidade.</h2>
+            <span className="inline-flex items-center gap-2 text-milho font-semibold"><Scale size={18} aria-hidden="true" /> Balança conectada</span>
+            <h2 className="rc-display-2 mt-3 !text-white max-w-[16ch]">A balança confere cada quilo.</h2>
             <p className="mt-5 text-lg text-green-100 leading-relaxed max-w-[50ch]">
-              Mercados encontrando produtos frescos. Produtores encontrando compradores. A plataforma aproxima os dois lados
-              e organiza as ofertas, inclusive quando vários produtores atendem um mesmo pedido.
+              O módulo da balança manda o peso para o Raiz Conecta pelo Wi-Fi. O app guia a separação produto por produto
+              e só registra o que está dentro do combinado: nem a menos, nem a mais.
             </p>
-            <p className="mt-6 text-green-100">Sem atravessadores, com visibilidade das quantidades e do andamento da compra.</p>
+            <ul className="mt-8 space-y-4">
+              {SCALE_POINTS.map(({ icon: Icon, text }) => (
+                <li key={text} className="flex gap-3 text-green-50">
+                  <Icon size={20} className="text-milho shrink-0 mt-0.5" aria-hidden="true" /> {text}
+                </li>
+              ))}
+            </ul>
           </div>
-          <div className="grid sm:grid-cols-[1fr_auto_1fr] gap-4 items-center" aria-label="Conexão entre mercado e produtor">
-            <div className="rounded-2xl bg-white/10 border border-white/20 p-6 text-center">
-              <Store className="mx-auto text-green-200" size={38} aria-hidden="true" />
-              <h3 className="text-xl font-bold mt-3">Mercados</h3>
-              <p className="mt-2 text-sm text-green-100">Publicam a demanda</p>
-            </div>
-            <ArrowRight className="mx-auto rotate-90 sm:rotate-0 text-green-300" size={28} aria-hidden="true" />
-            <div className="rounded-2xl bg-white/10 border border-white/20 p-6 text-center">
-              <Sprout className="mx-auto text-green-200" size={38} aria-hidden="true" />
-              <h3 className="text-xl font-bold mt-3">Produtores</h3>
-              <p className="mt-2 text-sm text-green-100">Respondem com ofertas</p>
+          {/* O celular "sai" da borda de baixo da faixa: mostra a parte da tela que importa (o pedido, a faixa e o peso). */}
+          <div className="relative mx-auto w-full max-w-[320px] self-end -mb-20 md:-mb-24">
+            <div className="rounded-t-[2.6rem] bg-gray-950 px-2.5 pt-2.5 shadow-2xl ring-1 ring-white/10">
+              <Image
+                src="/landing/app-pesagem.png"
+                alt="Tela de pesagem do app com a Balança RC-01 conectada: pode pesar entre 7,84 e 8,16 kg, a balança marca 8 kg e o peso está estabilizando dentro da faixa"
+                width={780}
+                height={1000}
+                sizes="320px"
+                className="rounded-t-[2.1rem] w-full h-auto"
+              />
             </div>
           </div>
         </div>

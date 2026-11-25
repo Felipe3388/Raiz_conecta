@@ -21,7 +21,7 @@ export function ScaleWidget() {
         <Scale size={24} className="text-gray-500" aria-hidden="true" />
         <div>
           <p className="font-bold text-gray-900">Conecte sua balança</p>
-          <p className="text-sm text-gray-600 mt-1">Pese os pedidos sem digitar. Basta o código da etiqueta.</p>
+          <p className="text-sm text-gray-600 mt-1">Pese os pedidos sem digitar. Adicione a balança pelo app, em 3 passos.</p>
         </div>
         <span className="text-sm font-bold text-green-700 flex items-center gap-1">Conectar <ChevronRight size={16} aria-hidden="true" /></span>
       </Link>

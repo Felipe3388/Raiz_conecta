@@ -3,7 +3,8 @@ import { formatDeviceId, isValidDeviceId, normalizeDeviceId } from "./deviceId";
 import { linkKey } from "./linkKey";
 import { cleanScaleName } from "./name";
 import { ONLINE_WINDOW_MS, isOnline, parseReadings, readingsToStore } from "./readings";
-import { CODE_LENGTH, codeMatches, formatCode, normalizeCode, pairingCode } from "./pairing";
+import { PAIRING_TTL_MS, generatePairingToken, hashPairingToken, isPairingTokenFormat, pairingState, pairingStatus } from "./pairing";
+import { factoryName } from "./name";
 import { generateSecret, hashSecret, secretMatches } from "./secret";
 import { toScaleState } from "./scales";
 
@@ -122,19 +123,59 @@ describe("toScaleState", () => {
 });
 
 describe("pairing", () => {
-  it("o código é estável, tem 8 símbolos legíveis e muda de balança para balança", () => {
-    const code = pairingCode("a4:cf:12:9b:07:e1");
-    expect(code).toMatch(new RegExp(`^[0-9A-HJKMNP-TV-Z]{${CODE_LENGTH}}$`));
-    expect(pairingCode("A4CF129B07E1")).toBe(code);
-    expect(pairingCode("A4CF129B07E2")).not.toBe(code);
-    expect(formatCode(code)).toBe(`${code.slice(0, 4)}-${code.slice(4)}`);
+  it("gera tokens longos e diferentes; só o hash fica guardado", () => {
+    const token = generatePairingToken();
+    expect(isPairingTokenFormat(token)).toBe(true);
+    expect(generatePairingToken()).not.toBe(token);
+    expect(hashPairingToken(token)).not.toContain(token);
+    expect(hashPairingToken(token)).toBe(hashPairingToken(token));
   });
-  it("aceita o código digitado com traço, minúsculas e letras confundidas", () => {
-    const code = pairingCode("A4CF129B07E1");
-    expect(codeMatches(formatCode(code).toLowerCase(), "A4CF129B07E1")).toBe(true);
-    expect(codeMatches(` ${code} `, "A4CF129B07E1")).toBe(true);
-    expect(codeMatches(code, "A4CF129B07E2")).toBe(false);
-    expect(normalizeCode("o1-iL")).toBe("0111");
+
+  it("só aceita o formato do token (64 hexadecimais minúsculos)", () => {
+    expect(isPairingTokenFormat("a".repeat(64))).toBe(true);
+    expect(isPairingTokenFormat("A".repeat(64))).toBe(false);
+    expect(isPairingTokenFormat("a".repeat(63))).toBe(false);
+    expect(isPairingTokenFormat("")).toBe(false);
+  });
+
+  it("estado: aguardando, vinculada, recusada ou expirada", () => {
+    const now = new Date("2026-11-24T12:00:00Z");
+    const open = { expiraEm: new Date(now.getTime() + PAIRING_TTL_MS), usadoEm: null, recusa: null };
+    expect(pairingState(open, now)).toBe("aguardando");
+    expect(pairingState({ ...open, expiraEm: new Date(now.getTime() - 1) }, now)).toBe("expirada");
+    expect(pairingState({ ...open, usadoEm: now }, now)).toBe("vinculada");
+    expect(pairingState({ ...open, recusa: "outra-conta" }, now)).toBe("recusada");
+  });
+
+  it("status: pronta só quando a balança é do produtor e já falou com o servidor", () => {
+    const now = new Date("2026-11-24T12:00:00Z");
+    const used = { expiraEm: new Date(now.getTime() + 60_000), usadoEm: now, recusa: null };
+    const scale = (extra = {}) => ({
+      deviceId: "A4CF129B07E1", nome: "Balança RC-07E1", apelido: null, vinculadaEm: now, emailProdutor: "maria@teste.com", conectada: true,
+      ultimoContato: new Date(now.getTime() - 2_000), ...extra,
+    });
+
+    const ready = pairingStatus(used, scale(), "Maria@teste.com", now);
+    expect(ready).toMatchObject({ estado: "vinculada", pronta: true, deviceId: "A4:CF:12:9B:07:E1" });
+    expect(ready.balanca).toMatchObject({ deviceId: "A4:CF:12:9B:07:E1", deviceName: "Balança RC-07E1" });
+
+    expect(pairingStatus(used, scale({ ultimoContato: null }), "maria@teste.com", now)).toMatchObject({ estado: "vinculada", pronta: false });
+    // A balança saiu da conta depois do vínculo: o pareamento não vale mais.
+    expect(pairingStatus(used, scale({ emailProdutor: null }), "maria@teste.com", now)).toMatchObject({ estado: "expirada", pronta: false, balanca: null });
+    expect(pairingStatus(used, scale({ emailProdutor: "outro@teste.com" }), "maria@teste.com", now).balanca).toBeNull();
+  });
+
+  it("recusada traz a mensagem para o produtor", () => {
+    const now = new Date();
+    const refused = { expiraEm: new Date(now.getTime() + 60_000), usadoEm: null, recusa: "outra-conta" };
+    expect(pairingStatus(refused, null, "maria@teste.com", now)).toMatchObject({ estado: "recusada", pronta: false, mensagem: expect.stringMatching(/outra conta/) });
+  });
+});
+
+describe("factoryName", () => {
+  it("usa o final do MAC", () => {
+    expect(factoryName("A4CF129B07E1")).toBe("Balança RC-07E1");
+    expect(factoryName("a4:cf:12:9b:07:e1")).toBe("Balança RC-07E1");
   });
 });
 

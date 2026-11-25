@@ -30,7 +30,7 @@ Primeiro administrador: abra `/api/setup-admin` uma vez (usa `ADMIN_SENHA_INICIA
 | Variável | Obrigatória | Para quê |
 |---|---|---|
 | `DATABASE_URL` | sim | PostgreSQL (Neon, Supabase...) |
-| `JWT_SECRET` | **sim, em produção** (32+ caracteres) | Assina os tokens e gera os códigos de etiqueta das balanças. Sem ela, em produção o login e as rotas protegidas recusam funcionar (falha fechada) — configure também no ambiente **Preview** do Vercel |
+| `JWT_SECRET` | **sim, em produção** (32+ caracteres) | Assina os tokens de login e as chaves de vínculo das balanças. Sem ela, em produção o login e as rotas protegidas recusam funcionar (falha fechada) — configure também no ambiente **Preview** do Vercel |
 | `ADMIN_SENHA_INICIAL` | para o setup | Senha do primeiro administrador (8+ caracteres, maiúscula, minúscula, número e símbolo) |
 | `CLOUDINARY_CLOUD_NAME` / `_API_KEY` / `_API_SECRET` | sim | Fotos de produtos, sugestões e documentos |
 | `MICROSERVICE_URL` | não | Microsserviço de e-mails (`app-node`). Vazio = o site funciona sem enviar e-mails |
@@ -51,8 +51,8 @@ Primeiro administrador: abra `/api/setup-admin` uma vez (usa `ADMIN_SENHA_INICIA
 
 | Área | Rota | O que tem |
 |---|---|---|
-| Administração | `/admin` | Usuários (aprovar/rejeitar/suspender/editar), produtos, sugestões, administradores e **Balanças** (cadastrar MAC, ver código da etiqueta, gerar segredo, liberar) |
-| Produtor | `/produtor` | Início, Catálogo, Ofertas, Entregas e Mais — as telas do app adaptadas ao computador (menu lateral, Início em colunas, Ofertas em tabela) — mais **Meu Perfil** (`/produtor/perfil`) e **Minha balança** (`/produtor/balancas`: adicionar pela etiqueta, renomear, trocar, remover e ver o **peso ao vivo**) |
+| Administração | `/admin` | Usuários (aprovar/rejeitar/suspender/editar), produtos, sugestões, administradores e **Balanças** (acompanhar sinal e dono, liberar, excluir; elas nascem no pareamento feito pelo produtor no app) |
+| Produtor | `/produtor` | Início, Catálogo, Ofertas, Entregas e Mais — as telas do app adaptadas ao computador (menu lateral, Início em colunas, Ofertas em tabela) — mais **Meu Perfil** (`/produtor/perfil`) e **Minha balança** (`/produtor/balancas`: renomear, trocar, remover e ver o **peso ao vivo**) |
 | Mercado | `/catalogo`, `/checkout` | Catálogo com busca/filtros, cotação (carrinho guardado no navegador), confirmação, **Minhas cotações** (acompanhar ofertas, avaliar o produtor, cancelar em até 7 dias úteis) |
 | Página inicial | `/` | Como funciona, para quem é, a balança conectada e os ODS; quem já entrou vai ao seu painel |
 | Conta | `/perfil` (mercado), `/login`, `/completar-perfil`, `/cadastro-enviado` | Dados, endereço (CEP preenche sozinho), senha, exclusão de conta e a tela de "cadastro enviado" (olhe o e-mail) |

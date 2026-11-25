@@ -149,10 +149,18 @@ const paths = {
   },
   "/api/produtor/balancas": {
     get: op("Balanças", "Balanças do produtor", { description: "Todas as vinculadas e qual está conectada. É o contrato `ScaleState` do app mobile.", responses: { ...ok("Estado das balanças.", ref("EstadoBalancas")), ...errors(401, 403, 500) } }),
-    post: op("Balanças", "Vincula uma balança", {
-      description: "Balança livre exige o `codigo` da etiqueta (HMAC do MAC). Código errado e balança inexistente respondem igual (404). Já sendo do produtor, só a deixa conectada. 5 erros em 15 min travam.",
-      body: jsonBody(obj({ deviceId: str("A4:CF:12:9B:07:E1"), codigo: str("K7M2-Q9XT") }, ["deviceId"])),
-      responses: { ...res(201, "Balança vinculada e conectada.", ref("BalancaVinculada")), ...errors(400, 401, 403, 404, 409, 429, 500) },
+  },
+  "/api/produtor/balancas/pareamento": {
+    post: op("Balanças", "Abre o pareamento de uma balança nova", {
+      description: "Estilo lâmpada inteligente: o app pede o token ANTES de entrar na rede Balanca_raiz_XXXX da balança (o celular fica sem internet nela), entrega o token ao módulo junto do Wi-Fi do produtor e consulta `GET /pareamento/{id}` até a balança ficar pronta. O token vale 15 min, aparece só aqui e um produtor tem um pareamento aberto por vez. 10 pedidos em 15 min travam (429).",
+      responses: { ...res(201, "Pareamento aberto.", ref("PareamentoAberto")), ...errors(401, 403, 429, 500) },
+    }),
+  },
+  "/api/produtor/balancas/pareamento/{id}": {
+    get: op("Balanças", "Andamento do pareamento", {
+      description: "`aguardando`: o módulo ainda não falou com o servidor. `vinculada`: a balança já está na conta; `pronta` vira true quando ela já envia sinal. `recusada`: o módulo é de outra conta (`mensagem` explica). `expirada`: passou o prazo. Nunca vem do cache.",
+      parameters: [{ name: "id", in: "path", required: true, description: "O `id` devolvido por POST /pareamento.", schema: str("c1x...") }],
+      responses: { ...ok("Estado do pareamento.", ref("EstadoPareamento")), ...errors(401, 403, 404, 500) },
     }),
   },
   "/api/produtor/balancas/{id}": {
@@ -211,19 +219,11 @@ const paths = {
     }),
   },
   "/api/admin/balancas": {
-    get: op("Balanças (admin)", "Lista todas as balanças", { responses: { ...ok("Balanças com código da etiqueta, vínculo e estado online.", arr(ref("BalancaAdmin"))), ...errors(401, 403, 500) } }),
-    post: op("Balanças (admin)", "Cadastra uma balança", {
-      description: "Devolve o `segredo` UMA vez (o banco guarda só o hash). Grave no firmware do ESP32; para ver outro, gere um novo.",
-      body: jsonBody(obj({ deviceId: str("A4:CF:12:9B:07:E1"), nome: str("Balança 01") }, ["deviceId"])),
-      responses: { ...res(201, "Balança cadastrada.", obj({ balanca: ref("BalancaAdmin"), segredo: str("rc_...") })), ...errors(400, 401, 403, 409, 500) },
-    }),
+    get: op("Balanças (admin)", "Lista todas as balanças", { responses: { ...ok("Balanças com dono, vínculo e estado online.", arr(ref("BalancaAdmin"))), ...errors(401, 403, 500) } }),
   },
   "/api/admin/balancas/{id}": {
     patch: op("Balanças (admin)", "Libera a balança do produtor", { parameters: [idParam], body: jsonBody(obj({ liberar: bool(true) }, ["liberar"])), responses: { ...ok("Liberada (histórico apagado).", ref("BalancaAdmin")), ...errors(400, 401, 403, 404, 500) } }),
     delete: op("Balanças (admin)", "Remove a balança", { parameters: [idParam], responses: { ...ok("Removida.", message), ...errors(401, 403, 404, 500) } }),
-  },
-  "/api/admin/balancas/{id}/segredo": {
-    post: op("Balanças (admin)", "Gera um novo segredo", { description: "O segredo anterior deixa de valer na hora.", parameters: [idParam], responses: { ...ok("Novo segredo (mostrado uma vez).", obj({ segredo: str("rc_...") })), ...errors(401, 403, 404, 500) } }),
   },
   "/api/iot/config": {
     get: op("IoT", "Configuração do módulo", {
@@ -231,6 +231,18 @@ const paths = {
       security: DEVICE,
       parameters: [{ name: "X-Device-Id", in: "header", required: true, schema: str("A4:CF:12:9B:07:E1") }],
       responses: { ...ok("Configuração.", obj({ hora: int(1761600000000), vinculada: bool(), intervaloAtivoMs: int(500), intervaloOciosoMs: int(5000), lote: int(10) })), ...errors(401, 500) },
+    }),
+  },
+  "/api/iot/vincular": {
+    post: op("IoT", "O módulo conclui o pareamento", {
+      description: "Chamado pelo ESP32 já no Wi-Fi do produtor, com o token que o app lhe entregou. O servidor vincula a balança ao dono do token, gera o `segredo` do módulo e o devolve UMA vez (o banco guarda só o hash). Se o módulo ainda guarda um segredo de pareamento anterior, manda `Authorization: Device <segredo>` como prova; só assim uma balança que já tem dono troca de dono (senão 409). Token vencido, desconhecido ou de outro módulo responde o mesmo 401. 10 erros em 15 min por IP travam.",
+      security: [],
+      parameters: [
+        { name: "X-Device-Id", in: "header", required: true, schema: str("A4:CF:12:9B:07:E1") },
+        { name: "Authorization", in: "header", required: false, description: "`Device <segredo anterior>` (opcional).", schema: str() },
+      ],
+      body: jsonBody(obj({ token: str("64 caracteres hexadecimais"), firmware: str("2.0.0") }, ["token"])),
+      responses: { ...ok("Balança vinculada.", obj({ ok: bool(true), segredo: str("64 caracteres hexadecimais"), hora: int(1761600000000), vinculada: bool(true), intervaloAtivoMs: int(500), intervaloOciosoMs: int(5000), lote: int(10) })), ...errors(400, 401, 409, 429, 500) },
     }),
   },
   "/api/iot/leituras": {
@@ -280,7 +292,7 @@ const spec = {
     securitySchemes: {
       BearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT", description: "Token do login (app mobile)." },
       CookieAuth: { type: "apiKey", in: "cookie", name: "token", description: "Cookie httpOnly gravado pelo login (site)." },
-      DeviceAuth: { type: "apiKey", in: "header", name: "Authorization", description: "`Device <segredo>` — o segredo mostrado uma vez ao cadastrar a balança." },
+      DeviceAuth: { type: "apiKey", in: "header", name: "Authorization", description: "`Device <segredo>` — o segredo que o servidor entrega ao módulo uma única vez, ao concluir o pareamento (POST /api/iot/vincular)." },
     },
     schemas: {
       Erro: obj({ error: str("Mensagem pronta para mostrar à pessoa") }, ["error"]),
@@ -312,10 +324,15 @@ const spec = {
       MuralItem: obj({ id: str(), produto: str(), quantidade: num(), unidade: str(), precoMedio: num(), status: status(["ABERTA", "CONCLUIDA"]), atendido: num(), faltante: num(), percentual: int(), criadoEm: str(), minhaQuantidade: { type: "number", nullable: true } }),
       UsuarioAdmin: obj({ email: str(), nomeFantasia: str(), status: str(), tipo: status(["produtor", "mercado", "admin"]), telefone: str(), cidade: str(), estado: str(), criadoEm: str() }),
       BalancaVinculada: obj({ deviceId: str("A4:CF:12:9B:07:E1"), deviceName: str("Balança 01"), nickname: { type: "string", nullable: true }, key: str("RC-1a2b3c4d5e6f7a8b9c0d"), linkedAt: str("2026-10-27T12:00:00.000Z") }),
+      PareamentoAberto: obj({ id: str("c1x..."), token: str("64 caracteres hexadecimais"), expiraEm: str("2026-11-24T12:15:00.000Z") }),
+      EstadoPareamento: obj({
+        estado: status(["aguardando", "vinculada", "recusada", "expirada"]), pronta: bool(), deviceId: { type: "string", nullable: true },
+        balanca: { allOf: [ref("BalancaVinculada")], nullable: true }, mensagem: { type: "string", nullable: true },
+      }),
       EstadoBalancas: obj({ scales: arr(ref("BalancaVinculada")), activeDeviceId: { type: "string", nullable: true } }),
       LeituraAoVivo: obj({ online: bool(), kg: { type: "number", nullable: true }, estavel: bool(), em: { type: "integer", nullable: true }, agora: int() }),
       BalancaAdmin: obj({
-        deviceId: str(), nome: str(), codigo: str("K7M2-Q9XT"), emailProdutor: { type: "string", nullable: true }, apelido: { type: "string", nullable: true }, conectada: bool(), online: bool(),
+        deviceId: str(), nome: str(), emailProdutor: { type: "string", nullable: true }, apelido: { type: "string", nullable: true }, conectada: bool(), online: bool(),
         firmware: { type: "string", nullable: true }, ultimoContato: { type: "string", nullable: true }, ultimoKg: { type: "number", nullable: true }, vinculadaEm: { type: "string", nullable: true }, criadoEm: str(),
       }),
     },

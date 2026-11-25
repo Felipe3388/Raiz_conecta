@@ -1,27 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { isActiveScale, labelError, maskDeviceId, maskPairingCode, parseLabelText, scaleDisplayName, scaleRowHint } from "./label";
+import { isActiveScale, scaleDisplayName, scaleRowHint } from "./label";
 import { applyReading, formatKg, POLL_OFFLINE_MS, POLL_ONLINE_MS } from "./liveWeight";
 
-describe("etiqueta da balança", () => {
-  it("mascara o endereço e o código enquanto a pessoa digita", () => {
-    expect(maskDeviceId("a4cf129")).toBe("A4:CF:12:9");
-    expect(maskDeviceId("A4-CF-12-9B-07-E1-FF")).toBe("A4:CF:12:9B:07:E1");
-    expect(maskPairingCode("k7m2q9xt")).toBe("K7M2-Q9XT");
-    expect(maskPairingCode("k7m")).toBe("K7M");
-  });
-
-  it("lê o texto do QR Code e recusa o que não é da etiqueta", () => {
-    expect(parseLabelText(" RC:A4CF129B07E1:K7M2Q9XT ")).toEqual({ deviceId: "A4:CF:12:9B:07:E1", code: "K7M2-Q9XT" });
-    expect(parseLabelText("RC:A4CF12:K7M2Q9XT")).toBeNull();
-    expect(parseLabelText("A4:CF:12:9B:07:E1")).toBeNull();
-  });
-
-  it("confere os dois campos antes de enviar", () => {
-    expect(labelError("A4:CF:12", "K7M2-Q9XT")).toMatch(/endereço completo/);
-    expect(labelError("A4:CF:12:9B:07:E1", "K7M2")).toMatch(/código da etiqueta/);
-    expect(labelError("A4:CF:12:9B:07:E1", "K7M2-Q9XT")).toBeNull();
-  });
-
+describe("balança na tela", () => {
   it("nome, balança conectada e a linha do Mais", () => {
     const scale = { deviceId: "A4:CF:12:9B:07:E1", deviceName: "Balança RC-07E1", nickname: null, key: "k", linkedAt: "" };
     expect(scaleDisplayName(scale)).toBe("Balança RC-07E1");
@@ -31,6 +12,7 @@ describe("etiqueta da balança", () => {
     expect(scaleRowHint("Galpão", 2)).toBe("Conectada: Galpão");
     expect(scaleRowHint(null, 2)).toMatch(/Nenhuma conectada/);
     expect(scaleRowHint(null, 0)).toMatch(/Não conectada/);
+    expect(scaleRowHint(null, 0)).toMatch(/app/);
   });
 });
 

@@ -1308,13 +1308,26 @@
         "tags": [
           "Produtor"
         ],
-        "summary": "Lista sugestões de produto (admin)",
+        "summary": "Consulta sugestões (produtor: próprias; admin: pendentes)",
+        "description": "O produtor recebe apenas suas sugestões, com histórico e situação real. O admin recebe pendentes por padrão; ?status=all inclui o histórico.",
         "security": [
           {
             "BearerAuth": []
           },
           {
             "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "all"
+            },
+            "description": "Admin: use all para listar todas as sugestões."
           }
         ],
         "responses": {
@@ -1409,11 +1422,23 @@
         },
         "responses": {
           "201": {
-            "description": "Sugestão enviada.",
+            "description": "Sugestão enviada com id e status.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Mensagem"
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "integer"
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "EM_ANALISE"
+                    }
+                  }
                 }
               }
             }
@@ -1460,11 +1485,11 @@
           }
         }
       },
-      "delete": {
+      "patch": {
         "tags": [
           "Produtor"
         ],
-        "summary": "Apaga uma sugestão (admin)",
+        "summary": "Recusa uma sugestão (admin, preservando histórico)",
         "security": [
           {
             "BearerAuth": []
@@ -1473,20 +1498,37 @@
             "CookieAuth": []
           }
         ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "example": 1
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "status": {
+                    "type": "string",
+                    "example": "RECUSADA"
+                  },
+                  "motivo": {
+                    "type": "string",
+                    "example": "Produto já existe no catálogo"
+                  }
+                },
+                "required": [
+                  "id",
+                  "status"
+                ]
+              }
             }
           }
-        ],
+        },
         "responses": {
           "200": {
-            "description": "Apagada.",
+            "description": "Recusada.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1527,6 +1569,113 @@
           },
           "404": {
             "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito com o estado atual.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Produtor"
+        ],
+        "summary": "Retira a própria sugestão pendente (Desfazer)",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retirada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mensagem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito com o estado atual.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1605,13 +1754,15 @@
             }
           }
         }
-      },
+      }
+    },
+    "/api/produtor/balancas/pareamento": {
       "post": {
         "tags": [
           "Balanças"
         ],
-        "summary": "Vincula uma balança",
-        "description": "Balança livre exige o `codigo` da etiqueta (HMAC do MAC). Código errado e balança inexistente respondem igual (404). Já sendo do produtor, só a deixa conectada. 5 erros em 15 min travam.",
+        "summary": "Abre o pareamento de uma balança nova",
+        "description": "Estilo lâmpada inteligente: o app pede o token ANTES de entrar na rede Balanca_raiz_XXXX da balança (o celular fica sem internet nela), entrega o token ao módulo junto do Wi-Fi do produtor e consulta `GET /pareamento/{id}` até a balança ficar pronta. O token vale 15 min, aparece só aqui e um produtor tem um pareamento aberto por vez. 10 pedidos em 15 min travam (429).",
         "security": [
           {
             "BearerAuth": []
@@ -1620,46 +1771,94 @@
             "CookieAuth": []
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "deviceId": {
-                    "type": "string",
-                    "example": "A4:CF:12:9B:07:E1"
-                  },
-                  "codigo": {
-                    "type": "string",
-                    "example": "K7M2-Q9XT"
-                  }
-                },
-                "required": [
-                  "deviceId"
-                ]
-              }
-            }
-          }
-        },
         "responses": {
           "201": {
-            "description": "Balança vinculada e conectada.",
+            "description": "Pareamento aberto.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BalancaVinculada"
+                  "$ref": "#/components/schemas/PareamentoAberto"
                 }
               }
             }
           },
-          "400": {
-            "description": "Dados inválidos (a mensagem diz o que corrigir).",
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem permissão para este recurso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Muitas tentativas; veja o cabeçalho Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/produtor/balancas/pareamento/{id}": {
+      "get": {
+        "tags": [
+          "Balanças"
+        ],
+        "summary": "Andamento do pareamento",
+        "description": "`aguardando`: o módulo ainda não falou com o servidor. `vinculada`: a balança já está na conta; `pronta` vira true quando ela já envia sinal. `recusada`: o módulo é de outra conta (`mensagem` explica). `expirada`: passou o prazo. Nunca vem do cache.",
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "O `id` devolvido por POST /pareamento.",
+            "schema": {
+              "type": "string",
+              "example": "c1x..."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estado do pareamento.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoPareamento"
                 }
               }
             }
@@ -1686,26 +1885,6 @@
           },
           "404": {
             "description": "Não encontrado.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflito com o estado atual.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Muitas tentativas; veja o cabeçalho Retry-After.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3062,7 +3241,7 @@
           "Admin"
         ],
         "summary": "Transforma uma sugestão em produto",
-        "description": "Cria o produto e apaga a sugestão numa transação. Os campos ajustados valem; o que faltar vem da sugestão.",
+        "description": "Cria o produto e marca a sugestão como APROVADA numa transação. Os campos ajustados valem; o que faltar vem da sugestão.",
         "security": [
           {
             "BearerAuth": []
@@ -3185,7 +3364,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Balanças com código da etiqueta, vínculo e estado online.",
+            "description": "Balanças com dono, vínculo e estado online.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3209,115 +3388,6 @@
           },
           "403": {
             "description": "Sem permissão para este recurso.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Erro interno (sem detalhes).",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Balanças (admin)"
-        ],
-        "summary": "Cadastra uma balança",
-        "description": "Devolve o `segredo` UMA vez (o banco guarda só o hash). Grave no firmware do ESP32; para ver outro, gere um novo.",
-        "security": [
-          {
-            "BearerAuth": []
-          },
-          {
-            "CookieAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "deviceId": {
-                    "type": "string",
-                    "example": "A4:CF:12:9B:07:E1"
-                  },
-                  "nome": {
-                    "type": "string",
-                    "example": "Balança 01"
-                  }
-                },
-                "required": [
-                  "deviceId"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Balança cadastrada.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "balanca": {
-                      "$ref": "#/components/schemas/BalancaAdmin"
-                    },
-                    "segredo": {
-                      "type": "string",
-                      "example": "rc_..."
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Dados inválidos (a mensagem diz o que corrigir).",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Sem sessão ou sessão vencida.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Sem permissão para este recurso.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflito com o estado atual.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3526,93 +3596,6 @@
         }
       }
     },
-    "/api/admin/balancas/{id}/segredo": {
-      "post": {
-        "tags": [
-          "Balanças (admin)"
-        ],
-        "summary": "Gera um novo segredo",
-        "description": "O segredo anterior deixa de valer na hora.",
-        "security": [
-          {
-            "BearerAuth": []
-          },
-          {
-            "CookieAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "description": "Endereço MAC da balança (A4:CF:12:9B:07:E1 ou só os 12 caracteres).",
-            "schema": {
-              "type": "string",
-              "example": "A4:CF:12:9B:07:E1"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Novo segredo (mostrado uma vez).",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "segredo": {
-                      "type": "string",
-                      "example": "rc_..."
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Sem sessão ou sessão vencida.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Sem permissão para este recurso.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Não encontrado.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Erro interno (sem detalhes).",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Erro"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/iot/config": {
       "get": {
         "tags": [
@@ -3670,6 +3653,150 @@
           },
           "401": {
             "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno (sem detalhes).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/iot/vincular": {
+      "post": {
+        "tags": [
+          "IoT"
+        ],
+        "summary": "O módulo conclui o pareamento",
+        "description": "Chamado pelo ESP32 já no Wi-Fi do produtor, com o token que o app lhe entregou. O servidor vincula a balança ao dono do token, gera o `segredo` do módulo e o devolve UMA vez (o banco guarda só o hash). Se o módulo ainda guarda um segredo de pareamento anterior, manda `Authorization: Device <segredo>` como prova; só assim uma balança que já tem dono troca de dono (senão 409). Token vencido, desconhecido ou de outro módulo responde o mesmo 401. 10 erros em 15 min por IP travam.",
+        "parameters": [
+          {
+            "name": "X-Device-Id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "A4:CF:12:9B:07:E1"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "description": "`Device <segredo anterior>` (opcional).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "example": "64 caracteres hexadecimais"
+                  },
+                  "firmware": {
+                    "type": "string",
+                    "example": "2.0.0"
+                  }
+                },
+                "required": [
+                  "token"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Balança vinculada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "segredo": {
+                      "type": "string",
+                      "example": "64 caracteres hexadecimais"
+                    },
+                    "hora": {
+                      "type": "integer",
+                      "example": 1761600000000
+                    },
+                    "vinculada": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "intervaloAtivoMs": {
+                      "type": "integer",
+                      "example": 500
+                    },
+                    "intervaloOciosoMs": {
+                      "type": "integer",
+                      "example": 5000
+                    },
+                    "lote": {
+                      "type": "integer",
+                      "example": 10
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos (a mensagem diz o que corrigir).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem sessão ou sessão vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflito com o estado atual.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Muitas tentativas; veja o cabeçalho Retry-After.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3859,7 +3986,7 @@
         "type": "apiKey",
         "in": "header",
         "name": "Authorization",
-        "description": "`Device <segredo>` — o segredo mostrado uma vez ao cadastrar a balança."
+        "description": "`Device <segredo>` — o segredo que o servidor entrega ao módulo uma única vez, ao concluir o pareamento (POST /api/iot/vincular)."
       }
     },
     "schemas": {
@@ -4315,6 +4442,16 @@
           "precoSugerido": {
             "type": "number"
           },
+          "status": {
+            "type": "string",
+            "example": "EM_ANALISE"
+          },
+          "motivo": {
+            "type": "string"
+          },
+          "decididoEm": {
+            "type": "string"
+          },
           "criadoEm": {
             "type": "string",
             "example": "2026-10-27T12:00:00.000Z"
@@ -4443,11 +4580,6 @@
           "id": {
             "type": "string"
           },
-          "mercado": {
-            "type": "string",
-            "description": "Nome fantasia do mercado que fez o pedido (nunca o e-mail).",
-            "example": "Hortifruti Bom Preço"
-          },
           "produto": {
             "type": "string"
           },
@@ -4546,6 +4678,57 @@
           }
         }
       },
+      "PareamentoAberto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "c1x..."
+          },
+          "token": {
+            "type": "string",
+            "example": "64 caracteres hexadecimais"
+          },
+          "expiraEm": {
+            "type": "string",
+            "example": "2026-11-24T12:15:00.000Z"
+          }
+        }
+      },
+      "EstadoPareamento": {
+        "type": "object",
+        "properties": {
+          "estado": {
+            "type": "string",
+            "example": "aguardando",
+            "enum": [
+              "aguardando",
+              "vinculada",
+              "recusada",
+              "expirada"
+            ]
+          },
+          "pronta": {
+            "type": "boolean"
+          },
+          "deviceId": {
+            "type": "string",
+            "nullable": true
+          },
+          "balanca": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BalancaVinculada"
+              }
+            ],
+            "nullable": true
+          },
+          "mensagem": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
       "EstadoBalancas": {
         "type": "object",
         "properties": {
@@ -4591,10 +4774,6 @@
           },
           "nome": {
             "type": "string"
-          },
-          "codigo": {
-            "type": "string",
-            "example": "K7M2-Q9XT"
           },
           "emailProdutor": {
             "type": "string",

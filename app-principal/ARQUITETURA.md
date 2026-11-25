@@ -23,7 +23,7 @@ src/
     api/http.ts        Respostas padrão das rotas: fail(), serverError(), text()...
     auth/              JWT, sessão (requireSession), rascunho do cadastro.
     http/client.ts     api(): o único jeito de as telas chamarem a API (nunca lança; 401 leva ao login).
-    iot/               Balança: id (MAC), código da etiqueta, leituras, peso ao vivo.
+    iot/               Balança: id (MAC), pareamento (token), leituras, peso ao vivo.
     ...                Uma pasta por assunto (perfil, mercado, produtor, admin, format, validation...).
   proxy.ts             (antigo middleware.ts) Separa /admin, /produtor, /catalogo e /checkout por perfil; CORS da API.
 ```
@@ -92,8 +92,8 @@ Toda rota segue o mesmo padrão (`src/app/api/**/route.ts`):
 4. Responder com `NextResponse.json(...)`; erro esperado → `fail(status, "mensagem")`; inesperado →
    `serverError("evento", error)` (log JSON + 500 sem detalhes).
 
-Recurso de outra pessoa responde 404 (não revela o que existe). Tentativas repetidas (login, troca de senha e
-código da etiqueta da balança) passam por `lib/security/rateLimit.ts`.
+Recurso de outra pessoa responde 404 (não revela o que existe). Tentativas repetidas (login, troca de senha,
+pedidos e erros de token do pareamento da balança) passam por `lib/security/rateLimit.ts`.
 
 Cada rota nova precisa de teste (`route.test.ts` ao lado) e de entrada no Swagger: edite
 `scripts/build-swagger.mjs` e rode `npm run docs:api`. O teste `src/swagger.test.ts` falha se faltar documentação.

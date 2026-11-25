@@ -14,7 +14,7 @@ function InstagramIcon({ size = 20 }: { size?: number }) {
 }
 
 const LINKS = [
-  { title: "Plataforma", items: [{ href: "/#como-funciona", label: "Como funciona" }, { href: "/#para-quem", label: "Para quem é" }, { href: "/#conexao", label: "Conexão direta" }] },
+  { title: "Plataforma", items: [{ href: "/#como-funciona", label: "Como funciona" }, { href: "/#para-quem", label: "Para quem é" }, { href: "/#balanca", label: "Balança conectada" }] },
   { title: "Conta", items: [{ href: "/login", label: "Entrar" }, { href: "/login?modo=cadastro", label: "Criar conta" }, { href: "/api-docs", label: "Documentação da API" }] },
 ];
 
@@ -26,7 +26,7 @@ export function SiteFooter() {
           <div>
             <Wordmark look="dark" />
             <p className="mt-4 text-sm leading-relaxed max-w-[34ch]">
-              Produtores rurais e mercados da mesma região, fazendo negócios diretos e sem atravessadores.
+              Produtores rurais e mercados da mesma região, negociando direto, com a pesagem conferida.
             </p>
           </div>
 
