@@ -2,11 +2,13 @@
 
 > Voltar ao [README](../README.md).
 
-O Raiz Conecta liga produtores rurais a mercados e hortifrutis. O **mercado** monta uma cotação no site, os
-**produtores** da região respondem pelo app (ou pelo site) e, no dia da entrega, o app guia a **pesagem** de cada
-produto, de preferência com a **balança conectada**. O **administrador** aprova as contas e cuida do catálogo.
+O Raiz Conecta existe para **conectar produtores rurais a mercados e hortifrutis, sem atravessador**. O
+**mercado** monta uma cotação no site e publica o que precisa; os **produtores** da região veem o pedido, ofertam
+(tudo ou só uma parte) pelo app ou pelo site, e os pedidos se completam com ofertas de vários produtores. No dia
+da entrega, o app guia a **pesagem** para o mercado receber o que pediu. O **administrador** aprova as contas e
+cuida do catálogo.
 
-![Painel do produtor no site](readme/site-produtor-inicio.png)
+![Produtores e mercados conectados pelo Raiz Conecta](readme/demo-rede-produtores-mercados.gif)
 
 ## Sumário
 
@@ -57,7 +59,9 @@ O cadastro tem **dois passos** e passa por aprovação da equipe antes de libera
 
 ## Mercado: cotação
 
-Tudo no site, em **Painel de Compras**.
+Tudo no site, em **Painel de Compras**. Cada item da cotação vira uma demanda aberta: os produtores ofertam e, quando a soma das ofertas atinge a quantidade pedida, o pedido é atendido.
+
+![Mercado solicita 120 kg e dois produtores completam o pedido](readme/demo-conexao-mercados-produtores.gif)
 
 1. **Nova cotação** — busque pelo nome, filtre por categoria ou ordene por preço. Em cada produto, escolha a
    quantidade (− e + ou digite) e toque em **Adicionar**. A cotação aparece ao lado, com a estimativa pelo preço
@@ -150,6 +154,8 @@ bloqueado. Com todos os produtos pesados, **Entregar o pedido à logística**. S
 O site tem as **mesmas telas** do app, adaptadas para a tela grande. No computador, um menu lateral fixo traz as
 cinco abas e, logo abaixo, **Minha balança** e **Meu Perfil** (no app eles ficam dentro de Mais). No celular, o site
 usa a barra de abas do app, com o Início no meio.
+
+![Painel do produtor no site](readme/site-produtor-inicio.png)
 
 | Tela | O que faz |
 | --- | --- |

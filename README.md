@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/readme/banner.svg" alt="Raiz Conecta — conectando mercados e produtores rurais por meio de pedidos e ofertas" width="100%">
+<img src="docs/readme/banner.svg" alt="Raiz Conecta — produtores rurais conectados direto aos mercados" width="100%">
 
 <br>
 
@@ -17,8 +17,10 @@ Projeto Interdisciplinar · Desenvolvimento de Software Multiplataforma · Fatec
 ![ESP32](https://img.shields.io/badge/IoT-ESP32-f59e0b?style=flat-square&logo=espressif&logoColor=white)
 ![Testes](https://img.shields.io/badge/testes-1.432_passando-22c55e?style=flat-square&logo=vitest&logoColor=white)
 
-[**Resumo**](#resumo) ·
-[**Em andamento**](#-o-que-estamos-fazendo-agora) ·
+[**Sobre**](#sobre-o-projeto) ·
+[**Como funciona**](#como-funciona) ·
+[**Ecossistema**](#o-ecossistema) ·
+[**Situação atual**](#situação-atual) ·
 [**Descrição**](#1-descrição-do-projeto) ·
 [**Requisitos**](#2-requisitos-do-projeto) ·
 [**Projeto do software**](#3-projeto-do-software) ·
@@ -29,19 +31,76 @@ Projeto Interdisciplinar · Desenvolvimento de Software Multiplataforma · Fatec
 
 > **Branch de referência:** `main`. As alterações deste pacote são preparadas para a branch principal; a publicação no repositório precisa ser feita por um colaborador com acesso.
 
-> Este README resume a **documentação completa do projeto** ([`Raiz_Conecta_Documentacao.docx`](Raiz_Conecta_Documentacao.docx), versão 3.0, outubro de 2026), na mesma ordem dos capítulos. Onde o código mudou desde o documento, o texto já traz a situação de **novembro de 2026**. As figuras marcadas com *(documento v3.0)* vêm do documento original.
+> Este README apresenta o projeto e resume a **documentação completa** ([`Raiz_Conecta_Documentacao.docx`](Raiz_Conecta_Documentacao.docx), versão 3.0, outubro de 2026), na mesma ordem dos capítulos. Onde o código mudou desde o documento, o texto já traz a situação de **novembro de 2026**. As figuras marcadas com *(documento v3.0)* vêm do documento original.
 
 ---
 
-## Resumo
+## Sobre o projeto
 
-O **Raiz Conecta** é uma plataforma digital B2B que aproxima produtores rurais de mercados e hortifrútis. **Sua missão é conectar quem precisa comprar com quem produz e pode ofertar, sem atravessadores.** O sistema tem três partes que usam a mesma API:
+O **Raiz Conecta** nasceu de uma pergunta simples: por que quem planta e quem vende ao consumidor precisam de tantos intermediários para se encontrar? **Sua missão é conectar quem precisa comprar com quem produz e pode ofertar, sem atravessadores.**
 
-- **Aplicação web** (Next.js, React, Prisma e PostgreSQL): cadastro em duas etapas com validação documental, catálogo oficial, fluxo de **demanda reversa** (o mercado publica o que precisa e os produtores ofertam), ofertas fracionadas, cancelamento por prazo em dias úteis, avaliação de produtores e painel administrativo.
+**O problema.** A cadeia de distribuição de alimentos frescos tem ineficiências que prejudicam as duas pontas. Mercados e hortifrútis têm dificuldade para encontrar fornecedores confiáveis e com preço competitivo. Produtores de pequeno e médio porte não têm canais diretos para escoar a produção e dependem de intermediários que reduzem sua margem. O resultado é desperdício, preço alto para o consumidor e trabalho do produtor subvalorizado.
+
+**A solução.** Uma plataforma que inverte o caminho: em vez de o produtor procurar comprador, o **mercado publica o que precisa** (demanda reversa) e os produtores que têm o produto no catálogo **ofertam** a quantidade total ou parcial. Pedidos grandes se completam com ofertas de vários produtores, e cada um vende o que realmente tem.
+
+**Quem usa.**
+
+| Perfil | O que faz no Raiz Conecta |
+| --- | --- |
+| **Mercado / hortifrúti** | Monta a cotação no site, dispara o pedido, acompanha as ofertas, confirma o recebimento e avalia o produtor |
+| **Produtor rural** | Mantém o catálogo do que produz, responde pedidos pelo app ou pelo site, separa a carga e confere o peso na entrega |
+| **Administrador** | Aprova cadastros com validação de documento, cuida do catálogo oficial, das sugestões e das balanças |
+
+**Por que é diferente.**
+
+- **Sem atravessador:** a conexão é direta entre quem produz e quem compra.
+- **Oferta fracionada:** o produtor atende uma parte do pedido; o restante segue para outros produtores.
+- **Confiança:** todo cadastro passa por validação documental e aprovação manual da equipe; produtores recebem avaliação de 1 a 5.
+- **Feito para o campo:** o app do produtor tem letras grandes, poucos toques e linguagem simples, e a pesagem é guiada, com conferência de peso.
+- **Peso conferido:** a balança conectada (ESP32) manda o peso ao servidor e o mercado recebe o que pediu, com tolerância de ±2%.
+
+## Como funciona
+
+```mermaid
+flowchart LR
+    M["🏪 Mercado<br/>publica a necessidade<br/>(ex.: 120 kg de tomate)"] --> D["Demanda aberta"]
+    D --> P1["🌱 Produtor A<br/>oferta 80 kg"]
+    D --> P2["🌱 Produtor B<br/>oferta 40 kg"]
+    P1 --> C["✅ Pedido atendido<br/>(soma das ofertas = pedido)"]
+    P2 --> C
+    C --> E["🚚 Entrega no dia combinado<br/>com pesagem guiada"]
+    E --> R["⭐ Mercado confirma o recebimento<br/>e avalia o produtor"]
+    style C fill:#dcfce7,stroke:#16a34a,color:#14532d
+```
+
+1. **O mercado publica.** Escolhe os produtos e as quantidades na cotação e confirma; cada item vira uma demanda aberta.
+2. **Os produtores respondem.** Quem tem o produto no catálogo vê a oportunidade e oferta tudo ou parte.
+3. **O pedido se completa.** Quando a soma das ofertas atinge a quantidade pedida, a demanda é concluída.
+4. **A entrega acontece.** O produtor separa a carga e pesa no app, com a balança conectada, para entregar o que foi combinado.
+5. **O ciclo fecha com confiança.** O mercado confirma o recebimento e avalia o produtor de 1 a 5.
+
+<img src="docs/readme/demo-conexao-mercados-produtores.gif" alt="Animação Raiz Conecta: o mercado solicita 120 kg de tomate, dois produtores ofertam 80 e 40 kg, e o pedido é atendido" width="100%">
+
+*Animação ilustrativa da missão do projeto: o mercado publica a necessidade, dois produtores atendem com ofertas complementares e o pedido é completado. Não representa operações reais nem dados em tempo real.*
+
+<img src="docs/readme/demo-site-cotacao.gif" alt="Fluxo de cotação do mercado no site" width="720">
+
+*Cotação no site: o mercado seleciona produtos, define quantidades e envia sua necessidade aos produtores.*
+
+### Impacto
+
+A plataforma funciona como vitrine para apresentar produtores a mercados que ainda não tiveram contato direto com quem planta, e promove inclusão digital no agronegócio, redução do desperdício e renda justa. Contribui para os ODS 2, 8, 12 e 17 ([detalhes na seção 1.2](#12-justificativa-e-ods)).
+
+## O ecossistema
+
+Três partes usam a mesma API, mais um microsserviço independente:
+
+- **Aplicação web** (Next.js, React, Prisma e PostgreSQL): cadastro em duas etapas com validação documental, catálogo oficial, demanda reversa, ofertas fracionadas, cancelamento por prazo em dias úteis, avaliação de produtores e painel administrativo.
 - **Aplicativo mobile do Produtor** (Expo e React Native): pedidos de mercado com preço fixo e janela de resposta de 30 minutos, painel, entregas em dias definidos e **pesagem guiada** com tolerância de ±2% e conferência de peso estável.
 - **Balança conectada** (ESP32 com célula de carga): manda o peso para o servidor, e o app e o site mostram a leitura ao vivo.
+- **Microsserviço de e-mail** (Express e Nodemailer): envia os e-mails transacionais sem bloquear o fluxo principal.
 
-Um microsserviço independente (Express e Nodemailer) envia os e-mails transacionais. Toda a base é testada: 498 testes no site e na API e 934 no aplicativo.
+Toda a base é testada: 498 testes no site e na API e 934 no aplicativo.
 
 *Palavras-chave: plataforma B2B; produtores rurais; mercados; demanda reversa; Next.js; Expo; pesagem; IoT; JWT; Prisma.*
 
@@ -56,11 +115,13 @@ Um microsserviço independente (Express e Nodemailer) envia os e-mails transacio
 | Jira (Scrum) | [Quadro SCRUM](https://raizconectado.atlassian.net/jira/software/projects/SCRUM/boards/1) |
 | Instagram | [@raizconecta_dsm](https://www.instagram.com/raizconecta_dsm) |
 
+Mais: [Guia de uso](docs/GUIA-DE-USO.md) · [Projeto Interdisciplinar](docs/PROJETO-INTERDISCIPLINAR.md)
+
 ---
 
-## 🚧 O que estamos fazendo agora
+## Situação atual
 
-*Situação em novembro de 2026 — linha principal de desenvolvimento (`main`).*
+*Novembro de 2026 — linha principal de desenvolvimento (`main`).*
 
 O documento v3.0 terminou com uma recomendação: refatorar o `app-principal` em duas frentes, primeiro a segurança e o contrato da API, depois o novo fluxo de pedidos, entregas e pesagem. A primeira frente está feita; a segunda começou pela balança.
 
@@ -70,20 +131,8 @@ O documento v3.0 terminou com uma recomendação: refatorar o `app-principal` em
 | **Contrato da API** | Swagger gerado por script, cobrindo todas as rotas, com um teste que falha se alguma ficar de fora | ✅ Feito |
 | **Site refeito** | Landing, login e cadastro novos; área do produtor adaptada do app para a tela grande (menu lateral, Início em colunas, Ofertas em tabela); kit de componentes único; tela de "cadastro enviado" | ✅ Feito |
 | **Balança (IoT)** | Cadastro do módulo pelo administrador, vínculo pelo código da etiqueta, leituras do ESP32 no servidor e peso ao vivo no app e no site; firmware de exemplo | ✅ API pronta · 🔧 falta testar o módulo em campo |
-| **App mobile** | Login, cadastro, catálogo, sugestão, perfil e **balança** usam a API real | 🔧 Parcial |
+| **App mobile** | Login, cadastro, catálogo, sugestão, perfil e balança usam a API real | 🔧 Parcial |
 | **Pedidos com preço fixo, entregas e registro da pesagem** | Modelo de dados e rotas propostos no documento (seção 3.9.3); no app ainda funcionam com dados simulados | ⏳ Próximo passo |
-
-### Em destaque: do mercado para quem produz
-
-<img src="docs/readme/demo-conexao-mercados-produtores.gif" alt="Animação Raiz Conecta em verde-escuro: o mercado solicita 120 kg de tomate, dois produtores ofertam 80 e 40 kg, e o pedido é atendido" width="100%">
-
-*Animação ilustrativa da missão do projeto: o mercado publica a necessidade, dois produtores atendem com ofertas complementares e o pedido é completado. Não representa operações reais nem dados em tempo real.*
-
-<img src="docs/readme/demo-site-cotacao.gif" alt="Fluxo de cotação do mercado no site" width="720">
-
-*Cotação no site: o mercado seleciona produtos, define quantidades e envia sua necessidade aos produtores.*
-
-As demonstrações de balança e pesagem continuam como funcionalidades técnicas secundárias, documentadas nas seções de IoT e entrega — elas não são a proposta central da plataforma.
 
 ---
 
@@ -92,8 +141,6 @@ As demonstrações de balança e pesagem continuam como funcionalidades técnica
 ### 1.1 Proposta do software
 
 O Raiz Conecta moderniza e desburocratiza a relação comercial entre produtores rurais e estabelecimentos varejistas. O objetivo é facilitar a compra e venda de produtos frescos diretamente da fonte, com agilidade, economia e transparência.
-
-**Problema.** A cadeia de distribuição de alimentos frescos tem ineficiências que prejudicam as duas pontas. Mercados têm dificuldade para encontrar fornecedores confiáveis e com preço competitivo; produtores não têm canais diretos para escoar a produção e dependem de intermediários que reduzem sua margem. O resultado é desperdício, preço alto para o consumidor e trabalho do produtor subvalorizado.
 
 **Público-alvo.** (i) Mercados, hortifrútis e mercearias de pequeno e médio porte, que buscam produtos frescos com procedência e bom preço; (ii) produtores rurais de pequeno e médio porte, que querem vender mais e com melhor retorno.
 
@@ -114,7 +161,7 @@ O Raiz Conecta moderniza e desburocratiza a relação comercial entre produtores
 
 ### 1.2 Justificativa e ODS
 
-A plataforma integra produtores e compradores e funciona como vitrine para apresentar produtores a mercados que ainda não tiveram contato direto com quem planta. Promove inclusão digital no agronegócio, redução do desperdício e renda justa. O aplicativo reforça essa proposta: o produtor, que muitas vezes trabalha longe do computador, responde pedidos, separa a carga e confere o peso pelo celular, com letras grandes, poucos toques e linguagem simples.
+O aplicativo reforça a proposta da plataforma: o produtor, que muitas vezes trabalha longe do computador, responde pedidos, separa a carga e confere o peso pelo celular, com letras grandes, poucos toques e linguagem simples.
 
 | ODS | Como o projeto contribui |
 | --- | --- |
@@ -152,7 +199,7 @@ A identidade usa tons de verde (natureza, agricultura e sustentabilidade) e um s
 
 <table>
 <tr>
-<td width="50%" valign="top"><img src="docs/readme/banner.svg" alt="Landing: mercados e produtores conectados"><br><sub><b>Landing</b> · o mercado publica a demanda, produtores ofertam juntos e completam o pedido; conexão direta e ODS</sub></td>
+<td width="50%" valign="top"><img src="docs/readme/site-landing.png" alt="Landing: mercados e produtores conectados"><br><sub><b>Landing</b> · o mercado publica a demanda, produtores ofertam juntos e completam o pedido; conexão direta e ODS</sub></td>
 <td width="50%" valign="top"><img src="docs/readme/site-cadastro.png" alt="Cadastro"><br><sub><b>Cadastro em dois passos</b> · tipo de conta, dados de acesso com senha forte; depois CPF/CNPJ, CEP com ViaCEP e foto do documento</sub></td>
 </tr>
 <tr>
@@ -227,7 +274,7 @@ Feito com Expo SDK 57, React Native 0.86.3 e Expo Router, em TypeScript; roda no
 | Cadastro em dois passos | **Real** | `POST /api/auth/cadastro` com documento |
 | Catálogo e sugestão de produto | **Real** | `/api/produtos`, `/api/produtor/meus-produtos`, `/api/produtor/sugestao` |
 | Meu Perfil (com senha atual) | **Real** | `GET/PUT/DELETE /api/perfil/meus-dados` |
-| **Balança: vínculo e peso ao vivo** | **Real** *(novo)* | `/api/produtor/balancas` e `.../{id}/leitura` |
+| Balança: vínculo e peso ao vivo | **Real** *(novo)* | `/api/produtor/balancas` e `.../{id}/leitura` |
 | Pedidos de mercado com preço fixo | Simulado | rotas propostas na seção 3.9.3 do documento |
 | Escada de preços e preço sugerido | Simulado | calculados no servidor na versão real |
 | Entregas e registro da pesagem | Simulado | idem |
@@ -496,7 +543,14 @@ Todas as rotas estão no Swagger em **`/api-docs`**. Erros são sempre `{ "error
 
 ### 3.7 Balança conectada (IoT)
 
-O administrador cadastra o módulo pelo endereço MAC e recebe um **segredo** (o servidor guarda só o hash). A etiqueta da balança traz o MAC e um **código** derivado pelo servidor, que o produtor digita para vincular a balança: saber o MAC não basta para tomar a balança de outra pessoa. O módulo envia as leituras para `POST /api/iot/leituras`; o servidor guarda o último peso e, no histórico, só as leituras estáveis que mudaram; o app e o site consultam `GET .../leitura` a cada 0,5 s (2 s sem sinal).
+A balança apoia a entrega: garante que o mercado receba o peso combinado. O administrador cadastra o módulo pelo endereço MAC e recebe um **segredo** (o servidor guarda só o hash). A etiqueta da balança traz o MAC e um **código** derivado pelo servidor, que o produtor digita para vincular a balança: saber o MAC não basta para tomar a balança de outra pessoa. O módulo envia as leituras para `POST /api/iot/leituras`; o servidor guarda o último peso e, no histórico, só as leituras estáveis que mudaram; o app e o site consultam `GET .../leitura` a cada 0,5 s (2 s sem sinal).
+
+<table>
+<tr>
+<td width="34%" align="center"><img src="docs/readme/demo-app-pesagem.gif" alt="Pesagem guiada no app" height="420"><br><sub>Pesagem guiada no app</sub></td>
+<td width="66%" align="center"><img src="docs/readme/demo-site-balanca.gif" alt="Peso ao vivo no site" width="100%"><br><sub>Peso ao vivo no site</sub></td>
+</tr>
+</table>
 
 Detalhes, firmware e teste sem hardware: [`app-principal/docs/IOT.md`](app-principal/docs/IOT.md).
 
