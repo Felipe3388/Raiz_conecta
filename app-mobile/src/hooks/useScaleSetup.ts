@@ -131,6 +131,7 @@ export function useScaleSetup() {
   return {
     status: scale.status,
     reload: scale.reload,
+    refresh: scale.refresh,
     // Cada balança com o nome que aparece na tela e se é a conectada.
     scales: scale.scales.map((item) => ({
       deviceId: item.deviceId,

@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/motion/PressableScale";
 import { ScaleBanner } from "@/components/produtor/ScaleBanner";
@@ -20,10 +21,11 @@ const BOTTOM_SPACE = 96;
 // privacidade, termos e ajuda ficam aqui; o menu do ícone da conta guarda só o perfil e a saída.
 export default function MaisScreen() {
   const screen = useMoreScreen();
+  const { refreshing, onRefresh } = usePullToRefresh(screen.refresh);
   const { identity } = screen;
 
   return (
-    <FormScreen edges={[]} centered={false} animated={false} bottomSpace={BOTTOM_SPACE}>
+    <FormScreen edges={[]} centered={false} animated={false} bottomSpace={BOTTOM_SPACE} refreshing={refreshing} onRefresh={onRefresh}>
       <PressableScale
         accessibilityRole="button"
         accessibilityLabel={`${identity.name}. Ver meu perfil`}

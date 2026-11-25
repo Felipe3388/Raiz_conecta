@@ -141,6 +141,7 @@ export function useEntregasScreen() {
   return {
     status: data.status,
     reload: data.reload,
+    refresh: async () => { await Promise.all([data.refresh(), producerData.refresh()]); },
     chips,
     filter,
     chooseDay: setChosenDay,

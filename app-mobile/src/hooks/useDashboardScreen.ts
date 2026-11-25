@@ -6,7 +6,7 @@ import { useProdutorData } from "./useProdutorData";
 
 // Controller do Painel: resume, com os dados que o app já carregou, como está a atividade do produtor.
 export function useDashboardScreen() {
-  const { status, proposals, savedIds, reload } = useProdutorData();
+  const { status, proposals, savedIds, reload, refresh } = useProdutorData();
   const deliveries = useDeliveries();
   // O relógio corre só enquanto há proposta pendente: é ele que tira do resumo a que passou do prazo.
   const now = useNow(
@@ -22,6 +22,7 @@ export function useDashboardScreen() {
     status,
     summary,
     reload,
+    refresh: async () => { await Promise.all([refresh(), deliveries.refresh()]); },
     // Quantos pedidos pedem ação até o próximo dia de entrega, e qual dia é esse.
     nextDelivery: deliveries.status === "ready" ? { pending: deliveries.pending, day: deliveries.nextDay } : null,
     now,

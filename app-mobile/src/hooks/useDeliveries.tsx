@@ -25,6 +25,7 @@ interface DeliveriesData {
   handOverAll: (deliveryIds: string[]) => Promise<void>;
   simulateReceipt: (deliveryId: string, input: WeighingInput) => Promise<void>;
   reload: () => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 const DeliveriesContext = createContext<DeliveriesData | null>(null);
@@ -51,18 +52,20 @@ export function DeliveriesProvider({ email, children, deliveries: gateway = getD
         setList(await gateway.listDeliveries(email));
         loadedOnce.current = true;
         setStatus("ready");
-      } catch {
+      } catch (error) {
         if (!quiet) setStatus("error");
+        else throw error;
       }
     },
     [gateway, email],
   );
 
   useEffect(() => {
-    if (dataStatus === "ready") void load(loadedOnce.current);
+    if (dataStatus === "ready") void load(loadedOnce.current).catch(() => {});
   }, [dataStatus, proposals, load]);
 
   const reload = useCallback(() => load(false), [load]);
+  const refresh = useCallback(() => load(true), [load]);
 
   const replace = useCallback((updated: Delivery) => {
     setList((current) => current.map((item) => (item.id === updated.id ? updated : item)));
@@ -109,8 +112,9 @@ export function DeliveriesProvider({ email, children, deliveries: gateway = getD
       handOverAll,
       simulateReceipt,
       reload,
+      refresh,
     };
-  }, [dataStatus, status, list, gateway, addWeighing, removeWeighing, handOverAll, simulateReceipt, reload]);
+  }, [dataStatus, status, list, gateway, addWeighing, removeWeighing, handOverAll, simulateReceipt, reload, refresh]);
 
   return <DeliveriesContext.Provider value={value}>{children}</DeliveriesContext.Provider>;
 }

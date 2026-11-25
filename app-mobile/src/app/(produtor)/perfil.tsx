@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { StyleSheet, Text, View } from "react-native";
 import { AvatarPicker } from "@/components/produtor/AvatarPicker";
 import { LockedField } from "@/components/produtor/LockedField";
@@ -27,6 +28,7 @@ export default function PerfilScreen() {
   const identity = useProducerIdentity();
   const perfil = useProfileScreen(email, identity.setName);
   const undo = useUndo();
+  const { refreshing, onRefresh } = usePullToRefresh(perfil.refresh);
 
   function changeIcon(next: string | null) {
     const previous = identity.emoji;
@@ -45,7 +47,7 @@ export default function PerfilScreen() {
   const { profile, form } = perfil;
 
   return (
-    <FormScreen edges={["bottom"]} centered={false} animated={false} bottomSpace={BOTTOM_SPACE}>
+    <FormScreen edges={["bottom"]} centered={false} animated={false} bottomSpace={BOTTOM_SPACE} refreshing={refreshing} onRefresh={onRefresh}>
       <View style={styles.top}>
         <UserAvatar initials={identity.initials} emoji={identity.emoji} size={88} />
         <Text style={styles.name}>{identity.name}</Text>

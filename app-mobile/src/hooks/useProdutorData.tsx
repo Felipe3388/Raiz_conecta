@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { hasSelectionChanged, toggleProductId } from "@/lib/produtor/catalog";
 import { onlyMyProducts } from "@/lib/produtor/proposals";
 import { getCatalogService, getProposalService, type CatalogGateway, type ProposalGateway } from "@/services";
@@ -18,6 +18,7 @@ interface ProdutorData {
   // aceitas e as encerradas.
   proposals: Proposal[];
   reload: () => Promise<void>;
+  refresh: () => Promise<void>;
   toggleProduct: (id: number) => void;
   // Devolve as escolhas que valiam antes de salvar, para quem quiser desfazer.
   saveSelection: () => Promise<number[]>;
@@ -51,9 +52,10 @@ export function ProdutorDataProvider({
   const [savedIds, setSavedIds] = useState<number[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [allProposals, setAllProposals] = useState<Proposal[]>([]);
+  const savedSnapshot = useRef<number[]>([]);
 
-  const reload = useCallback(async () => {
-    setStatus("loading");
+  const load = useCallback(async (quiet: boolean) => {
+    if (!quiet) setStatus("loading");
     try {
       const [loadedProducts, loadedIds, loadedProposals] = await Promise.all([
         catalog.listProducts(),
@@ -61,17 +63,23 @@ export function ProdutorDataProvider({
         proposalGateway.listProposals(email),
       ]);
       setProducts(loadedProducts);
+      // When pulling to refresh, do not wipe out unsaved catalog choices.
+      setSelectedIds((current) => quiet && hasSelectionChanged(savedSnapshot.current, current) ? current : loadedIds);
+      savedSnapshot.current = loadedIds;
       setSavedIds(loadedIds);
-      setSelectedIds(loadedIds);
       setAllProposals(loadedProposals);
       setStatus("ready");
-    } catch {
-      setStatus("error");
+    } catch (error) {
+      if (!quiet) setStatus("error");
+      else throw error;
     }
   }, [catalog, proposalGateway, email]);
 
+  const reload = useCallback(() => load(false), [load]);
+  const refresh = useCallback(() => load(true), [load]);
+
   useEffect(() => {
-    reload();
+    void reload();
   }, [reload]);
 
   const toggleProduct = useCallback((id: number) => {
@@ -81,6 +89,7 @@ export function ProdutorDataProvider({
   const saveSelection = useCallback(async () => {
     const previous = savedIds;
     await catalog.saveMyProductIds(email, selectedIds);
+    savedSnapshot.current = selectedIds;
     setSavedIds(selectedIds);
     return previous;
   }, [catalog, email, selectedIds, savedIds]);
@@ -88,6 +97,7 @@ export function ProdutorDataProvider({
   const restoreSavedIds = useCallback(
     async (ids: number[]) => {
       await catalog.saveMyProductIds(email, ids);
+      savedSnapshot.current = ids;
       setSavedIds(ids);
       setSelectedIds(ids);
     },
@@ -126,6 +136,7 @@ export function ProdutorDataProvider({
       hasUnsavedSelection: hasSelectionChanged(savedIds, selectedIds),
       proposals,
       reload,
+      refresh,
       toggleProduct,
       saveSelection,
       restoreSavedIds,
@@ -141,6 +152,7 @@ export function ProdutorDataProvider({
     savedIds,
     proposals,
     reload,
+    refresh,
     toggleProduct,
     saveSelection,
     restoreSavedIds,

@@ -36,6 +36,7 @@ export function useSettingsScreen() {
   }
 
   return {
+    refresh: scale.refresh,
     reduceMotion: settings.reduceMotion,
     setReduceMotion: (reduceMotion: boolean) => void update({ reduceMotion }),
     autoWeigh: settings.autoWeigh,

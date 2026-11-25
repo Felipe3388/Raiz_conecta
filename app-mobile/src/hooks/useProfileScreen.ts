@@ -69,6 +69,14 @@ export function useProfileScreen(
     load();
   }, [load]);
 
+  // Quiet refresh keeps unsaved form edits, while updating the server copy of the profile.
+  const refresh = useCallback(async () => {
+    const latest = await gateway.getProfile(email);
+    const previousForm = profile ? editableFrom(profile) : null;
+    setForm((current) => previousForm && JSON.stringify(current) !== JSON.stringify(previousForm) ? current : editableFrom(latest));
+    setProfile(latest);
+  }, [gateway, email, profile]);
+
   function setField(field: keyof EditableProfile, text: string) {
     const formatted =
       field === "telefone"
@@ -166,5 +174,6 @@ export function useProfileScreen(
     isDeleting,
     contactSupport,
     reload: load,
+    refresh,
   };
 }

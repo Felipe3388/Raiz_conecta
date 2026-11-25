@@ -15,7 +15,7 @@ import { logout } from "@/lib/auth/logout";
 const PUBLIC_LINKS = [
   { href: "/#como-funciona", label: "Como funciona" },
   { href: "/#para-quem", label: "Para quem é" },
-  { href: "/#balanca", label: "Balança" },
+  { href: "/#conexao", label: "Conexão direta" },
 ];
 
 const ROLE_LABEL = { admin: "Administrador", produtor: "Produtor", mercado: "Mercado" } as const;

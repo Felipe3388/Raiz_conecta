@@ -1,4 +1,5 @@
 import { StyleSheet, Switch, Text, View } from "react-native";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { Button } from "@/components/ui/Button";
 import { FormScreen } from "@/components/ui/FormScreen";
 import { Input } from "@/components/ui/Input";
@@ -16,9 +17,10 @@ const BOTTOM_SPACE = 96;
 // Configurações: acessibilidade e o modo de pesagem. Privacidade, termos, conta e ajuda moram na aba Mais.
 export default function ConfiguracoesScreen() {
   const settings = useSettingsScreen();
+  const { refreshing, onRefresh } = usePullToRefresh(settings.refresh);
 
   return (
-    <FormScreen edges={["bottom"]} centered={false} animated={false} bottomSpace={BOTTOM_SPACE}>
+    <FormScreen edges={["bottom"]} centered={false} animated={false} bottomSpace={BOTTOM_SPACE} refreshing={refreshing} onRefresh={onRefresh}>
       {settings.scale.isReady && (
         <SettingsGroup title={SCALE_SETTINGS.title}>
           {settings.scale.isConnected ? (

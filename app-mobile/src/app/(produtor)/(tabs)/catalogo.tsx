@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { StyleSheet, Text, View } from "react-native";
 import { PriceSheet } from "@/components/produtor/PriceSheet";
 import { ProductCard } from "@/components/produtor/ProductCard";
@@ -40,6 +41,7 @@ function plural(count: number, one: string, many: string) {
 export default function CatalogoScreen() {
   const catalog = useCatalogScreen();
   const assistant = useAssistant();
+  const { refreshing, onRefresh } = usePullToRefresh(catalog.refresh);
 
   if (catalog.status === "loading") return <PageLoader />;
   if (catalog.status === "error") return <LoadError onRetry={catalog.reload} />;
@@ -102,6 +104,8 @@ export default function CatalogoScreen() {
   return (
     <>
       <ListScreen
+        refreshing={refreshing}
+        onRefresh={onRefresh}
         data={catalog.products}
         numColumns={isDetails ? 1 : 2}
         gap={isDetails ? spacing.sm : spacing.md}

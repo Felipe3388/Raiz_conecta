@@ -1,5 +1,6 @@
 import { useMemo, type ReactElement, type ReactNode } from "react";
-import { FlatList, StyleSheet, View } from "react-native";
+import { FlatList, Platform, RefreshControl, StyleSheet, Text, View, Pressable, ActivityIndicator } from "react-native";
+import { colors } from "@/theme";
 import { Reveal } from "@/components/motion/Reveal";
 import { staggerDelay } from "@/components/motion/timing";
 import { spacing } from "@/theme";
@@ -31,6 +32,8 @@ interface ListScreenProps<T> {
   bottomSpace?: number;
   // Barra fixa sobre a lista (opcional).
   overlay?: ReactNode;
+  refreshing?: boolean;
+  onRefresh?: () => void;
 }
 
 // Tela de lista: título e busca no topo, itens que entram em sequência e coluna centralizada em telas largas.
@@ -44,6 +47,8 @@ export function ListScreen<T>({
   gap = spacing.md,
   bottomSpace = DEFAULT_BOTTOM_SPACE,
   overlay,
+  refreshing = false,
+  onRefresh,
 }: ListScreenProps<T>) {
   const rows = useMemo(() => withFillers(data, numColumns), [data, numColumns]);
 
@@ -55,8 +60,20 @@ export function ListScreen<T>({
         numColumns={numColumns}
         keyExtractor={(row, index) => (row === FILLER ? `filler-${index}` : keyExtractor(row as T))}
         keyboardShouldPersistTaps="handled"
+        refreshControl={onRefresh && Platform.OS !== "web" ? (
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} tintColor={colors.primary} />
+        ) : undefined}
         showsVerticalScrollIndicator={false}
-        ListHeaderComponent={header}
+        ListHeaderComponent={
+          <>
+            {onRefresh && Platform.OS === "web" && (
+              <Pressable onPress={onRefresh} accessibilityRole="button" accessibilityLabel="Atualizar dados" style={styles.webRefresh}>
+                {refreshing ? <ActivityIndicator size="small" color={colors.primary} /> : <Text style={styles.webRefreshText}>↻ Atualizar dados</Text>}
+              </Pressable>
+            )}
+            {header}
+          </>
+        }
         ListEmptyComponent={<View style={styles.empty}>{empty}</View>}
         columnWrapperStyle={numColumns > 1 ? { gap } : undefined}
         contentContainerStyle={[styles.content, { gap, paddingBottom: bottomSpace }]}
@@ -83,4 +100,6 @@ const styles = StyleSheet.create({
   },
   cell: { flex: 1 },
   empty: { minHeight: 320 },
+  webRefresh: { alignSelf: "flex-end", paddingHorizontal: 12, paddingVertical: 7, minHeight: 36 },
+  webRefreshText: { color: colors.primary, fontWeight: "700" },
 });

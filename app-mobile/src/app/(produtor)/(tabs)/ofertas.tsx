@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { StyleSheet, View } from "react-native";
 import { DemandSummary } from "@/components/produtor/DemandSummary";
 import { MarketCard } from "@/components/produtor/MarketCard";
@@ -28,6 +29,7 @@ const FILTERS: ProposalFilter[] = ["all", "pending", "accepted", "closed"];
 // entrega de terça ou sexta.
 export default function OfertasScreen() {
   const offers = useOffersScreen();
+  const { refreshing, onRefresh } = usePullToRefresh(offers.refresh);
 
   if (offers.status === "loading") return <PageLoader />;
   if (offers.status === "error") return <LoadError onRetry={offers.reload} />;
@@ -72,6 +74,8 @@ export default function OfertasScreen() {
   return (
     <>
       <ListScreen
+        refreshing={refreshing}
+        onRefresh={onRefresh}
         data={offers.markets}
         keyExtractor={(market) => market.key}
         header={header}

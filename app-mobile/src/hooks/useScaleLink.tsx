@@ -23,6 +23,7 @@ interface ScaleLinkData {
   renameScale: (deviceId: string, text: string) => Promise<void>;
   removeScale: (deviceId: string) => Promise<void>;
   reload: () => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 const EMPTY: ScaleState = { scales: [], activeDeviceId: null };
@@ -105,8 +106,9 @@ export function ScaleLinkProvider({ email, children, gateway = getScaleLinkServi
       renameScale,
       removeScale,
       reload,
+      refresh,
     };
-  }, [status, state, gateway, addScale, activateScale, renameScale, removeScale, reload]);
+  }, [status, state, gateway, addScale, activateScale, renameScale, removeScale, reload, refresh]);
 
   return <ScaleLinkContext.Provider value={value}>{children}</ScaleLinkContext.Provider>;
 }

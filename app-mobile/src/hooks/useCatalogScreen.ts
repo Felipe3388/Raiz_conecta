@@ -75,5 +75,6 @@ export function useCatalogScreen() {
     isSaving,
     save,
     reload: data.reload,
+    refresh: data.refresh,
   };
 }

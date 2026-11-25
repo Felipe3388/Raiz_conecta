@@ -33,6 +33,7 @@ export function useMoreScreen() {
 
   return {
     identity,
+    refresh: scale.refresh,
     // Só avisa "conecte" depois de saber que não há balança (não pisca enquanto carrega).
     needsScale: scale.status === "ready" && scale.scales.length === 0,
     scaleDescription: scaleRowDescription(scale.activeName, scale.scales.length),

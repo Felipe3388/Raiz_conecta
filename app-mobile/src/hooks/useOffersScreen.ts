@@ -137,6 +137,7 @@ export function useOffersScreen() {
   return {
     status: data.status,
     reload: data.reload,
+    refresh: data.refresh,
     now,
     markets,
     imageUrlOf: (productName: string) => productImageUrl(data.products, productName),

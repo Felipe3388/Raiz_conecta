@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/readme/banner.svg" alt="Raiz Conecta — do produtor rural direto ao mercado, com cotação, ofertas, entregas e pesagem conectada" width="100%">
+<img src="docs/readme/banner.svg" alt="Raiz Conecta — conectando mercados e produtores rurais por meio de pedidos e ofertas" width="100%">
 
 <br>
 
@@ -27,13 +27,15 @@ Projeto Interdisciplinar · Desenvolvimento de Software Multiplataforma · Fatec
 
 </div>
 
+> **Branch de referência:** `main`. As alterações deste pacote são preparadas para a branch principal; a publicação no repositório precisa ser feita por um colaborador com acesso.
+
 > Este README resume a **documentação completa do projeto** ([`Raiz_Conecta_Documentacao.docx`](Raiz_Conecta_Documentacao.docx), versão 3.0, outubro de 2026), na mesma ordem dos capítulos. Onde o código mudou desde o documento, o texto já traz a situação de **novembro de 2026**. As figuras marcadas com *(documento v3.0)* vêm do documento original.
 
 ---
 
 ## Resumo
 
-O **Raiz Conecta** é uma plataforma digital B2B que aproxima produtores rurais de mercados e hortifrútis. O sistema tem três partes que usam a mesma API:
+O **Raiz Conecta** é uma plataforma digital B2B que aproxima produtores rurais de mercados e hortifrútis. **Sua missão é conectar quem precisa comprar com quem produz e pode ofertar, sem atravessadores.** O sistema tem três partes que usam a mesma API:
 
 - **Aplicação web** (Next.js, React, Prisma e PostgreSQL): cadastro em duas etapas com validação documental, catálogo oficial, fluxo de **demanda reversa** (o mercado publica o que precisa e os produtores ofertam), ofertas fracionadas, cancelamento por prazo em dias úteis, avaliação de produtores e painel administrativo.
 - **Aplicativo mobile do Produtor** (Expo e React Native): pedidos de mercado com preço fixo e janela de resposta de 30 minutos, painel, entregas em dias definidos e **pesagem guiada** com tolerância de ±2% e conferência de peso estável.
@@ -58,7 +60,7 @@ Um microsserviço independente (Express e Nodemailer) envia os e-mails transacio
 
 ## 🚧 O que estamos fazendo agora
 
-*Situação em novembro de 2026, na branch `teste`.*
+*Situação em novembro de 2026 — linha principal de desenvolvimento (`main`).*
 
 O documento v3.0 terminou com uma recomendação: refatorar o `app-principal` em duas frentes, primeiro a segurança e o contrato da API, depois o novo fluxo de pedidos, entregas e pesagem. A primeira frente está feita; a segunda começou pela balança.
 
@@ -71,21 +73,17 @@ O documento v3.0 terminou com uma recomendação: refatorar o `app-principal` em
 | **App mobile** | Login, cadastro, catálogo, sugestão, perfil e **balança** usam a API real | 🔧 Parcial |
 | **Pedidos com preço fixo, entregas e registro da pesagem** | Modelo de dados e rotas propostos no documento (seção 3.9.3); no app ainda funcionam com dados simulados | ⏳ Próximo passo |
 
-<table>
-<tr>
-<td width="30%" valign="top" align="center">
-<img src="docs/readme/demo-app-pesagem.gif" alt="App do produtor: entrar, abrir Entregas, iniciar a pesagem, colocar o produto na balança, esperar o peso firmar e ver a confirmação verde" width="100%"><br>
-<sub><b>App</b> · a pesagem espera o peso ficar parado 5 s dentro da faixa e confirma sozinha</sub>
-</td>
-<td width="70%" valign="top" align="center">
-<img src="docs/readme/demo-site-cotacao.gif" alt="Site do mercado: buscar produtos, escolher as quantidades, revisar e disparar a cotação" width="100%"><br>
-<sub><b>Site do mercado</b> · busca, quantidade e Revisar e disparar</sub>
-<br><br>
-<img src="docs/readme/demo-site-balanca.gif" alt="Site do produtor: Minha balança com o peso ao vivo subindo, oscilando e parando" width="100%"><br>
-<sub><b>Peso ao vivo</b> · a leitura do ESP32 chega ao servidor e aparece no site e no app</sub>
-</td>
-</tr>
-</table>
+### Em destaque: do mercado para quem produz
+
+<img src="docs/readme/demo-conexao-mercados-produtores.gif" alt="Animação Raiz Conecta em verde-escuro: o mercado solicita 120 kg de tomate, dois produtores ofertam 80 e 40 kg, e o pedido é atendido" width="100%">
+
+*Animação ilustrativa da missão do projeto: o mercado publica a necessidade, dois produtores atendem com ofertas complementares e o pedido é completado. Não representa operações reais nem dados em tempo real.*
+
+<img src="docs/readme/demo-site-cotacao.gif" alt="Fluxo de cotação do mercado no site" width="720">
+
+*Cotação no site: o mercado seleciona produtos, define quantidades e envia sua necessidade aos produtores.*
+
+As demonstrações de balança e pesagem continuam como funcionalidades técnicas secundárias, documentadas nas seções de IoT e entrega — elas não são a proposta central da plataforma.
 
 ---
 
@@ -154,7 +152,7 @@ A identidade usa tons de verde (natureza, agricultura e sustentabilidade) e um s
 
 <table>
 <tr>
-<td width="50%" valign="top"><img src="docs/readme/site-landing.png" alt="Landing page"><br><sub><b>Landing</b> · o caminho de um pedido (mercado pede, produtor atende, balança confere), como funciona em 4 passos, para quem é, a balança e os ODS</sub></td>
+<td width="50%" valign="top"><img src="docs/readme/banner.svg" alt="Landing: mercados e produtores conectados"><br><sub><b>Landing</b> · o mercado publica a demanda, produtores ofertam juntos e completam o pedido; conexão direta e ODS</sub></td>
 <td width="50%" valign="top"><img src="docs/readme/site-cadastro.png" alt="Cadastro"><br><sub><b>Cadastro em dois passos</b> · tipo de conta, dados de acesso com senha forte; depois CPF/CNPJ, CEP com ViaCEP e foto do documento</sub></td>
 </tr>
 <tr>

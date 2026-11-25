@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { colors } from "@/theme";
 import type { Edge } from "react-native-safe-area-context";
 import { Reveal } from "@/components/motion/Reveal";
 import { spacing } from "@/theme";
@@ -16,6 +17,8 @@ export function FormScreen({
   edges = ["top", "bottom"],
   centered = true,
   bottomSpace = 0,
+  refreshing = false,
+  onRefresh,
 }: {
   children: ReactNode;
   animated?: boolean;
@@ -25,6 +28,8 @@ export function FormScreen({
   centered?: boolean;
   // Folga no fim do conteúdo para o botão flutuante de ajuda não cobrir o último campo.
   bottomSpace?: number;
+  refreshing?: boolean;
+  onRefresh?: () => void;
 }) {
   return (
     <Screen edges={edges}>
@@ -36,8 +41,16 @@ export function FormScreen({
             { paddingBottom: spacing.lg + bottomSpace },
           ]}
           keyboardShouldPersistTaps="handled"
+          refreshControl={onRefresh && Platform.OS !== "web" ? (
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} tintColor={colors.primary} />
+          ) : undefined}
           showsVerticalScrollIndicator={false}
         >
+          {onRefresh && Platform.OS === "web" && (
+            <Pressable onPress={onRefresh} accessibilityRole="button" accessibilityLabel="Atualizar dados" style={styles.webRefresh}>
+              {refreshing ? <ActivityIndicator size="small" color={colors.primary} /> : <Text style={styles.webRefreshText}>↻ Atualizar dados</Text>}
+            </Pressable>
+          )}
           {animated ? (
             <Reveal offset={10} style={styles.column}>
               {children}
@@ -56,4 +69,6 @@ const styles = StyleSheet.create({
   scrollContent: { flexGrow: 1, paddingVertical: spacing.lg },
   centered: { justifyContent: "center" },
   column: { width: "100%", maxWidth: MAX_CONTENT_WIDTH, alignSelf: "center", gap: spacing.md },
+  webRefresh: { alignSelf: "flex-end", minHeight: 36, justifyContent: "center", paddingHorizontal: 12 },
+  webRefreshText: { color: colors.primary, fontWeight: "700" },
 });

@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { StyleSheet, Text, View } from "react-native";
 import { OrderCardView } from "@/components/entregas/OrderCardView";
 import { PickListCard } from "@/components/entregas/PickListCard";
@@ -21,6 +22,7 @@ import { colors, spacing, typography } from "@/theme";
 // por vez, com voz), o total a separar e, abaixo, um cartão por pedido (mercado) com os produtos e os pesos.
 export default function EntregasScreen() {
   const screen = useEntregasScreen();
+  const { refreshing, onRefresh } = usePullToRefresh(screen.refresh);
 
   if (screen.status === "loading") return <PageLoader />;
   if (screen.status === "error") return <LoadError onRetry={screen.reload} />;
@@ -71,6 +73,8 @@ export default function EntregasScreen() {
   return (
     <>
       <ListScreen
+        refreshing={refreshing}
+        onRefresh={onRefresh}
         data={screen.cards}
         keyExtractor={(card) => card.key}
         header={header}

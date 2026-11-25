@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useRouter } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 import { PressableScale } from "@/components/motion/PressableScale";
@@ -28,7 +29,8 @@ const BOTTOM_SPACE = 96;
 // Painel: um resumo simples da atividade do produtor, com atalhos para cada tela.
 export default function PainelScreen() {
   const router = useRouter();
-  const { status, summary, reload, nextDelivery, now } = useDashboardScreen();
+  const { status, summary, reload, refresh, nextDelivery, now } = useDashboardScreen();
+  const { refreshing, onRefresh } = usePullToRefresh(refresh);
 
   if (status === "loading") return <PageLoader />;
   if (status === "error") return <LoadError onRetry={reload} />;
@@ -37,7 +39,7 @@ export default function PainelScreen() {
   const nextDayLabel = nextDelivery ? deliveryDayLabel(nextDelivery.day, now).toLowerCase() : "";
 
   return (
-    <FormScreen edges={[]} centered={false} animated={false} bottomSpace={BOTTOM_SPACE}>
+    <FormScreen edges={[]} centered={false} animated={false} bottomSpace={BOTTOM_SPACE} refreshing={refreshing} onRefresh={onRefresh}>
       <View style={styles.top}>
         <ScreenHeading title="Meu Painel" />
       </View>

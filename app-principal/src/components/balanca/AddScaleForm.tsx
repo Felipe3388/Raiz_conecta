@@ -34,10 +34,10 @@ export function AddScaleForm({ busy, onAdd, onCancel }: { busy: boolean; onAdd: 
   }
 
   return (
-    <form onSubmit={submit} className="bg-white rounded-2xl border border-gray-200 p-5 md:p-6 space-y-4" noValidate>
+    <form onSubmit={submit} className="rounded-xl bg-gray-50 border border-gray-200 p-4 space-y-4" noValidate>
       <div>
-        <h2 className="flex items-center gap-2 text-base"><Tag size={19} className="text-green-700" aria-hidden="true" /> Dados da etiqueta</h2>
-        <p className="text-sm text-gray-500 mt-1">Estão na etiqueta colada na balança. Se tiver o QR Code, cole o texto dele no primeiro campo.</p>
+        <h2 className="flex items-center gap-2 text-base"><Tag size={19} className="text-green-700" aria-hidden="true" /> Vincular nova balança</h2>
+        <p className="text-sm text-gray-500 mt-1">Use o endereço e o código de segurança da etiqueta. Se tiver o QR Code, cole o texto no primeiro campo.</p>
       </div>
       <div className="grid sm:grid-cols-2 gap-4">
         <Input label="Endereço da balança" name="deviceId" value={deviceId} onChange={(e) => onDeviceChange(e.target.value)} placeholder="A4:CF:12:9B:07:E1" autoComplete="off" spellCheck={false} className="font-mono" />
